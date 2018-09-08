@@ -21,6 +21,7 @@ export default {
     if (!loadingTimer) return
     clearInterval(loadingTimer)
     loadingTimer = undefined
+    statusBarItem.text = MENU_PREFIX
   },
 
   setStatusText (txt: string | Function) {
@@ -31,7 +32,7 @@ export default {
       exports.default.startLoading()
       txt((newTxt: string) => {
         exports.default.stopLoading()
-        statusBarItem.text = `${MENU_PREFIX}: ${newTxt}`
+        statusBarItem.text = `${MENU_PREFIX}${newTxt && ': ' + newTxt || ''}`
       })
     }
   }
