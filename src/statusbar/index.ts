@@ -1,38 +1,40 @@
 import * as vscode from 'vscode'
 import * as elegantSpinner from 'elegant-spinner'
 
-const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 5)
+const sbItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 5)
 const MENU_PREFIX = 'FastSfdc'
 const spinner = elegantSpinner()
-let loadingTimer: NodeJS.Timer | undefined
+
+let loadingTimer: NodeJS.Timer
+let loadingCounter = 0
 
 export default {
   initStatusBar () {
-    statusBarItem.text = MENU_PREFIX
-    statusBarItem.show()
+    sbItem.text = MENU_PREFIX
+    sbItem.show()
   },
 
   startLoading () {
-    if (loadingTimer) return
-    loadingTimer = setInterval(() => statusBarItem.text = `${MENU_PREFIX}: ${spinner()}`, 50)
+    if (!loadingCounter++) loadingTimer = setInterval(() => sbItem.text = `${MENU_PREFIX}: ${spinner()}`, 50)
   },
 
   stopLoading () {
-    if (!loadingTimer) return
-    clearInterval(loadingTimer)
-    loadingTimer = undefined
-    statusBarItem.text = MENU_PREFIX
+    if (loadingCounter === 1) {
+      sbItem.text = MENU_PREFIX
+      clearInterval(loadingTimer)
+    }
+    loadingCounter = Math.max(loadingCounter - 1, 0)
   },
 
   setStatusText (txt: string | Function) {
     if (typeof txt === 'string') {
-      statusBarItem.text = MENU_PREFIX
-      if (txt) statusBarItem.text += ': ' + txt
+      sbItem.text = MENU_PREFIX
+      if (txt) sbItem.text += ': ' + txt
     } else {
       exports.default.startLoading()
       txt((newTxt: string) => {
         exports.default.stopLoading()
-        statusBarItem.text = `${MENU_PREFIX}${newTxt && ': ' + newTxt || ''}`
+        if (!loadingCounter) sbItem.text = `${MENU_PREFIX}${newTxt && ': ' + newTxt || ''}`
       })
     }
   }
