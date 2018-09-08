@@ -3,7 +3,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { Config } from '../fast-sfdc'
 import connector from '../sfdc-connector'
-import statusBar from '../statusbar'
+import StatusBar from '../statusbar'
 
 async function getUsername (config: Config): Promise<string> {
   const result = await vscode.window.showInputBox({
@@ -57,11 +57,12 @@ export default async function enterCredentials () {
   )
 
   try {
-    const res = await connector.connect(config)
-    statusBar.setStatusText('👍🏻')
-    console.log(res)
+    StatusBar.startLoading()
+    await connector.connect(config)
+    StatusBar.stopLoading()
+    vscode.window.showInformationMessage('Credentials ok!')
   } catch (error) {
-    console.error(error.message)
-    statusBar.setStatusText('😞')
+    StatusBar.stopLoading()
+    vscode.window.showErrorMessage('Wrong credentials. Fix them to retry')
   }
 }
