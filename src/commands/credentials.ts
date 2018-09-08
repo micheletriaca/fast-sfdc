@@ -1,6 +1,5 @@
 import * as vscode from 'vscode'
-import * as fs from 'fs'
-import * as path from 'path'
+import configService from '../config-service'
 import { Config } from '../fast-sfdc'
 import connector from '../sfdc-connector'
 import StatusBar from '../statusbar'
@@ -40,7 +39,7 @@ async function getUrl (): Promise<string> {
 }
 
 export default async function enterCredentials () {
-  const config: Config = { apiVersion: '43.0' }
+  const config = await configService.getConfig()
 
   config.url = await getUrl()
   if (!config.url) return
@@ -51,10 +50,7 @@ export default async function enterCredentials () {
   config.password = await getPassword(config)
   if (!config.password) return
 
-  fs.writeFileSync(
-    path.join(vscode.workspace.rootPath as string, 'fastsfdc.json'),
-    JSON.stringify(config, undefined, 2)
-  )
+  await configService.storeConfig(config)
 
   try {
     StatusBar.startLoading()
