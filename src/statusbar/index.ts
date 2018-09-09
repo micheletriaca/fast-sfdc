@@ -27,9 +27,9 @@ export default {
     loadingCounter = Math.max(loadingCounter - 1, 0)
   },
 
-  startLongJob (done: (d: DoneCallback) => void) {
+  startLongJob (doLongJob: (done: DoneCallback) => void) {
     exports.default.startLoading()
-    done((newTxt: string) => {
+    doLongJob((newTxt: string) => {
       exports.default.stopLoading()
       if (!loadingCounter) exports.default.setText(newTxt)
     })
