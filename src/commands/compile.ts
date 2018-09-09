@@ -82,6 +82,7 @@ const compileAuraDefinition = async (doc: vscode.TextDocument, done: DoneCallbac
 const compileMetadataContainerObject = async (doc: vscode.TextDocument, done: DoneCallback, toolingType: string) => {
   const fileName = parsers.getFilename(doc)
   const obj = await findByNameAndType(fileName, toolingType)
+  if (!obj) throw Error('File not found on Salesforce server')
   if (!metaContainerId) metaContainerId = await sfdcConnector.createMetadataContainer()
   if (!recordsInMetaContainer.has(obj.Id)) {
     recordsInMetaContainer.set(obj.Id, await sfdcConnector.addToMetadataContainer(doc, obj, metaContainerId))
