@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 import * as elegantSpinner from 'elegant-spinner'
+import { DoneCallback } from '../fast-sfdc'
 
 const sbItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 5)
 const MENU_PREFIX = 'FastSfdc'
@@ -26,16 +27,15 @@ export default {
     loadingCounter = Math.max(loadingCounter - 1, 0)
   },
 
-  setStatusText (txt: string | Function) {
-    if (typeof txt === 'string') {
-      sbItem.text = MENU_PREFIX
-      if (txt) sbItem.text += ': ' + txt
-    } else {
-      exports.default.startLoading()
-      txt((newTxt: string) => {
-        exports.default.stopLoading()
-        if (!loadingCounter) sbItem.text = `${MENU_PREFIX}${newTxt && ': ' + newTxt || ''}`
-      })
-    }
+  startLongJob (done: (d: DoneCallback) => void) {
+    exports.default.startLoading()
+    done((newTxt: string) => {
+      exports.default.stopLoading()
+      if (!loadingCounter) exports.default.setText(newTxt)
+    })
+  },
+
+  setText (newTxt: string) {
+    sbItem.text = `${MENU_PREFIX}${newTxt && ': ' + newTxt || ''}`
   }
 }

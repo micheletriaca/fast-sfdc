@@ -5,3 +5,5 @@ export interface Config {
   password?: string
   url?: string
 }
+
+export type DoneCallback = (s: string) => void
