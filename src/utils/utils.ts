@@ -8,9 +8,5 @@ export default {
     }
   },
 
-  async sleep (ms: number) {
-    return new Promise((resolve) => {
-      setTimeout(resolve, ms)
-    })
-  }
+  sleep: async (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 }

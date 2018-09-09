@@ -4,13 +4,14 @@ import * as fs from 'fs'
 import * as vscode from 'vscode'
 
 const getCfgPath = () => path.join(vscode.workspace.rootPath as string, 'fastsfdc.json')
+const CURRENT_API_VERSION = '43.0'
 
 export default {
   getConfig (): Promise<Config> {
     return new Promise((resolve, reject) => {
       const cfgPath = getCfgPath()
       if (!vscode.workspace.rootPath || !fs.existsSync(cfgPath)) {
-        resolve({ stored: false, apiVersion: '43.0' })
+        resolve({ stored: false, apiVersion: CURRENT_API_VERSION })
       } else {
         fs.readFile(cfgPath, 'utf8', (err, res) => err && reject(err) || resolve({ ...JSON.parse(res), stored: true }))
       }

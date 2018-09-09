@@ -96,7 +96,7 @@ export default {
         DeployDetails,
         ErrorMsg
         FROM ContainerAsyncRequest
-        WHERE Id='${containerAsyncRequestId}'`
+        WHERE Id = '${containerAsyncRequestId}'`
       )
       if (res.records[0].State !== 'Queued') return res.records[0]
     }
