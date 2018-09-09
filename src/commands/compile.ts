@@ -27,7 +27,6 @@ function updateProblemsPanel (errors: any[], doc: vscode.TextDocument) {
 
 function updateProblemsPanelFromAuraError (err: any, doc: vscode.TextDocument) {
   const filename = parsers.getFilename(doc)
-  const diagnostics: vscode.Diagnostic[] = []
 
   let failureLineNumber: number
   let failureColumnNumber: number
@@ -37,7 +36,7 @@ function updateProblemsPanelFromAuraError (err: any, doc: vscode.TextDocument) {
   if (m) {
     const [msg, line, col] = m
     errorMessage = msg
-    failureLineNumber = parseInt(line, 10)
+    failureLineNumber = parseInt(line, 10) - 1
     failureColumnNumber = parseInt(col, 10)
   } else {
     const splitString = err.message.split(filename + ':')
@@ -45,16 +44,15 @@ function updateProblemsPanelFromAuraError (err: any, doc: vscode.TextDocument) {
     const idx = partTwo.indexOf(':') + 1
     const rangeArray: any[] = partTwo.substring(0, idx).split(',')
     errorMessage = partTwo.substring(idx)
-    failureLineNumber = rangeArray[0]
+    failureLineNumber = rangeArray[0] - 1
     failureColumnNumber = rangeArray[1]
   }
 
-  let failureRange: vscode.Range = doc.lineAt(failureLineNumber - 1).range
+  let failureRange = doc.lineAt(failureLineNumber).range
   if (failureColumnNumber > 0) {
-    failureRange = failureRange.with(new vscode.Position((failureLineNumber - 1), failureColumnNumber))
+    failureRange = failureRange.with(new vscode.Position(failureLineNumber, failureColumnNumber))
   }
-  diagnostics.push(new vscode.Diagnostic(failureRange, errorMessage, 0))
-  diagnosticCollection.set(doc.uri, diagnostics)
+  diagnosticCollection.set(doc.uri, [new vscode.Diagnostic(failureRange, errorMessage, 0)])
 }
 
 const compileAuraDefinition = async (doc: vscode.TextDocument, done: DoneCallback) => {
