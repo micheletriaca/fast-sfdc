@@ -5,44 +5,42 @@ import configService from '../config-service'
 import parsers from '../utils/parsers'
 import utils from '../utils/utils'
 
+let config: Config
 configService.getConfig().then(cfg => config = cfg)
 const conn = new SfdcConn()
+
 const getBasePath = () => `/services/data/v${config.apiVersion}/tooling`
+const rest = async function (endpoint: string, ...args: any[]) {
+  try {
+    if (!conn.sessionId) await connect()
+    return await conn.rest(getBasePath() + endpoint, ...args)
+  } catch (e) {
+    if (e.response.statusCode === 401 || e.response.statusCode === 403) {
+      await connect()
+      return conn.rest(getBasePath() + endpoint, ...args)
+    } else {
+      throw e
+    }
+  }
+}
 
-const post = async (endpoint: string, body: any): Promise<any> => {
-  if (!conn.sessionId) await exports.default.connect()
-  return conn.rest(getBasePath() + endpoint, {
-    method: 'POST',
-    body
+const post = async (endpoint: string, body: any) => rest(endpoint, { method: 'POST', body })
+const patch = async (endpoint: string, body: any) => rest(endpoint, { method: 'PATCH', body })
+const get = async (endpoint: string) => rest(endpoint)
+const query = (q: string) => get(`/query?q=${encodeURIComponent(q.replace(/ +/g, ' '))}`)
+const connect = async function (cfg?: Config) {
+  if (cfg) config = cfg
+  await conn.soapLogin({
+    hostname: config.url,
+    apiVersion: config.apiVersion,
+    username: config.username,
+    password: config.password
   })
 }
-
-const patch = async (endpoint: string, body: any): Promise<any> => {
-  if (!conn.sessionId) await exports.default.connect()
-  return conn.rest(getBasePath() + endpoint, {
-    method: 'PATCH',
-    body
-  })
-}
-
-const get = async (endpoint: string) => {
-  if (!conn.sessionId) await exports.default.connect()
-  return conn.rest(getBasePath() + endpoint)
-}
-
-let config: Config
 
 export default {
-  connect: async function (cfg: Config | undefined) {
-    if (cfg) config = cfg
-    await conn.soapLogin({
-      hostname: config.url,
-      apiVersion: config.apiVersion,
-      username: config.username,
-      password: config.password
-    })
-    return true
-  },
+  connect,
+  query,
 
   async createMetadataContainer (): Promise<string> {
     const res = await post('/sobjects/MetadataContainer/', { name: 'FastSfdc-' + Date.now() })
@@ -59,13 +57,13 @@ export default {
   },
 
   async findByNameAndType (name: string, toolingType: string): Promise<any | null> {
-    const res = await exports.default.query(`SELECT
+    const res = await query(`SELECT
       Id,
       Metadata
       FROM ${toolingType}
       WHERE ${toolingType === 'AuraDefinitionBundle' ? 'Developer' : ''}Name = '${name}'`
     )
-    return res && res.records && res.records[0] || null
+    return res.records[0] || null
   },
 
   async addToMetadataContainer (doc: vscode.TextDocument, record: any, metaContainerId: string): Promise<any> {
@@ -90,7 +88,7 @@ export default {
     let retryCount = 0
     while (true) {
       await utils.sleep(retryCount++ > 3 ? 1000 : 200)
-      const res = await exports.default.query(`SELECT
+      const res = await query(`SELECT
         Id,
         State,
         DeployDetails,
@@ -100,7 +98,5 @@ export default {
       )
       if (res.records[0].State !== 'Queued') return res.records[0]
     }
-  },
-
-  query: (q: string) => get(`/query?q=${encodeURIComponent(q)}`)
+  }
 }
