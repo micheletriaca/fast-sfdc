@@ -64,7 +64,7 @@ const compileAuraDefinition = async (doc: vscode.TextDocument, done: DoneCallbac
     WHERE AuraDefinitionBundle.DeveloperName = '${bundleName}'
     AND DefType = '${auraDefType}'
   `)
-  if (!res || !res.records) throw Error('File not found on Salesforce server')
+  if (!res.records[0]) throw Error('File not found on Salesforce server')
   const record = res.records[0]
   try {
     await sfdcConnector.edit(doc, record, record.Id)
