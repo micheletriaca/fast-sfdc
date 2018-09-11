@@ -20,12 +20,17 @@ export interface ApexPageMetadata extends Metadata {
   label: string
 }
 
+export interface ApexComponentMetadata extends Metadata {
+  description: string,
+  label: string  
+}
+
 export interface MetaObj {
   FullName?: string,
   MetadataContainerId: string,
   Body: string,
   ContentEntityId?: string,
-  Metadata: ApexClassMetadata | ApexPageMetadata | Metadata
+  Metadata: ApexClassMetadata | ApexPageMetadata | ApexComponentMetadata | Metadata
 }
 
 export type DoneCallback = (s: string) => void
