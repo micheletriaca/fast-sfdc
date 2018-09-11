@@ -2,20 +2,20 @@ import * as vscode from 'vscode'
 import * as path from 'path'
 
 export default {
-  getToolingType (document: vscode.TextDocument, isMember = false): string | undefined {
+  getToolingType (document: vscode.TextDocument): string {
     const isAuraBundle = document.uri.path.indexOf(`${path.sep}aura${path.sep}`) !== -1
     if (isAuraBundle) return 'AuraDefinition'
 
     const extension = document.fileName.substring(document.fileName.lastIndexOf('.'))
     switch (extension) {
-      case '.cls': return `ApexClass${isMember ? 'Member' : ''}`
-      case '.trigger': return `ApexTrigger${isMember ? 'Member' : ''}`
-      case '.component': return `ApexComponent${isMember ? 'Member' : ''}`
-      case '.page': return `ApexPage${isMember ? 'Member' : ''}`
+      case '.cls': return 'ApexClassMember'
+      case '.trigger': return 'ApexTriggerMember'
+      case '.component': return 'ApexComponentMember'
+      case '.page': return 'ApexPageMember'
       case '.permissionset': return 'PermissionSet'
       case '.object': return 'CustomObject'
       case '.labels': return 'CustomLabels'
-      default: return undefined
+      default: return ''
     }
   },
 

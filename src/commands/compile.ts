@@ -2,14 +2,11 @@ import * as vscode from 'vscode'
 import StatusBar from '../statusbar'
 import sfdcConnector from '../sfdc-connector'
 import parsers from '../utils/parsers'
-import utils from '../utils/utils'
 import configService from '../services/config-service'
 import { DoneCallback } from '../fast-sfdc'
+import toolingService from '../services/tooling-service'
 
-let metaContainerId: string
-const recordsInMetaContainer = new Map()
 const diagnosticCollection = vscode.languages.createDiagnosticCollection('FastSfdc')
-const findByNameAndType = utils.memoize(sfdcConnector.findByNameAndType)
 
 function updateProblemsPanel (errors: any[], doc: vscode.TextDocument) {
   diagnosticCollection.set(doc.uri, errors
@@ -67,36 +64,23 @@ const compileAuraDefinition = async (doc: vscode.TextDocument, done: DoneCallbac
   if (!res.records[0]) throw Error('File not found on Salesforce server')
   const record = res.records[0]
   try {
-    await sfdcConnector.edit(doc, record, record.Id)
+    await sfdcConnector.editObjInMetadataContainer({ ...record, Source: doc.getText() }, 'AuraDefinition')
     diagnosticCollection.set(doc.uri, [])
     done('👍🏻')
   } catch (e) {
-    console.error(e)
     updateProblemsPanelFromAuraError(e, doc)
     done('👎🏻')
   }
 }
 
-const compileMetadataContainerObject = async (doc: vscode.TextDocument, done: DoneCallback, toolingType: string) => {
-  const fileName = parsers.getFilename(doc)
-  const obj = await findByNameAndType(fileName, toolingType)
-  if (!obj) throw Error('File not found on Salesforce server')
-  if (!metaContainerId) metaContainerId = await sfdcConnector.createMetadataContainer()
-  if (!recordsInMetaContainer.has(obj.Id)) {
-    recordsInMetaContainer.set(obj.Id, await sfdcConnector.addToMetadataContainer(doc, obj, metaContainerId))
-  } else {
-    await sfdcConnector.edit(doc, obj, recordsInMetaContainer.get(obj.Id))
-  }
-
-  const containerAsyncRequestId = await sfdcConnector.createContainerAsyncRequest(metaContainerId)
-  const results = await sfdcConnector.pollDeploymentStatus(containerAsyncRequestId)
+const compileMetadataContainerObject = async (doc: vscode.TextDocument, done: DoneCallback) => {
+  const compile = await toolingService.requestCompile()
+  const results = await compile({
+    Body: doc.getText(),
+    FullName: parsers.getFilename(doc)
+  }, parsers.getToolingType(doc))
   updateProblemsPanel(results.DeployDetails.componentFailures, doc)
-  if (results.State === 'Completed') {
-    recordsInMetaContainer.clear()
-    done('👍🏻')
-  } else {
-    done('👎🏻')
-  }
+  done(results.State === 'Completed' ? '👍🏻' : '👎🏻')
 }
 
 export default async function compile (doc: vscode.TextDocument) {
@@ -107,10 +91,9 @@ export default async function compile (doc: vscode.TextDocument) {
 
   StatusBar.startLongJob(async done => {
     try {
-      if (type === 'AuraDefinition') {
-        await compileAuraDefinition(doc, done)
-      } else {
-        await compileMetadataContainerObject(doc, done, type)
+      switch (type) {
+        case 'AuraDefinition': await compileAuraDefinition(doc, done); break
+        default: await compileMetadataContainerObject(doc, done)
       }
     } catch (e) {
       vscode.window.showErrorMessage('Error during compile: ' + e)

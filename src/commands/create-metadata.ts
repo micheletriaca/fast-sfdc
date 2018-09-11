@@ -1,10 +1,8 @@
 import * as vscode from 'vscode'
 import { DoneCallback, ApexPageMetadata, ApexClassMetadata, ApexComponentMetadata } from '../fast-sfdc'
-import sfdcConnector from '../sfdc-connector'
 import StatusBar from '../statusbar'
 import configService from '../config-service'
-
-let metaContainerId: string
+import toolingService from '../services/tooling-service'
 
 interface MetaOption {label: string, toolingType: string}
 
@@ -68,29 +66,22 @@ function getMetadata (metaType: string, metaName: string, apiVersionS: string) {
     default: throw Error('unknown meta type')
   }
 }
-async function _createMeta (metaName: string, metaType: MetaOption, objName: string | undefined, done: DoneCallback) {
+async function _createMeta (metaName: string, metaType: MetaOption, objName: string, done: DoneCallback) {
   const config = await configService.getConfig()
-  if (!metaContainerId) metaContainerId = await sfdcConnector.createMetadataContainer()
-  await sfdcConnector.addObjToMetadataContainer(metaType.toolingType, {
+  const compile = await toolingService.requestCompile()
+  const results = await compile({
     Body: getDocument(metaName, metaType.toolingType, objName),
-    MetadataContainerId: metaContainerId,
     FullName: metaName,
     Metadata: getMetadata(metaType.toolingType, metaName, config.apiVersion as string)
-  })
-  const containerAsyncRequestId = await sfdcConnector.createContainerAsyncRequest(metaContainerId)
-  const results = await sfdcConnector.pollDeploymentStatus(containerAsyncRequestId)
-  if (results.State === 'Completed') {
-    done('👍🏻')
-  } else {
-    showErrors(results.DeployDetails.componentFailures)
-    done('👎🏻')
-  }
+  }, metaType.toolingType)
+  showErrors(results.DeployDetails.componentFailures)
+  done(results.State === 'Completed' ? '👍🏻' : '👎🏻')
 }
 
 function showErrors (errors: any[]) {
   errors
     .filter(e => e.ProblemType !== 'Error')
-    .map(failure => {
+    .forEach(failure => {
       vscode.window.showErrorMessage(failure)
     })
 }

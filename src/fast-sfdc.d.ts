@@ -10,6 +10,10 @@ export interface Metadata {
   apiVersion: number  
 }
 
+export interface AuraMetadata extends Metadata {
+  description: string
+}
+
 export interface ApexClassMetadata extends Metadata {
   status: 'Active'
 }
@@ -26,11 +30,19 @@ export interface ApexComponentMetadata extends Metadata {
 }
 
 export interface MetaObj {
-  FullName?: string,
-  MetadataContainerId: string,
+  Id?: string
+  FullName: string,
   Body: string,
-  ContentEntityId?: string,
-  Metadata: ApexClassMetadata | ApexPageMetadata | ApexComponentMetadata | Metadata
+  MetadataContainerId?: string,
+  Metadata?: ApexClassMetadata | ApexPageMetadata | ApexComponentMetadata | Metadata
+}
+
+export interface AuraObj {
+  Id?: string,
+  FullName: string,
+  Source: string,
+  MetadataContainerId?: string,
+  Metadata?: AuraMetadata
 }
 
 export type DoneCallback = (s: string) => void

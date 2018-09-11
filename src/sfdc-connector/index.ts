@@ -1,7 +1,5 @@
-import { Config, MetaObj } from '../fast-sfdc'
+import { Config, MetaObj, AuraObj } from '../fast-sfdc'
 import * as SfdcConn from 'node-salesforce-connection'
-import * as vscode from 'vscode'
-import parsers from '../utils/parsers'
 import configService from '../services/config-service'
 import utils from '../utils/utils'
 
@@ -42,9 +40,18 @@ export default {
   connect,
   query,
 
-  async createMetadataContainer (): Promise<string> {
-    const res = await post('/sobjects/MetadataContainer/', { name: 'FastSfdc-' + Date.now() })
+  async createMetadataContainer (name: string): Promise<string> {
+    const res = await post('/sobjects/MetadataContainer/', { name })
     return res.id
+  },
+
+  async addObjToMetadataContainer (toolingType: string, obj: MetaObj) {
+    const res = await post(`/sobjects/${toolingType}`, obj)
+    return res.id
+  },
+
+  async editObjInMetadataContainer (record: MetaObj | AuraObj, toolingType: string) {
+    return patch(`/sobjects/${toolingType}/${record.Id}`, { ...record, Id: undefined })
   },
 
   async createContainerAsyncRequest (metaContainerId: string): Promise<string> {
@@ -54,39 +61,6 @@ export default {
       MetadataContainerId: metaContainerId
     })
     return res.id
-  },
-
-  async findByNameAndType (name: string, toolingType: string): Promise<any | null> {
-    const res = await query(`SELECT
-      Id,
-      Metadata
-      FROM ${toolingType}
-      WHERE ${toolingType === 'AuraDefinitionBundle' ? 'Developer' : ''}Name = '${name}'`
-    )
-    return res.records[0] || null
-  },
-
-  async addObjToMetadataContainer (toolingType: string, obj: MetaObj) {
-    const res = await post(`/sobjects/${toolingType}`, obj)
-    return res.id
-  },
-
-  async addToMetadataContainer (doc: vscode.TextDocument, record: any, metaContainerId: string): Promise<any> {
-    const res = await post(`/sobjects/${parsers.getToolingType(doc, true)}`, {
-      Body: doc.getText(),
-      ContentEntityId: record.Id,
-      Metadata: record.Metadata,
-      MetadataContainerId: metaContainerId
-    })
-    return res.id
-  },
-
-  async edit (doc: vscode.TextDocument, record: any, memberId: string) {
-    const toolingType = parsers.getToolingType(doc, true)
-    await patch(`/sobjects/${toolingType}/${memberId}`, {
-      [toolingType === 'AuraDefinition' ? 'Source' : 'Body']: doc.getText(),
-      Metadata: record.Metadata
-    })
   },
 
   async pollDeploymentStatus (containerAsyncRequestId: string) {
