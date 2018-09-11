@@ -1,8 +1,9 @@
 import * as vscode from 'vscode'
+import * as path from 'path'
 
 export default {
   getToolingType (document: vscode.TextDocument, isMember = false): string | undefined {
-    const isAuraBundle = document.uri.path.indexOf('/aura/') !== -1
+    const isAuraBundle = document.uri.path.indexOf(`${path.sep}aura${path.sep}`) !== -1
     if (isAuraBundle) return 'AuraDefinition'
 
     const extension = document.fileName.substring(document.fileName.lastIndexOf('.'))
@@ -44,10 +45,10 @@ export default {
   },
 
   getFilename (doc: vscode.TextDocument) {
-    return doc.fileName.substring(doc.fileName.lastIndexOf('/') + 1, doc.fileName.lastIndexOf('.'))
+    return doc.fileName.substring(doc.fileName.lastIndexOf(path.sep) + 1, doc.fileName.lastIndexOf('.'))
   },
 
   getAuraBundleName (doc: vscode.TextDocument) {
-    return doc.fileName.substring(doc.fileName.indexOf('aura/') + 5, doc.fileName.lastIndexOf('/'))
+    return doc.fileName.substring(doc.fileName.indexOf(`aura${path.sep}`) + 5, doc.fileName.lastIndexOf(path.sep))
   }
 }
