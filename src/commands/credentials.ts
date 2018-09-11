@@ -28,10 +28,10 @@ async function getPassword (config: Config): Promise<string> {
 async function getUrl (): Promise<string> {
   const res = await vscode.window.showQuickPick([
     {
-      label: '$(code) Production / Developer',
+      label: 'Production / Developer',
       description: 'login.salesforce.com'
     }, {
-      label: '$(beaker) Sandbox / Test',
+      label: 'Sandbox / Test',
       description: 'test.salesforce.com'
     }
   ], { ignoreFocusOut: true })
