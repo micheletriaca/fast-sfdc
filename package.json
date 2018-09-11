@@ -5,7 +5,7 @@
     "version": "0.0.1",
     "publisher": "micheletriaca",
     "engines": {
-        "vscode": "^1.27.0"
+        "vscode": "^1.25.0"
     },
     "categories": [
         "Other"
@@ -43,7 +43,7 @@
         "typescript": "^2.6.1",
         "vscode": "^1.1.21"
     },
-    "dependencies": {        
+    "dependencies": {
         "elegant-spinner": "^1.0.1",
         "node-salesforce-connection": "^2.3.0"
     }
