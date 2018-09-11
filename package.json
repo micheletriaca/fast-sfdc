@@ -19,7 +19,11 @@
         "commands": [
             {
                 "command": "FastSfdc.enterCredentials",
-                "title": "Fast-Sfdc: Enter credentials"
+                "title": "Fast-Sfdc: Enter credentials..."
+            },
+            {
+                "command": "FastSfdc.createMeta",
+                "title": "Fast-Sfdc: Create new..."
             }
         ]
     },

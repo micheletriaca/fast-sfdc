@@ -1,4 +1,4 @@
-import { Config } from '../fast-sfdc'
+import { Config, MetaObj } from '../fast-sfdc'
 import * as SfdcConn from 'node-salesforce-connection'
 import * as vscode from 'vscode'
 import configService from '../config-service'
@@ -64,6 +64,11 @@ export default {
       WHERE ${toolingType === 'AuraDefinitionBundle' ? 'Developer' : ''}Name = '${name}'`
     )
     return res.records[0] || null
+  },
+
+  async addObjToMetadataContainer (toolingType: string, obj: MetaObj) {
+    const res = await post(`/sobjects/${toolingType}`, obj)
+    return res.id
   },
 
   async addToMetadataContainer (doc: vscode.TextDocument, record: any, metaContainerId: string): Promise<any> {
