@@ -3,7 +3,7 @@ import StatusBar from '../statusbar'
 import sfdcConnector from '../sfdc-connector'
 import parsers from '../utils/parsers'
 import utils from '../utils/utils'
-import configService from '../config-service'
+import configService from '../services/config-service'
 import { DoneCallback } from '../fast-sfdc'
 
 let metaContainerId: string

@@ -1,8 +1,8 @@
 import { Config, MetaObj } from '../fast-sfdc'
 import * as SfdcConn from 'node-salesforce-connection'
 import * as vscode from 'vscode'
-import configService from '../config-service'
 import parsers from '../utils/parsers'
+import configService from '../services/config-service'
 import utils from '../utils/utils'
 
 let config: Config

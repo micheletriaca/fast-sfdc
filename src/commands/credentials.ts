@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import configService from '../config-service'
+import configService from '../services/config-service'
 import { Config } from '../fast-sfdc'
 import connector from '../sfdc-connector'
 import StatusBar from '../statusbar'
