@@ -11,6 +11,16 @@ export default {
   },
 
   sleep: async (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),
+  promisify: (fn: Function) => {
+    return function (...args: any[]): Promise<any> {
+      return new Promise((resolve, reject) => {
+        fn(...args, (err: any, res: any) => {
+          if (err) reject(err)
+          else resolve(res)
+        })
+      })
+    }
+  },
 
   inputText: async (placeHolder: string, defValue?: string, opts?: any) => await vscode.window.showInputBox({
     ignoreFocusOut: true,

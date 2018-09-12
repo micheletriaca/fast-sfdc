@@ -7,8 +7,10 @@ import utils from '../utils/utils'
 import * as path from 'path'
 import * as fs from 'fs'
 import * as xml2js from 'xml2js'
+import { promisify } from 'util'
 
 interface DocType { label: string, toolingType: string, folder: string, extension: string }
+const writeFileP = promisify(fs.writeFile)
 
 async function chooseType (): Promise<DocType | undefined> {
   const res: DocType | undefined = await vscode.window.showQuickPick([
@@ -71,8 +73,8 @@ async function createRemoteMeta (docBody: string, docMeta: AnyMetadata, docName:
 async function storeOnFileSystem (docBody: string, docMeta: AnyMetadata, docName: string, docType: DocType) {
   const builder = new xml2js.Builder({ xmldec: { version: '1.0', encoding: 'UTF-8' } })
   const p = path.join(vscode.workspace.rootPath as string, 'src', docType.folder, docName + docType.extension)
-  fs.writeFileSync(p, docBody)
-  fs.writeFileSync(`${p}-meta.xml`, builder.buildObject({
+  await writeFileP(p, docBody)
+  await writeFileP(`${p}-meta.xml`, builder.buildObject({
     ApexClass: {
       ...docMeta,
       apiVersion: docMeta.apiVersion + '.0',
