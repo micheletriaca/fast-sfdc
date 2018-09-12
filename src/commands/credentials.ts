@@ -1,29 +1,8 @@
 import * as vscode from 'vscode'
 import configService from '../services/config-service'
-import { Config } from '../fast-sfdc'
 import connector from '../sfdc-connector'
 import StatusBar from '../statusbar'
-
-async function getUsername (config: Config): Promise<string> {
-  const result = await vscode.window.showInputBox({
-    ignoreFocusOut: true,
-    placeHolder: 'mark@salesforce.com',
-    value: config.username || '',
-    prompt: 'Please enter your SFDC username'
-  })
-  return result || ''
-}
-
-async function getPassword (config: Config): Promise<string> {
-  const result = await vscode.window.showInputBox({
-    ignoreFocusOut: true,
-    password: true,
-    value: config.password || '',
-    placeHolder: 'enter your password and token',
-    prompt: 'Please enter your SFDC password and token'
-  })
-  return result || ''
-}
+import utils from '../utils/utils'
 
 async function getUrl (): Promise<string> {
   const res = await vscode.window.showQuickPick([
@@ -44,10 +23,17 @@ export default async function enterCredentials () {
   config.url = await getUrl()
   if (!config.url) return
 
-  config.username = await getUsername(config)
+  config.username = await utils.inputText(
+    'Please enter your SFDC username',
+    config.username || ''
+  )
   if (!config.username) return
 
-  config.password = await getPassword(config)
+  config.password = await utils.inputText(
+    'Please enter your SFDC password and token',
+    config.password || '',
+    { password: true }
+  )
   if (!config.password) return
 
   await configService.storeConfig(config)

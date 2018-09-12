@@ -3,6 +3,7 @@ import { DoneCallback, ApexPageMetadata, ApexClassMetadata, ApexComponentMetadat
 import StatusBar from '../statusbar'
 import configService from '../config-service'
 import toolingService from '../services/tooling-service'
+import utils from '../utils/utils'
 
 interface MetaOption {label: string, toolingType: string}
 
@@ -15,20 +16,6 @@ async function chooseType (): Promise<MetaOption | undefined> {
     { label: 'Lightning component', toolingType: 'ApexClassMember' }
   ], { ignoreFocusOut: true })
   return res
-}
-
-async function getName (metaType: string): Promise<string> {
-  return await vscode.window.showInputBox({
-    ignoreFocusOut: true,
-    placeHolder: `enter ${metaType.toLowerCase()} name`
-  }) || ''
-}
-
-async function getObj (): Promise<string> {
-  return await vscode.window.showInputBox({
-    ignoreFocusOut: true,
-    placeHolder: `enter SObject name`
-  }) || ''
 }
 
 function getDocument (metaName: string, metaType: string, objName?: string) {
@@ -90,11 +77,11 @@ export default async function createMeta () {
   const metaType = await chooseType()
   if (!metaType) return
 
-  const metaName = await getName(metaType.label)
+  const metaName = await utils.inputText(`enter ${metaType.label.toLowerCase()} name`)
   if (!metaName) return
 
   const isTrigger = metaType.toolingType === 'ApexTriggerMember'
-  const triggerObj = isTrigger ? await getObj() : ''
+  const triggerObj = isTrigger ? await utils.inputText('enter SObject name') : ''
   if (isTrigger && !triggerObj) return
 
   StatusBar.startLongJob(async done => {
