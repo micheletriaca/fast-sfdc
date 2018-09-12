@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 import { DoneCallback, ApexPageMetadata, ApexClassMetadata, ApexComponentMetadata } from '../fast-sfdc'
 import StatusBar from '../statusbar'
-import configService from '../config-service'
+import configService from '../services/config-service'
 import toolingService from '../services/tooling-service'
 import utils from '../utils/utils'
 
