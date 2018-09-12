@@ -27,10 +27,12 @@ export default {
   readFile: promisify(fs.readFile),
   writeFile: promisify(fs.writeFile),
 
-  inputText: async (placeHolder: string, defValue?: string, opts?: any) => await vscode.window.showInputBox({
-    ignoreFocusOut: true,
-    placeHolder,
-    value: defValue,
-    ...opts
-  }) || ''
+  inputText: async (placeHolder: string, defValue: string = '', opts?: any) => {
+    return await vscode.window.showInputBox({
+      ignoreFocusOut: true,
+      placeHolder,
+      value: defValue,
+      ...opts
+    }) || ''
+  }
 }

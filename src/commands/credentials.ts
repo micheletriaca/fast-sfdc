@@ -23,17 +23,10 @@ export default async function enterCredentials () {
   config.url = await getUrl()
   if (!config.url) return
 
-  config.username = await utils.inputText(
-    'Please enter your SFDC username',
-    config.username || ''
-  )
+  config.username = await utils.inputText('Please enter your SFDC username', config.username)
   if (!config.username) return
 
-  config.password = await utils.inputText(
-    'Please enter your SFDC password and token',
-    config.password || '',
-    { password: true }
-  )
+  config.password = await utils.inputText('Please enter your SFDC password and token', config.password, { password: true })
   if (!config.password) return
 
   await configService.storeConfig(config)

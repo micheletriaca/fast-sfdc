@@ -35,24 +35,13 @@ function getMetadata (metaType: string, metaName: string, apiVersionS: string): 
   switch (metaType) {
     case 'ApexClassMember':
     case 'ApexTriggerMember':
-      return {
-        apiVersion,
-        status: 'Active'
-      }
+      return { apiVersion, status: 'Active' }
     case 'ApexPageMember':
-      return {
-        apiVersion,
-        availableInTouch: true,
-        confirmationTokenRequired: false,
-        label: metaName
-      }
+      return { apiVersion, availableInTouch: true, confirmationTokenRequired: false, label: metaName }
     case 'ApexComponentMember':
-      return {
-        apiVersion,
-        description: metaName,
-        label: metaName
-      }
-    default: throw Error('unknown meta type')
+      return { apiVersion, description: metaName, label: metaName }
+    default:
+      throw Error('unknown meta type')
   }
 }
 
