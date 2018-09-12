@@ -13,7 +13,8 @@ const rest = async function (endpoint: string, ...args: any[]) {
     if (!conn.sessionId) await connect()
     return await conn.rest(getBasePath() + endpoint, ...args)
   } catch (e) {
-    if (e.response.statusCode === 401 || e.response.statusCode === 403) {
+    if (e.code === 'ENOTFOUND') throw Error('Unreachable host. Check connection')
+    else if (e.response && (e.response.statusCode === 401 || e.response.statusCode === 403)) {
       await connect()
       return conn.rest(getBasePath() + endpoint, ...args)
     } else {
@@ -41,26 +42,25 @@ export default {
   query,
 
   async createMetadataContainer (name: string): Promise<string> {
-    const res = await post('/sobjects/MetadataContainer/', { name })
-    return res.id
+    return (await post('/sobjects/MetadataContainer/', { name })).id
   },
 
-  async addObjToMetadataContainer (toolingType: string, obj: MetaObj) {
-    const res = await post(`/sobjects/${toolingType}`, obj)
-    return res.id
+  async addObjToMetadataContainer (toolingType: string, record: MetaObj) {
+    return (await post(`/sobjects/${toolingType}`, record)).id
   },
 
-  async editObjInMetadataContainer (record: MetaObj | AuraObj, toolingType: string) {
+  async editObj (toolingType: string, record: MetaObj | AuraObj) {
     return patch(`/sobjects/${toolingType}/${record.Id}`, { ...record, Id: undefined })
   },
 
+  editAuraObj: async (record: AuraObj) => exports.default.editObj('AuraDefinition', record),
+
   async createContainerAsyncRequest (metaContainerId: string): Promise<string> {
-    const res = await post('/sobjects/ContainerAsyncRequest/', {
+    return (await post('/sobjects/ContainerAsyncRequest/', {
+      MetadataContainerId: metaContainerId,
       IsCheckOnly: false,
-      IsRunTests: false,
-      MetadataContainerId: metaContainerId
-    })
-    return res.id
+      IsRunTests: false
+    })).id
   },
 
   async pollDeploymentStatus (containerAsyncRequestId: string) {
@@ -77,5 +77,12 @@ export default {
       )
       if (res.records[0].State !== 'Queued') return res.records[0]
     }
-  }
+  },
+
+  findAuraByNameAndDefType: async (bundleName: string, auraDefType: string) => (await query(`SELECT
+    Id
+    FROM AuraDefinition
+    WHERE AuraDefinitionBundle.DeveloperName = '${bundleName}'
+    AND DefType = '${auraDefType}'
+  `)).records[0]
 }

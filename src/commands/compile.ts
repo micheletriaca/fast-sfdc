@@ -55,16 +55,10 @@ function updateProblemsPanelFromAuraError (err: any, doc: vscode.TextDocument) {
 const compileAuraDefinition = async (doc: vscode.TextDocument, done: DoneCallback) => {
   const bundleName = parsers.getAuraBundleName(doc)
   const auraDefType = parsers.getAuraDefType(doc)
-  const res = await sfdcConnector.query(`SELECT
-    Id
-    FROM AuraDefinition
-    WHERE AuraDefinitionBundle.DeveloperName = '${bundleName}'
-    AND DefType = '${auraDefType}'
-  `)
-  if (!res.records[0]) throw Error('File not found on Salesforce server')
-  const record = res.records[0]
+  const record = await sfdcConnector.findAuraByNameAndDefType(bundleName, auraDefType as string)
+  if (!record) throw Error('File not found on Salesforce server')
   try {
-    await sfdcConnector.editObjInMetadataContainer({ ...record, Source: doc.getText() }, 'AuraDefinition')
+    await sfdcConnector.editAuraObj({ ...record, Source: doc.getText() })
     diagnosticCollection.set(doc.uri, [])
     done('👍🏻')
   } catch (e) {
@@ -75,10 +69,10 @@ const compileAuraDefinition = async (doc: vscode.TextDocument, done: DoneCallbac
 
 const compileMetadataContainerObject = async (doc: vscode.TextDocument, done: DoneCallback) => {
   const compile = await toolingService.requestCompile()
-  const results = await compile({
+  const results = await compile(parsers.getToolingType(doc), {
     Body: doc.getText(),
     FullName: parsers.getFilename(doc)
-  }, parsers.getToolingType(doc))
+  })
   updateProblemsPanel(results.DeployDetails.componentFailures, doc)
   done(results.State === 'Completed' ? '👍🏻' : '👎🏻')
 }

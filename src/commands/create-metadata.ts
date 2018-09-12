@@ -53,14 +53,14 @@ function getMetadata (metaType: string, metaName: string, apiVersionS: string) {
     default: throw Error('unknown meta type')
   }
 }
-async function _createMeta (metaName: string, metaType: MetaOption, objName: string, done: DoneCallback) {
+async function _createMeta (metaName: string, metaType: MetaOption, sObjectName: string, done: DoneCallback) {
   const config = await configService.getConfig()
   const compile = await toolingService.requestCompile()
-  const results = await compile({
-    Body: getDocument(metaName, metaType.toolingType, objName),
+  const results = await compile(metaType.toolingType, {
+    Body: getDocument(metaName, metaType.toolingType, sObjectName),
     FullName: metaName,
     Metadata: getMetadata(metaType.toolingType, metaName, config.apiVersion as string)
-  }, metaType.toolingType)
+  })
   showErrors(results.DeployDetails.componentFailures)
   done(results.State === 'Completed' ? '👍🏻' : '👎🏻')
 }
