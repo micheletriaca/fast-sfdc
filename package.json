@@ -12,7 +12,9 @@
     ],
     "activationEvents": [
         "workspaceContains:**/package.xml",
-        "workspaceContains:**/fastsfdc.json"
+        "workspaceContains:**/fastsfdc.json",
+        "onCommand:FastSfdc.enterCredentials",
+        "onCommand:FastSfdc.createMeta"
     ],
     "main": "./out/extension",
     "contributes": {
