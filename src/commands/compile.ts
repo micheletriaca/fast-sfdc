@@ -90,14 +90,9 @@ export default async function compile (doc: vscode.TextDocument) {
   if (!cfg.stored) return
 
   StatusBar.startLongJob(async done => {
-    try {
-      switch (type) {
-        case 'AuraDefinition': await compileAuraDefinition(doc, done); break
-        default: await compileMetadataContainerObject(doc, done)
-      }
-    } catch (e) {
-      vscode.window.showErrorMessage('Error during compile: ' + e)
-      done('👎🏻')
+    switch (type) {
+      case 'AuraDefinition': return compileAuraDefinition(doc, done)
+      default: return compileMetadataContainerObject(doc, done)
     }
   })
 }

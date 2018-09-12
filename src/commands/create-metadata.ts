@@ -85,18 +85,9 @@ export default async function createMeta () {
   if (isTrigger && !triggerObj) return
 
   StatusBar.startLongJob(async done => {
-    try {
-      switch (metaType.toolingType) {
-        case 'Lightning component':
-          console.log('2')
-          return '2'
-        default:
-          await _createMeta(metaName, metaType, triggerObj, done)
-          return '1'
-      }
-    } catch (e) {
-      vscode.window.showErrorMessage(e.message || JSON.stringify(e))
-      done('👎🏻')
+    switch (metaType.toolingType) {
+      case 'Lightning component': return '2'
+      default: return _createMeta(metaName, metaType, triggerObj, done)
     }
   })
 }

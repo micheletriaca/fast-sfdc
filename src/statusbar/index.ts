@@ -27,12 +27,18 @@ export default {
     loadingCounter = Math.max(loadingCounter - 1, 0)
   },
 
-  startLongJob (doLongJob: (done: DoneCallback) => void) {
+  async startLongJob (doLongJob: (done: DoneCallback) => void) {
     exports.default.startLoading()
-    doLongJob((newTxt: string) => {
+    try {
+      await doLongJob((newTxt: string) => {
+        exports.default.stopLoading()
+        if (!loadingCounter) exports.default.setText(newTxt)
+      })
+    } catch (e) {
+      vscode.window.showErrorMessage(e.message || JSON.stringify(e))
       exports.default.stopLoading()
-      if (!loadingCounter) exports.default.setText(newTxt)
-    })
+      if (!loadingCounter) exports.default.setText('👎🏻')
+    }
   },
 
   setText (newTxt: string) {
