@@ -34,8 +34,10 @@ export interface MetaObj {
   FullName: string,
   Body: string,
   MetadataContainerId?: string,
-  Metadata?: ApexClassMetadata | ApexPageMetadata | ApexComponentMetadata | Metadata
+  Metadata?: AnyMetadata
 }
+
+type AnyMetadata = ApexClassMetadata | ApexPageMetadata | ApexComponentMetadata | Metadata
 
 export interface AuraObj {
   Id?: string,

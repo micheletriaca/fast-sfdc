@@ -1,34 +1,37 @@
 import * as vscode from 'vscode'
-import { DoneCallback, ApexPageMetadata, ApexClassMetadata, ApexComponentMetadata } from '../fast-sfdc'
+import { AnyMetadata } from '../fast-sfdc'
 import StatusBar from '../statusbar'
 import configService from '../services/config-service'
 import toolingService from '../services/tooling-service'
 import utils from '../utils/utils'
+import * as path from 'path'
+import * as fs from 'fs'
+import * as xml2js from 'xml2js'
 
-interface MetaOption {label: string, toolingType: string}
+interface DocType { label: string, toolingType: string, folder: string, extension: string }
 
-async function chooseType (): Promise<MetaOption | undefined> {
-  const res: MetaOption | undefined = await vscode.window.showQuickPick([
-    { label: 'Apex class', toolingType: 'ApexClassMember' },
-    { label: 'Visualforce page', toolingType: 'ApexPageMember' },
-    { label: 'Visualforce component', toolingType: 'ApexComponentMember' },
-    { label: 'Apex trigger', toolingType: 'ApexTriggerMember' },
-    { label: 'Lightning component', toolingType: 'ApexClassMember' }
+async function chooseType (): Promise<DocType | undefined> {
+  const res: DocType | undefined = await vscode.window.showQuickPick([
+    { label: 'Apex class', toolingType: 'ApexClassMember', folder: 'classes', extension: '.cls' },
+    { label: 'Visualforce page', toolingType: 'ApexPageMember', folder: 'pages', extension: '.page' },
+    { label: 'Visualforce component', toolingType: 'ApexComponentMember', folder: 'components', extension: '.component' },
+    { label: 'Apex trigger', toolingType: 'ApexTriggerMember', folder: 'triggers', extension: '.trigger' },
+    { label: 'Lightning component', toolingType: 'ApexClassMember', folder: '', extension: '' }
   ], { ignoreFocusOut: true })
   return res
 }
 
-function getDocument (metaName: string, metaType: string, objName?: string) {
+function getDocument (metaType: string, metaName: string, objName?: string) {
   switch (metaType) {
-    case 'ApexClassMember': return `public class ${metaName} {\n  }`
+    case 'ApexClassMember': return `public class ${metaName} {\n\n}`
     case 'ApexPageMember': return '<apex:page>\nHello world!\n</apex:page>'
     case 'ApexComponentMember': return '<apex:component>\nHello world!\n</apex:component>'
-    case 'ApexTriggerMember': return `trigger ${metaName} on ${objName} (before insert) {\n}`
+    case 'ApexTriggerMember': return `trigger ${metaName} on ${objName} (before insert) {\n\n}`
     default: return ''
   }
 }
 
-function getMetadata (metaType: string, metaName: string, apiVersionS: string) {
+function getMetadata (metaType: string, metaName: string, apiVersionS: string): AnyMetadata {
   const apiVersion = parseInt(apiVersionS as string, 10)
   switch (metaType) {
     case 'ApexClassMember':
@@ -36,33 +39,47 @@ function getMetadata (metaType: string, metaName: string, apiVersionS: string) {
       return {
         apiVersion,
         status: 'Active'
-      } as ApexClassMetadata
+      }
     case 'ApexPageMember':
       return {
         apiVersion,
         availableInTouch: true,
         confirmationTokenRequired: false,
         label: metaName
-      } as ApexPageMetadata
+      }
     case 'ApexComponentMember':
       return {
         apiVersion,
         description: metaName,
         label: metaName
-      } as ApexComponentMetadata
+      }
     default: throw Error('unknown meta type')
   }
 }
-async function _createMeta (metaName: string, metaType: MetaOption, sObjectName: string, done: DoneCallback) {
-  const config = await configService.getConfig()
+
+async function createRemoteMeta (docBody: string, docMeta: AnyMetadata, docName: string, docType: DocType) {
   const compile = await toolingService.requestCompile()
-  const results = await compile(metaType.toolingType, {
-    Body: getDocument(metaName, metaType.toolingType, sObjectName),
-    FullName: metaName,
-    Metadata: getMetadata(metaType.toolingType, metaName, config.apiVersion as string)
+  const results = await compile(docType.toolingType, {
+    Body: docBody,
+    FullName: docName,
+    Metadata: docMeta
   })
   showErrors(results.DeployDetails.componentFailures)
-  done(results.State === 'Completed' ? '👍🏻' : '👎🏻')
+  return results.State === 'Completed'
+}
+
+async function storeOnFileSystem (docBody: string, docMeta: AnyMetadata, docName: string, docType: DocType) {
+  const builder = new xml2js.Builder({ xmldec: { version: '1.0', encoding: 'UTF-8' } })
+  const p = path.join(vscode.workspace.rootPath as string, 'src', docType.folder, docName + docType.extension)
+  fs.writeFileSync(p, docBody)
+  fs.writeFileSync(`${p}-meta.xml`, builder.buildObject({
+    ApexClass: {
+      ...docMeta,
+      apiVersion: docMeta.apiVersion + '.0',
+      $: { xmlns: 'http://soap.sforce.com/2006/04/metadata' }
+    }
+  }))
+  await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(vscode.Uri.file(p)))
 }
 
 function showErrors (errors: any[]) {
@@ -74,20 +91,28 @@ function showErrors (errors: any[]) {
 }
 
 export default async function createMeta () {
-  const metaType = await chooseType()
-  if (!metaType) return
+  const docType = await chooseType()
+  if (!docType) return
 
-  const metaName = await utils.inputText(`enter ${metaType.label.toLowerCase()} name`)
-  if (!metaName) return
+  const docName = await utils.inputText(`enter ${docType.label.toLowerCase()} name`)
+  if (!docName) return
 
-  const isTrigger = metaType.toolingType === 'ApexTriggerMember'
-  const triggerObj = isTrigger ? await utils.inputText('enter SObject name') : ''
-  if (isTrigger && !triggerObj) return
+  const isTrigger = docType.toolingType === 'ApexTriggerMember'
+  const sObjectName = isTrigger ? await utils.inputText('enter SObject name') : ''
+  if (isTrigger && !sObjectName) return
+
+  const config = await configService.getConfig()
+  const docBody = getDocument(docType.toolingType, docName, sObjectName)
+  const docMeta = getMetadata(docType.toolingType, docName, config.apiVersion as string)
 
   StatusBar.startLongJob(async done => {
-    switch (metaType.toolingType) {
+    switch (docType.toolingType) {
       case 'Lightning component': return '2'
-      default: return _createMeta(metaName, metaType, triggerObj, done)
+      default:
+        let goOn = await createRemoteMeta(docBody, docMeta, docName, docType)
+        if (!goOn) { done('👎🏻'); return }
+        await storeOnFileSystem(docBody, docMeta, docName, docType)
+        done('👍🏻')
     }
   })
 }
