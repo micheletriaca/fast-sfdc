@@ -58,7 +58,7 @@ const compileAuraDefinition = async (doc: vscode.TextDocument, done: DoneCallbac
   const record = await sfdcConnector.findAuraByNameAndDefType(bundleName, auraDefType as string)
   if (!record) throw Error('File not found on Salesforce server')
   try {
-    await sfdcConnector.editAuraObj({ ...record, Source: doc.getText() })
+    await sfdcConnector.upsertAuraObj({ ...record, Source: doc.getText() })
     diagnosticCollection.set(doc.uri, [])
     done('👍🏻')
   } catch (e) {

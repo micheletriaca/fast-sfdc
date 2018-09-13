@@ -39,12 +39,36 @@ export interface MetaObj {
 
 type AnyMetadata = ApexClassMetadata | ApexPageMetadata | ApexComponentMetadata | Metadata
 
+type AuraDefType = 'APPLICATION' 
+  | 'CONTROLLER' 
+  | 'COMPONENT' 
+  | 'EVENT' 
+  | 'HELPER' 
+  | 'INTERFACE' 
+  | 'RENDERER' 
+  | 'STYLE' 
+  | 'PROVIDER' 
+  | 'MODEL' 
+  | 'TESTSUITE' 
+  | 'DOCUMENTATION' 
+  | 'TOKENS' 
+  | 'DESIGN' 
+  | 'SVG'
+
 export interface AuraObj {
   Id?: string,
-  FullName: string,
   Source: string,
-  MetadataContainerId?: string,
-  Metadata?: AuraMetadata
+  AuraDefinitionBundleId?: string,
+  DefType: AuraDefType,
+  Format: string
+}
+
+export interface AuraBundle {
+  Id?: string,
+  ApiVersion: number,
+  Description: string,
+  DeveloperName: string,
+  MasterLabel: string
 }
 
 export type DoneCallback = (s: string) => void

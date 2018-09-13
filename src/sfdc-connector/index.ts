@@ -1,4 +1,4 @@
-import { Config, MetaObj, AuraObj } from '../fast-sfdc'
+import { Config, MetaObj, AuraObj, AuraBundle } from '../fast-sfdc'
 import * as SfdcConn from 'node-salesforce-connection'
 import configService from '../services/config-service'
 import utils from '../utils/utils'
@@ -45,15 +45,20 @@ export default {
     return (await post('/sobjects/MetadataContainer/', { name })).id
   },
 
-  async addObjToMetadataContainer (toolingType: string, record: MetaObj) {
+  async upsertObj (toolingType: string, record: MetaObj | AuraObj | AuraBundle) {
+    return (record.Id ? this.editObj : this.createObj)(toolingType, record)
+  },
+
+  async createObj (toolingType: string, record: MetaObj | AuraObj | AuraBundle) {
     return (await post(`/sobjects/${toolingType}`, record)).id
   },
 
-  async editObj (toolingType: string, record: MetaObj | AuraObj) {
-    return patch(`/sobjects/${toolingType}/${record.Id}`, { ...record, Id: undefined })
+  async editObj (toolingType: string, record: MetaObj | AuraObj | AuraBundle) {
+    await patch(`/sobjects/${toolingType}/${record.Id}`, { ...record, Id: undefined, MetadataContainerId: undefined })
+    return record.Id
   },
 
-  editAuraObj: async (record: AuraObj) => exports.default.editObj('AuraDefinition', record),
+  upsertAuraObj: async (record: AuraObj) => exports.default.upsertObj('AuraDefinition', record),
 
   async createContainerAsyncRequest (metaContainerId: string): Promise<string> {
     return (await post('/sobjects/ContainerAsyncRequest/', {

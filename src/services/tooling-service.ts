@@ -13,12 +13,12 @@ export default {
     const metaContainerId = await createMetadataContainer(metaContainerName)
     const compile: CompileFn = async (objType, obj) => {
       const memberKey = obj.FullName + '_' + objType
-      if (objsInContainer.has(memberKey)) {
-        await sfdcConnector.editObj(objType, { ...obj, Id: objsInContainer.get(memberKey) })
-      } else {
-        const id = await sfdcConnector.addObjToMetadataContainer(objType, { ...obj, MetadataContainerId: metaContainerId })
-        objsInContainer.set(memberKey, id)
-      }
+      const id = await sfdcConnector.upsertObj(objType, {
+        ...obj,
+        Id: objsInContainer.get(memberKey),
+        MetadataContainerId: metaContainerId
+      })
+      objsInContainer.set(memberKey, id)
       const containerAsyncRequestId = await sfdcConnector.createContainerAsyncRequest(metaContainerId)
       const results = await sfdcConnector.pollDeploymentStatus(containerAsyncRequestId)
       if (results.State === 'Completed') objsInContainer.clear()
