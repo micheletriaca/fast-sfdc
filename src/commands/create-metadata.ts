@@ -121,7 +121,6 @@ export default async function createMeta () {
   const docMeta = getMetadata(docType.toolingType, docName, config.apiVersion as string)
 
   StatusBar.startLongJob(async done => {
-    let goOn = true
     switch (docType.toolingType) {
       case 'AuraDefinitionBundle':
         await createRemoteAuraDefinitionBundle(docBody, docMeta as AuraMetadata, docName)
@@ -129,8 +128,7 @@ export default async function createMeta () {
         done('👍🏻')
         break
       default:
-        goOn = await createRemoteMeta(docBody, docMeta, docName, docType)
-        if (!goOn) { done('👎🏻'); return }
+        if (!(await createRemoteMeta(docBody, docMeta, docName, docType))) { done('👎🏻'); return }
         await storeOnFileSystem(docBody, docMeta, docName, docType)
         done('👍🏻')
     }
