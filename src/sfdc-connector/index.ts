@@ -25,6 +25,7 @@ const rest = async function (endpoint: string, ...args: any[]) {
 
 const post = async (endpoint: string, body: any) => rest(endpoint, { method: 'POST', body })
 const patch = async (endpoint: string, body: any) => rest(endpoint, { method: 'PATCH', body })
+const del = async (endpoint: string) => rest(endpoint, { method: 'DELETE' })
 const get = async (endpoint: string) => rest(endpoint)
 const query = (q: string) => get(`/query?q=${encodeURIComponent(q.replace(/ +/g, ' '))}`)
 const connect = async function (cfg?: Config) {
@@ -51,6 +52,10 @@ export default {
 
   async createObj (toolingType: string, record: MetaObj | AuraObj | AuraBundle) {
     return (await post(`/sobjects/${toolingType}`, record)).id
+  },
+
+  async deleteObj (toolingType: string, recordId: string) {
+    return del(`/sobjects/${toolingType}/${recordId}`)
   },
 
   async editObj (toolingType: string, record: MetaObj | AuraObj | AuraBundle) {
