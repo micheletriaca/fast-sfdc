@@ -51,7 +51,7 @@ function getMetadata (metaType: string, metaName: string, apiVersionS: string): 
   }
 }
 
-async function createRemoteAuraDefinitionBundle (docBody: string, docMeta: AuraMetadata, docName: string) {
+async function createRemoteAuraBundle (docBody: string, docMeta: AuraMetadata, docName: string) {
   const auraBundleId = await sfdcConnector.upsertObj('AuraDefinitionBundle', {
     ApiVersion: docMeta.apiVersion,
     Description: docMeta.description,
@@ -115,15 +115,10 @@ export default async function createMeta () {
 
   StatusBar.startLongJob(async done => {
     switch (docType.toolingType) {
-      case 'AuraDefinitionBundle':
-        await createRemoteAuraDefinitionBundle(docBody, docMeta as AuraMetadata, docName)
-        await storeOnFileSystem(docBody, docMeta, docName, docType)
-        done('👍🏻')
-        break
-      default:
-        await createRemoteMeta(docBody, docMeta, docName, docType)
-        await storeOnFileSystem(docBody, docMeta, docName, docType)
-        done('👍🏻')
+      case 'AuraDefinitionBundle': await createRemoteAuraBundle(docBody, docMeta as AuraMetadata, docName); break
+      default: await createRemoteMeta(docBody, docMeta, docName, docType)
     }
+    await storeOnFileSystem(docBody, docMeta, docName, docType)
+    done('👍🏻')
   })
 }
