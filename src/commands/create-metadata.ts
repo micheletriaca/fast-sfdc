@@ -74,8 +74,9 @@ async function createRemoteMeta (docBody: string, docMeta: AnyMetadata, docName:
     FullName: docName,
     Metadata: docMeta
   })
-  showErrors(results.DeployDetails.componentFailures)
-  return results.State === 'Completed'
+  if (results.DeployDetails.componentFailures.length) {
+    throw Error(JSON.stringify(results.DeployDetails.componentFailures[0].problem))
+  }
 }
 
 async function storeOnFileSystem (docBody: string, docMeta: AnyMetadata, docName: string, docType: DocType) {
@@ -95,14 +96,6 @@ async function storeOnFileSystem (docBody: string, docMeta: AnyMetadata, docName
     }
   }))
   await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(vscode.Uri.file(p)))
-}
-
-function showErrors (errors: any[]) {
-  errors
-    .filter(e => e.ProblemType !== 'Error')
-    .forEach(failure => {
-      vscode.window.showErrorMessage(failure)
-    })
 }
 
 export default async function createMeta () {
@@ -128,7 +121,7 @@ export default async function createMeta () {
         done('👍🏻')
         break
       default:
-        if (!(await createRemoteMeta(docBody, docMeta, docName, docType))) { done('👎🏻'); return }
+        await createRemoteMeta(docBody, docMeta, docName, docType)
         await storeOnFileSystem(docBody, docMeta, docName, docType)
         done('👍🏻')
     }
