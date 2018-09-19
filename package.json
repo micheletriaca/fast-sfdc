@@ -1,54 +1,136 @@
 {
-    "name": "fast-sfdc",
-    "displayName": "fast-sfdc",
-    "description": "",
-    "version": "0.0.1",
-    "publisher": "micheletriaca",
-    "engines": {
-        "vscode": "^1.25.0"
+  "name": "fast-sfdc",
+  "displayName": "fast-sfdc",
+  "description": "",
+  "version": "0.0.1",
+  "publisher": "micheletriaca",
+  "engines": {
+    "vscode": "^1.24.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/package.xml",
+    "workspaceContains:**/fastsfdc.json",
+    "onCommand:FastSfdc.enterCredentials",
+    "onCommand:FastSfdc.createMeta"
+  ],
+  "main": "./out/extension",
+  "contributes": {
+    "commands": [
+      {
+        "command": "FastSfdc.enterCredentials",
+        "title": "Fast-Sfdc: Enter credentials..."
+      },
+      {
+        "command": "FastSfdc.createMeta",
+        "title": "Fast-Sfdc: Create new..."
+      },
+      {
+        "command": "FastSfdc.createAuraDefinition",
+        "title": "Fast-Sfdc: Create aura..."
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "FastSfdc.createAuraDefinition",
+          "when": "false"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "FastSfdc.createAuraDefinition",
+          "when": "resourceExtname == .cmp",
+          "group": "z_commands"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "FastSfdc.createAuraDefinition",
+          "when": "resourceExtname == .cmp",
+          "group": "z_commands"
+        }
+      ]
     },
-    "categories": [
-        "Other"
-    ],
-    "activationEvents": [
-        "workspaceContains:**/package.xml",
-        "workspaceContains:**/fastsfdc.json",
-        "onCommand:FastSfdc.enterCredentials",
-        "onCommand:FastSfdc.createMeta"
-    ],
-    "main": "./out/extension",
-    "contributes": {
-        "commands": [
-            {
-                "command": "FastSfdc.enterCredentials",
-                "title": "Fast-Sfdc: Enter credentials..."
-            },
-            {
-                "command": "FastSfdc.createMeta",
-                "title": "Fast-Sfdc: Create new..."
-            }
+    "languages": [
+      {
+        "id": "xml",
+        "aliases": [
+          "Aura"
+        ],
+        "extensions": [
+          ".cmp"
         ]
-    },
-    "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test"
-    },
-    "devDependencies": {
-        "@types/elegant-spinner": "^1.0.0",
-        "@types/mocha": "^2.2.42",
-        "@types/node": "^8.10.29",
-        "@types/xml2js": "^0.4.3",
-        "tslint": "^5.8.0",
-        "tslint-config-standard": "^8.0.1",
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.21"
-    },
-    "dependencies": {
-        "elegant-spinner": "^1.0.1",
-        "node-salesforce-connection": "^2.3.0",
-        "xml2js": "^0.4.19"
-    }
+      },
+      {
+        "id": "xml",
+        "extensions": [
+          ".object",
+          ".layout",
+          ".resource",
+          ".remoteSite",
+          ".labels",
+          ".app",
+          ".dashboard",
+          ".permissionset",
+          ".workflow",
+          ".email",
+          ".profile",
+          ".scf",
+          ".queue",
+          ".reportType",
+          ".report",
+          ".weblink",
+          ".tab",
+          ".letter",
+          ".role",
+          ".homePageComponent",
+          ".homePageLayout",
+          ".objectTranslation",
+          ".flow",
+          ".datacategorygroup",
+          ".snapshot",
+          ".site",
+          ".sharingRules",
+          ".settings",
+          ".callCenter",
+          ".community",
+          ".authProvider",
+          ".customApplicationComponent",
+          ".quickAction",
+          ".approvalProcess",
+          ".app",
+          ".auradoc",                    
+          ".evt",
+          ".tokens",
+          ".design",
+          ".object"
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "test": "npm run compile && node ./node_modules/vscode/bin/test"
+  },
+  "devDependencies": {
+    "@types/elegant-spinner": "^1.0.0",
+    "@types/mocha": "^2.2.42",
+    "@types/node": "^8.10.29",
+    "@types/xml2js": "^0.4.3",
+    "tslint": "^5.8.0",
+    "tslint-config-standard": "^8.0.1",
+    "typescript": "^2.6.1",
+    "vscode": "^1.1.21"
+  },
+  "dependencies": {
+    "elegant-spinner": "^1.0.1",
+    "node-salesforce-connection": "^2.3.0",
+    "xml2js": "^0.4.19"
+  }
 }
