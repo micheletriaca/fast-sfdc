@@ -26,6 +26,7 @@ export default {
   promisify,
   readFile: promisify(fs.readFile),
   writeFile: promisify(fs.writeFile),
+  readdir: promisify(fs.readdir),
 
   inputText: async (placeHolder: string, defValue: string = '', opts?: any) => {
     return await vscode.window.showInputBox({

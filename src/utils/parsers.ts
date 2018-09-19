@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 import * as path from 'path'
+import { AuraDefType } from '../fast-sfdc'
 
 export default {
   getToolingType (document: vscode.TextDocument): string {
@@ -19,9 +20,9 @@ export default {
     }
   },
 
-  getAuraDefType (document: vscode.TextDocument) {
-    const extension = document.fileName.substring(document.fileName.lastIndexOf('.')).toLowerCase()
-    const filename = exports.default.getFilename(document).toLowerCase()
+  getAuraDefType (fullPath: string): AuraDefType | '' {
+    const extension = fullPath.substring(fullPath.lastIndexOf('.')).toLowerCase()
+    const filename = exports.default.getFilename(fullPath).toLowerCase()
     switch (extension) {
       case '.app': return 'APPLICATION'
       case '.cmp': return 'COMPONENT'
@@ -39,16 +40,33 @@ export default {
           return 'RENDERER'
         }
         break
-      default:
-        throw new Error(`Unknown extension: ${extension}`)
     }
+    return ''
   },
 
-  getFilename (doc: vscode.TextDocument) {
-    return doc.fileName.substring(doc.fileName.lastIndexOf(path.sep) + 1, doc.fileName.lastIndexOf('.'))
+  getAuraFileName (bundleName: string, auraType: AuraDefType) {
+    switch (auraType) {
+      case 'COMPONENT': return bundleName + '.cmp'
+      case 'CONTROLLER': return bundleName + 'Controller.js'
+      case 'DESIGN': return bundleName + '.design'
+      case 'DOCUMENTATION': return bundleName + '.auradoc'
+      case 'HELPER': return bundleName + 'Helper.js'
+      case 'RENDERER': return bundleName + 'Renderer.js'
+      case 'STYLE': return bundleName + '.css'
+      case 'SVG': return bundleName + '.svg'
+    }
+    throw Error('invalid aura type')
   },
 
-  getAuraBundleName (doc: vscode.TextDocument) {
-    return doc.fileName.substring(doc.fileName.indexOf(`aura${path.sep}`) + 5, doc.fileName.lastIndexOf(path.sep))
+  getFilename (fullPath: string) {
+    return fullPath.substring(fullPath.lastIndexOf(path.sep) + 1, fullPath.lastIndexOf('.'))
+  },
+
+  getAuraBundleName (docUri: vscode.Uri) {
+    return docUri.path.substring(docUri.path.indexOf(`aura${path.sep}`) + 5, docUri.path.lastIndexOf(path.sep))
+  },
+
+  getLastFolder (docUri: vscode.Uri) {
+    return docUri.path.substring(0, docUri.path.lastIndexOf(path.sep))
   }
 }

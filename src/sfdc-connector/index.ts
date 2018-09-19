@@ -59,7 +59,12 @@ export default {
   },
 
   async editObj (toolingType: string, record: MetaObj | AuraObj | AuraBundle) {
-    await patch(`/sobjects/${toolingType}/${record.Id}`, { ...record, Id: undefined, MetadataContainerId: undefined })
+    await patch(`/sobjects/${toolingType}/${record.Id}`, {
+      ...record,
+      Id: undefined,
+      MetadataContainerId: undefined,
+      AuraDefinitionBundleId: undefined
+    })
     return record.Id
   },
 
@@ -89,8 +94,9 @@ export default {
     }
   },
 
-  findAuraByNameAndDefType: async (bundleName: string, auraDefType: string) => (await query(`SELECT
-    Id
+  findAuraByNameAndDefType: async (bundleName: string, auraDefType: string): Promise<AuraObj> => (await query(`SELECT
+    Id,
+    AuraDefinitionBundleId
     FROM AuraDefinition
     WHERE AuraDefinitionBundle.DeveloperName = '${bundleName}'
     AND DefType = '${auraDefType}'

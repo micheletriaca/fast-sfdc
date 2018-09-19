@@ -23,7 +23,7 @@ function updateProblemsPanel (errors: any[], doc: vscode.TextDocument) {
 }
 
 function updateProblemsPanelFromAuraError (err: any, doc: vscode.TextDocument) {
-  const filename = parsers.getFilename(doc)
+  const filename = parsers.getFilename(doc.fileName)
 
   let failureLineNumber: number
   let failureColumnNumber: number
@@ -53,8 +53,8 @@ function updateProblemsPanelFromAuraError (err: any, doc: vscode.TextDocument) {
 }
 
 const compileAuraDefinition = async (doc: vscode.TextDocument, done: DoneCallback) => {
-  const bundleName = parsers.getAuraBundleName(doc)
-  const auraDefType = parsers.getAuraDefType(doc)
+  const bundleName = parsers.getAuraBundleName(doc.uri)
+  const auraDefType = parsers.getAuraDefType(doc.fileName)
   const record = await sfdcConnector.findAuraByNameAndDefType(bundleName, auraDefType as string)
   if (!record) throw Error('File not found on Salesforce server')
   try {
@@ -71,7 +71,7 @@ const compileMetadataContainerObject = async (doc: vscode.TextDocument, done: Do
   const compile = await toolingService.requestCompile()
   const results = await compile(parsers.getToolingType(doc), {
     Body: doc.getText(),
-    FullName: parsers.getFilename(doc)
+    FullName: parsers.getFilename(doc.fileName)
   })
   updateProblemsPanel(results.DeployDetails.componentFailures, doc)
   done(results.State === 'Completed' ? '👍🏻' : '👎🏻')

@@ -55,12 +55,14 @@ type AuraDefType = 'APPLICATION'
   | 'DESIGN' 
   | 'SVG'
 
+type AuraFormat = 'XML' | 'JS' | 'CSS'
+
 export interface AuraObj {
   Id?: string,
   Source: string,
   AuraDefinitionBundleId?: string,
   DefType: AuraDefType,
-  Format: string
+  Format: AuraFormat
 }
 
 export interface AuraBundle {
