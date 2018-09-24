@@ -1,13 +1,13 @@
 'use strict'
 import * as vscode from 'vscode'
-import commands from './commands'
+import cmds from './commands'
 import statusBar from './statusbar'
 
-export function activate (context: vscode.ExtensionContext) {
-  context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(textDocument => commands.compile(textDocument)))
-  context.subscriptions.push(vscode.commands.registerCommand('FastSfdc.enterCredentials', commands.credentials))
-  context.subscriptions.push(vscode.commands.registerCommand('FastSfdc.createMeta', commands.createMeta))
-  context.subscriptions.push(vscode.commands.registerCommand('FastSfdc.createAuraDefinition', commands.createAuraDefinition))
+export function activate (ctx: vscode.ExtensionContext) {
+  ctx.subscriptions.push(vscode.workspace.onDidSaveTextDocument(textDocument => cmds.compile(textDocument)))
+  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.enterCredentials', cmds.credentials))
+  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.createMeta', cmds.createMeta))
+  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.createAuraDefinition', cmds.createAuraDefinition))
   statusBar.initStatusBar()
   console.log('Extension "fast-sfdc" is now active!')
 }
