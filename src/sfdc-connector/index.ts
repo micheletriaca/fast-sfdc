@@ -23,6 +23,22 @@ const rest = async function (endpoint: string, ...args: any[]) {
   }
 }
 
+const metadata = async function (method: string, args: any) {
+  const metadataWsdl = conn.wsdl(config.apiVersion, 'Metadata')
+  try {
+    if (!conn.sessionId) await connect()
+    return await conn.soap(metadataWsdl, method, args)
+  } catch (e) {
+    if (e.code === 'ENOTFOUND') throw Error('Unreachable host. Check connection')
+    else if (e.response && (e.response.statusCode === 401 || e.response.statusCode === 403)) {
+      await connect()
+      return conn.soap(metadataWsdl, method, args)
+    } else {
+      throw e
+    }
+  }
+}
+
 const post = async (endpoint: string, body: any) => rest(endpoint, { method: 'POST', body })
 const patch = async (endpoint: string, body: any) => rest(endpoint, { method: 'PATCH', body })
 const del = async (endpoint: string) => rest(endpoint, { method: 'DELETE' })
@@ -41,6 +57,7 @@ const connect = async function (cfg?: Config) {
 export default {
   connect,
   query,
+  metadata,
 
   async createMetadataContainer (name: string): Promise<string> {
     return (await post('/sobjects/MetadataContainer/', { name })).id
@@ -100,5 +117,34 @@ export default {
     FROM AuraDefinition
     WHERE AuraDefinitionBundle.DeveloperName = '${bundleName}'
     AND DefType = '${auraDefType}'
-  `)).records[0]
+  `)).records[0],
+
+  retrieveMetadata: async (packageXmlPath: string) => {
+    const pkg = await utils.readFile(packageXmlPath)
+    const pkgJson = (await utils.parseXml(pkg)).Package
+    delete pkgJson['$']
+    return metadata('retrieve', {
+      RetrieveRequest: {
+        apiVersion: config.apiVersion,
+        unpackaged: pkgJson,
+        singlePackage: true
+      }
+    })
+  },
+
+  pollRetrieveMetadataStatus: async (retrieveMetadataId: string) => {
+    while (true) {
+      await utils.sleep(5000)
+      const res = await metadata('checkRetrieveStatus', {
+        id: retrieveMetadataId,
+        includeZip: true
+      })
+      if (res.done === 'true') {
+        console.log('retrieve completed')
+        return res
+      } else {
+        console.log('checking retrieve status...', res.status)
+      }
+    }
+  }
 }
