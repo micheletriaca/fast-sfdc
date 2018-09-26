@@ -146,5 +146,28 @@ export default {
         console.log('checking retrieve status...', res.status)
       }
     }
+  },
+
+  deployMetadata: async (base64Content: string, opts: any) => {
+    return metadata('deploy', {
+      ZipFile: base64Content,
+      DeployOptions: opts
+    })
+  },
+
+  pollDeployMetadataStatus: async (deployMetadataId: string, pollInterval: number = 10000) => {
+    while (true) {
+      await utils.sleep(pollInterval)
+      const res = await metadata('checkDeployStatus', {
+        asyncProcessId: deployMetadataId,
+        includeDetails: true
+      })
+      if (res.done === 'true') {
+        console.log('deploy completed')
+        return res
+      } else {
+        console.log('checking deploy status...', res.status)
+      }
+    }
   }
 }
