@@ -155,19 +155,19 @@ export default {
     })
   },
 
-  pollDeployMetadataStatus: async (deployMetadataId: string, pollInterval: number = 10000) => {
+  pollDeployMetadataStatus: async (
+    deployMetadataId: string,
+    progressCallback: Function | undefined,
+    pollInterval: number = 10000
+  ) => {
     while (true) {
       await utils.sleep(pollInterval)
       const res = await metadata('checkDeployStatus', {
         asyncProcessId: deployMetadataId,
         includeDetails: true
       })
-      if (res.done === 'true') {
-        console.log('deploy completed')
-        return res
-      } else {
-        console.log('checking deploy status...', res.status)
-      }
+      if (res.done === 'true') return res
+      else if (progressCallback) progressCallback(res)
     }
   }
 }
