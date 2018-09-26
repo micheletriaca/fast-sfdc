@@ -12,9 +12,7 @@
   ],
   "activationEvents": [
     "workspaceContains:**/package.xml",
-    "workspaceContains:**/fastsfdc.json",
-    "onCommand:FastSfdc.enterCredentials",
-    "onCommand:FastSfdc.createMeta"
+    "workspaceContains:**/fastsfdc.json"
   ],
   "main": "./out/extension",
   "contributes": {
@@ -49,7 +47,27 @@
         {
           "command": "FastSfdc.createAuraDefinition",
           "when": "false"
-        }
+        },
+        {
+          "command": "FastSfdc.enterCredentials",
+          "when": "fast-sfdc-active"
+        },
+        {
+          "command": "FastSfdc.createMeta",
+          "when": "fast-sfdc-active"
+        },
+        {
+          "command": "FastSfdc.retrieve",
+          "when": "fast-sfdc-active"
+        },
+        {
+          "command": "FastSfdc.deploy",
+          "when": "fast-sfdc-active"
+        },
+        {
+          "command": "FastSfdc.validate",
+          "when": "fast-sfdc-active"
+        }  
       ],
       "editor/context": [
         {

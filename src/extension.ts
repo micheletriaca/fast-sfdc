@@ -12,5 +12,6 @@ export function activate (ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.deploy', cmds.deploy))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.validate', () => cmds.deploy(true)))
   statusBar.initStatusBar()
+  vscode.commands.executeCommand('setContext', 'fast-sfdc-active', true)
   console.log('Extension "fast-sfdc" is now active!')
 }
