@@ -111,7 +111,10 @@ export default {
     }
   },
 
-  findAuraByNameAndDefType: async (bundleName: string, auraDefType: string): Promise<AuraObj> => (await query(`SELECT
+  findAuraByNameAndDefType: async (
+    bundleName: string,
+    auraDefType: string
+  ): Promise<AuraObj> => (await query(`SELECT
     Id,
     AuraDefinitionBundleId
     FROM AuraDefinition
