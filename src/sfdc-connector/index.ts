@@ -166,8 +166,8 @@ export default {
         asyncProcessId: deployMetadataId,
         includeDetails: true
       })
+      if (progressCallback) progressCallback(res)
       if (res.done === 'true') return res
-      else if (progressCallback) progressCallback(res)
     }
   }
 }

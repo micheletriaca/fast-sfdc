@@ -23,7 +23,6 @@ export default async function deploy (checkOnly: boolean = false) {
       const numProcessed = parseInt(r.numberComponentsDeployed, 10) + parseInt(r.numberComponentErrors, 10)
       sbItem.text = `Deploy: ${r.status} (${numProcessed}/${r.numberComponentsTotal}) - Errors: ${r.numberComponentErrors}`
     })
-    if (deployResult.status === 'Succeeded') done('👍🏻')
-    else done('👎🏻')
+    done(deployResult.status === 'Succeeded' ? '👍🏻' : '👎🏻')
   })
 }
