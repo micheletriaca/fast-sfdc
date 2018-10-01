@@ -2,8 +2,6 @@ import * as vscode from 'vscode'
 import * as fs from 'fs'
 import * as xml2js from 'xml2js'
 
-const xmlParser = new xml2js.Parser()
-
 const promisify = (fn: Function) => {
   return function (...args: any[]): Promise<any> {
     return new Promise((resolve, reject) => {
@@ -30,7 +28,7 @@ export default {
   readFile: promisify(fs.readFile),
   writeFile: promisify(fs.writeFile),
   readdir: promisify(fs.readdir),
-  parseXml: promisify(xmlParser.parseString),
+  parseXml: (str: xml2js.convertableToString) => promisify(new xml2js.Parser().parseString)(str), // https://www.npmjs.com/package/xml2js#parsing-multiple-files
 
   inputText: async (placeHolder: string, defValue: string = '', opts?: any) => {
     return await vscode.window.showInputBox({
