@@ -3,10 +3,11 @@ import configService from '../services/config-service'
 import connector from '../sfdc-connector'
 import StatusBar from '../statusbar'
 import { ConfigCredential } from '../fast-sfdc'
+import toolingService from '../services/tooling-service'
 
 async function showCredsMenu (credentials: ConfigCredential[]): Promise<number> {
   const res = await vscode.window.showQuickPick(
-    credentials.map((x: ConfigCredential, idx: number) => {
+    credentials.map((x: ConfigCredential) => {
       return {
         label: x.username
       } as vscode.QuickPickItem
@@ -27,6 +28,7 @@ export default async function changeCredentials () {
   try {
     StatusBar.startLoading()
     await connector.connect(config)
+    toolingService.resetMetadataContainer()
     StatusBar.stopLoading()
     vscode.window.showInformationMessage('Credentials ok!')
   } catch (error) {

@@ -2,7 +2,7 @@ import sfdcConnector from '../sfdc-connector'
 import utils from '../utils/utils'
 import { MetaObj } from '../fast-sfdc'
 
-const metaContainerName = 'FastSfdc-' + Date.now()
+let metaContainerName = 'FastSfdc-' + Date.now()
 const createMetadataContainer = utils.memoize(sfdcConnector.createMetadataContainer)
 const objsInContainer = new Map()
 
@@ -33,5 +33,9 @@ export default {
       return results
     }
     return compile
+  },
+  resetMetadataContainer: () => {
+    objsInContainer.clear()
+    metaContainerName = 'FastSfdc-' + Date.now()
   }
 }
