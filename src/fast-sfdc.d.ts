@@ -1,6 +1,11 @@
 export interface Config {
   readonly stored: boolean
   apiVersion?: string
+  credentials: ConfigCredential[],
+  currentCredential: number
+}
+
+export interface ConfigCredential {
   username?: string
   password?: string
   url?: string

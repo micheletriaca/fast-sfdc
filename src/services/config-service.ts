@@ -8,10 +8,20 @@ const getCfgPath = () => path.join(vscode.workspace.rootPath as string, 'fastsfd
 const CURRENT_API_VERSION = '43.0'
 
 export default {
+  getConfigSync (): Config {
+    const cfgPath = getCfgPath()
+    if (!vscode.workspace.rootPath || !fs.existsSync(cfgPath)) {
+      return { stored: false, apiVersion: CURRENT_API_VERSION, credentials: [], currentCredential: 0 }
+    } else {
+      const storedCfg = fs.readFileSync(cfgPath, 'utf8')
+      return { ...JSON.parse(storedCfg), stored: true }
+    }
+  },
+
   async getConfig (): Promise<Config> {
     const cfgPath = getCfgPath()
     if (!vscode.workspace.rootPath || !fs.existsSync(cfgPath)) {
-      return Promise.resolve({ stored: false, apiVersion: CURRENT_API_VERSION })
+      return Promise.resolve({ stored: false, apiVersion: CURRENT_API_VERSION, credentials: [], currentCredential: 0 })
     } else {
       const storedCfg = await utils.readFile(cfgPath, 'utf8')
       return { ...JSON.parse(storedCfg), stored: true }

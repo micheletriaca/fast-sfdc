@@ -22,6 +22,18 @@
         "title": "Fast-Sfdc: Enter credentials..."
       },
       {
+        "command": "FastSfdc.replaceCredentials",
+        "title": "Fast-Sfdc: Replace credentials..."
+      },
+      {
+        "command": "FastSfdc.addCredentials",
+        "title": "Fast-Sfdc: Add other credentials..."
+      },
+      {
+        "command": "FastSfdc.changeCredentials",
+        "title": "Fast-Sfdc: Switch credentials..."
+      },
+      {
         "command": "FastSfdc.createMeta",
         "title": "Fast-Sfdc: Create new..."
       },
@@ -50,7 +62,19 @@
         },
         {
           "command": "FastSfdc.enterCredentials",
-          "when": "fast-sfdc-active"
+          "when": "fast-sfdc-active && !fast-sfdc-configured"
+        },
+        {
+          "command": "FastSfdc.replaceCredentials",
+          "when": "fast-sfdc-active && fast-sfdc-configured"
+        },
+        {
+          "command": "FastSfdc.changeCredentials",
+          "when": "fast-sfdc-active && fast-sfdc-more-credentials"
+        },
+        {
+          "command": "FastSfdc.addCredentials",
+          "when": "fast-sfdc-active && fast-sfdc-configured"
         },
         {
           "command": "FastSfdc.createMeta",

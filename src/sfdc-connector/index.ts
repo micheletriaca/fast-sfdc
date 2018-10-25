@@ -46,11 +46,12 @@ const get = async (endpoint: string) => rest(endpoint)
 const query = (q: string) => get(`/query?q=${encodeURIComponent(q.replace(/ +/g, ' '))}`)
 const connect = async function (cfg?: Config) {
   if (cfg) config = cfg
+  const creds = config.credentials[config.currentCredential]
   await conn.soapLogin({
-    hostname: config.url,
+    hostname: creds.url,
     apiVersion: config.apiVersion,
-    username: config.username,
-    password: config.password
+    username: creds.username,
+    password: creds.password
   })
 }
 
