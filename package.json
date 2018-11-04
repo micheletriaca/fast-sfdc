@@ -52,6 +52,10 @@
       {
         "command": "FastSfdc.validate",
         "title": "Fast-Sfdc: Validate metadata"
+      },
+      {
+        "command": "FastSfdc.executeAnonymous",
+        "title": "Fast-Sfdc: Execute anonymous"
       }
     ],
     "menus": {
@@ -91,7 +95,11 @@
         {
           "command": "FastSfdc.validate",
           "when": "fast-sfdc-active"
-        }  
+        },
+        {
+          "command": "FastSfdc.executeAnonymous",
+          "when": "fast-sfdc-active"
+        }
       ],
       "editor/context": [
         {

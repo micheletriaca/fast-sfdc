@@ -5,6 +5,7 @@ import createMeta from './create-metadata'
 import createAuraDefinition from './create-aura-definition'
 import retrieve from './retrieve'
 import deploy from './deploy'
+import executeAnonymous from './execute-anonymous'
 
 export default {
   credentials,
@@ -13,5 +14,6 @@ export default {
   createMeta,
   createAuraDefinition,
   retrieve,
-  deploy
+  deploy,
+  executeAnonymous
 }

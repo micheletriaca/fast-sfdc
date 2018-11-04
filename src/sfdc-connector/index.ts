@@ -2,6 +2,7 @@ import { Config, MetaObj, AuraObj, AuraBundle } from '../fast-sfdc'
 import * as SfdcConn from 'node-salesforce-connection'
 import configService from '../services/config-service'
 import utils from '../utils/utils'
+import soapWithDebug from './soap-with-debug'
 
 let config: Config
 configService.getConfig().then(cfg => config = cfg)
@@ -23,16 +24,16 @@ const rest = async function (endpoint: string, ...args: any[]) {
   }
 }
 
-const metadata = async function (method: string, args: any) {
-  const metadataWsdl = conn.wsdl(config.apiVersion, 'Metadata')
+const metadata = async function (method: string, args: any, wsdl: string = 'Metadata', headers: any = {}) {
+  const metadataWsdl = conn.wsdl(config.apiVersion, wsdl)
   try {
     if (!conn.sessionId) await connect()
-    return await conn.soap(metadataWsdl, method, args)
+    return await soapWithDebug(conn, metadataWsdl, method, args, headers)
   } catch (e) {
     if (e.code === 'ENOTFOUND') throw Error('Unreachable host. Check connection')
     else if (e.response && (e.response.statusCode === 401 || e.response.statusCode === 403)) {
       await connect()
-      return conn.soap(metadataWsdl, method, args)
+      return soapWithDebug(conn, metadataWsdl, method, args, headers)
     } else {
       throw e
     }
@@ -173,5 +174,21 @@ export default {
       if (progressCallback) progressCallback(res)
       if (res.done === 'true') return res
     }
+  },
+
+  executeAnonymous: async (scriptData: string) => {
+    return metadata('executeAnonymous', {
+      String: scriptData
+    }, 'Apex', {
+      headers: {
+        DebuggingHeader: {
+          categories: {
+            category: 'Apex_code',
+            level: 'FINEST'
+          },
+          debugLevel: 'DETAIL'
+        }
+      }
+    })
   }
 }

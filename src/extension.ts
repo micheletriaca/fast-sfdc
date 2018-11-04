@@ -11,6 +11,7 @@ export function activate (ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.addCredentials', () => cmds.credentials(true)))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.changeCredentials', cmds.changeCredentials))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.createMeta', cmds.createMeta))
+  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.executeAnonymous', cmds.executeAnonymous))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.createAuraDefinition', cmds.createAuraDefinition))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.retrieve', cmds.retrieve))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.deploy', cmds.deploy))
