@@ -17,7 +17,7 @@ export default async function executeAnonymous () {
     const res = await sfdcConnector.executeAnonymous(text)
     if (res.compiled === 'false') {
       const line = (selection.isEmpty ? 0 : editor.selection.start.line) + parseInt(res.line, 10) - 1
-      const col = (selection.isEmpty ? 0 : parseInt(res.column, 10) - 1)
+      const col = (selection.isEmpty ? 0 : editor.selection.start.character) + parseInt(res.column, 10) - 1
       diagnosticCollection.set(editor.document.uri, [new vscode.Diagnostic(
         new vscode.Range(new vscode.Position(line, col), new vscode.Position(line, col + 1)),
         res.compileProblem,
