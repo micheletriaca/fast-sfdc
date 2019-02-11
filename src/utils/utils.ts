@@ -29,7 +29,13 @@ export default {
   writeFile: promisify(fs.writeFile),
   readdir: promisify(fs.readdir),
   parseXml: (str: xml2js.convertableToString) => promisify(new xml2js.Parser().parseString)(str), // https://www.npmjs.com/package/xml2js#parsing-multiple-files
-
+  parseXmlStrict: (str: xml2js.convertableToString) => promisify(new xml2js.Parser({
+    explicitArray: false,
+    explicitRoot: false,
+    valueProcessors: [xml2js.processors.parseBooleans]
+  }).parseString)(str),
+  buildXml: (str: object, headless: boolean = false) => new xml2js.Builder({ headless }).buildObject(str),
+  toArray: (x: any, path: string) => x === undefined || x == null ? { [path]: [] } : (Array.isArray(x[path]) ? { [path] : x[path] } : { [path]: [x[path]] }),
   inputText: async (placeHolder: string, defValue: string = '', opts?: any) => {
     return await vscode.window.showInputBox({
       ignoreFocusOut: true,

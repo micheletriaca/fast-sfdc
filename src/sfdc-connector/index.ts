@@ -1,4 +1,4 @@
-import { Config, MetaObj, AuraObj, AuraBundle } from '../fast-sfdc'
+import { Config, MetaObj, AuraObj, LwcObj, AuraBundle } from '../fast-sfdc'
 import * as SfdcConn from 'node-salesforce-connection'
 import configService from '../services/config-service'
 import utils from '../utils/utils'
@@ -65,11 +65,11 @@ export default {
     return (await post('/sobjects/MetadataContainer/', { name })).id
   },
 
-  async upsertObj (toolingType: string, record: MetaObj | AuraObj | AuraBundle) {
+  async upsertObj (toolingType: string, record: MetaObj | AuraObj | LwcObj | AuraBundle) {
     return (record.Id ? this.editObj : this.createObj)(toolingType, record)
   },
 
-  async createObj (toolingType: string, record: MetaObj | AuraObj | AuraBundle) {
+  async createObj (toolingType: string, record: MetaObj | AuraObj | LwcObj | AuraBundle) {
     return (await post(`/sobjects/${toolingType}`, record)).id
   },
 
@@ -77,7 +77,7 @@ export default {
     return del(`/sobjects/${toolingType}/${recordId}`)
   },
 
-  async editObj (toolingType: string, record: MetaObj | AuraObj | AuraBundle) {
+  async editObj (toolingType: string, record: MetaObj | AuraObj | LwcObj | AuraBundle) {
     await patch(`/sobjects/${toolingType}/${record.Id}`, {
       ...record,
       Id: undefined,
@@ -88,6 +88,8 @@ export default {
   },
 
   upsertAuraObj: async (record: AuraObj) => exports.default.upsertObj('AuraDefinition', record),
+
+  upsertLwcObj: async (record: any) => exports.default.upsertObj('LightningComponentResource', record),
 
   async createContainerAsyncRequest (metaContainerId: string): Promise<string> {
     return (await post('/sobjects/ContainerAsyncRequest/', {
@@ -123,6 +125,26 @@ export default {
     WHERE AuraDefinitionBundle.DeveloperName = '${bundleName}'
     AND DefType = '${auraDefType}'
   `)).records[0],
+
+  findLwcByNameAndDefType: async (
+    bundleName: string,
+    lwcDefType: string,
+    filePath: string | undefined = undefined
+  ): Promise<any> => (await query(`SELECT
+    Id
+    FROM LightningComponentResource
+    WHERE LightningComponentBundle.DeveloperName = '${bundleName}'
+    AND Format = '${lwcDefType}'
+    ${filePath ? ` AND FilePath = '${filePath}'` : ''}
+  `)).records[0],
+
+  findLwcBundleId: async (
+    bundleName: string
+  ): Promise<any> => (await query(`SELECT
+    Id
+    FROM LightningComponentBundle
+    WHERE DeveloperName = '${bundleName}'
+  `)).records[0].Id,
 
   retrieveMetadata: async (packageXmlPath: string) => {
     const pkg = await utils.readFile(packageXmlPath)

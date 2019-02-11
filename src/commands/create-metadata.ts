@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import { AnyMetadata, AuraMetadata } from '../fast-sfdc'
+import { AnyMetadata, AuraMetadata, LwcMetadata } from '../fast-sfdc'
 import StatusBar from '../statusbar'
 import configService from '../services/config-service'
 import toolingService from '../services/tooling-service'
@@ -17,7 +17,8 @@ async function chooseType (): Promise<DocType | undefined> {
     { label: 'Visualforce page', toolingType: 'ApexPageMember', folder: 'pages', extension: '.page' },
     { label: 'Visualforce component', toolingType: 'ApexComponentMember', folder: 'components', extension: '.component' },
     { label: 'Apex trigger', toolingType: 'ApexTriggerMember', folder: 'triggers', extension: '.trigger' },
-    { label: 'Lightning component', toolingType: 'AuraDefinitionBundle', folder: 'aura', extension: '.cmp' }
+    { label: 'Lightning component', toolingType: 'AuraDefinitionBundle', folder: 'aura', extension: '.cmp' },
+    { label: 'Lightning web component', toolingType: 'LightningComponentBundle', folder: 'lwc', extension: '.js' }
   ], { ignoreFocusOut: true })
   return res
 }
@@ -30,6 +31,7 @@ function getDocument (metaType: string, metaName: string, objName?: string) {
     case 'ApexTriggerMember': return `trigger ${metaName} on ${objName} (before insert) {\n\n}`
     case 'AuraDefinitionBundle': return '<aura:component ' +
       'implements="flexipage:availableForRecordHome,force:hasRecordId" access="global">\n\n\</aura:component>'
+    case 'LightningComponentBundle': return `import { LightningElement, track } from 'lwc';\nexport default class CmpCtrl extends LightningElement {\n\n}`
     default: return ''
   }
 }
@@ -46,6 +48,8 @@ function getMetadata (metaType: string, metaName: string, apiVersionS: string): 
       return { apiVersion, description: metaName, label: metaName }
     case 'AuraDefinitionBundle':
       return { apiVersion, description: metaName }
+    case 'LightningComponentBundle':
+      return { apiVersion, isExposed: false, description: metaName }
     default:
       throw Error('unknown meta type')
   }
@@ -67,6 +71,20 @@ async function createRemoteAuraBundle (docBody: string, docMeta: AuraMetadata, d
   return auraCmpId
 }
 
+async function createRemoteLwcBundle (docBody: string, docMeta: LwcMetadata, docName: string) {
+  const lwcBundleId = await sfdcConnector.upsertObj('LightningComponentBundle', {
+    Metadata: {},
+    FullName: docName
+  })
+  const auraCmpId = await sfdcConnector.upsertLwcObj({
+    FilePath: `lwc/${docName}/${docName}.js`,
+    Source: docBody,
+    LightningComponentBundleId: lwcBundleId,
+    Format: 'js'
+  })
+  return auraCmpId
+}
+
 async function createRemoteMeta (docBody: string, docMeta: AnyMetadata, docName: string, docType: DocType) {
   const compile = await toolingService.requestCompile()
   const results = await compile(docType.toolingType, {
@@ -82,7 +100,7 @@ async function createRemoteMeta (docBody: string, docMeta: AnyMetadata, docName:
 async function storeOnFileSystem (docBody: string, docMeta: AnyMetadata, docName: string, docType: DocType) {
   const builder = new xml2js.Builder({ xmldec: { version: '1.0', encoding: 'UTF-8' } })
   let p = path.join(vscode.workspace.rootPath as string, 'src', docType.folder, docName + docType.extension)
-  if (docType.toolingType === 'AuraDefinitionBundle') {
+  if (docType.toolingType === 'AuraDefinitionBundle' || docType.toolingType === 'LightningComponentBundle') {
     const bundleDirPath = path.join(vscode.workspace.rootPath as string, 'src', docType.folder, docName)
     fs.mkdirSync(bundleDirPath)
     p = path.join(bundleDirPath, docName + docType.extension)
@@ -116,6 +134,7 @@ export default async function createMeta () {
   StatusBar.startLongJob(async done => {
     switch (docType.toolingType) {
       case 'AuraDefinitionBundle': await createRemoteAuraBundle(docBody, docMeta as AuraMetadata, docName); break
+      case 'LightningComponentBundle': await createRemoteLwcBundle(docBody, docMeta as LwcMetadata, docName); break
       default: await createRemoteMeta(docBody, docMeta, docName, docType)
     }
     await storeOnFileSystem(docBody, docMeta, docName, docType)

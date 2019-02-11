@@ -5,6 +5,7 @@ import parsers from '../utils/parsers'
 import configService from '../services/config-service'
 import { DoneCallback } from '../fast-sfdc'
 import toolingService from '../services/tooling-service'
+import utils from '../utils/utils'
 
 const diagnosticCollection = vscode.languages.createDiagnosticCollection('FastSfdc')
 
@@ -67,6 +68,42 @@ const compileAuraDefinition = async (doc: vscode.TextDocument, done: DoneCallbac
   }
 }
 
+const createLightningWebComponentMetadata = async (doc: vscode.TextDocument) => {
+  const metadata = { ...await utils.parseXmlStrict(doc.getText()), $: undefined }
+  const targetConfigs = metadata.targetConfigs ? utils.buildXml({ targetConfigs: metadata.targetConfigs }, true) : ''
+  metadata.targets = utils.toArray(metadata.targets, 'target')
+  metadata.targetConfigs = Buffer.from(targetConfigs).toString('base64')
+}
+
+const compileLightninWebComponent = async (doc: vscode.TextDocument, done: DoneCallback) => {
+  const bundleName = parsers.getLwcBundleName(doc.uri)
+  const lwcDefType = parsers.getLWCDefType(doc.fileName)
+  try {
+    const bundleId = await sfdcConnector.findLwcBundleId(bundleName)
+    if (lwcDefType === 'xml') {
+      await sfdcConnector.upsertObj('LightningComponentBundle', {
+        Id: bundleId,
+        Metadata: createLightningWebComponentMetadata(doc)
+      })
+    }
+    const filePath = `lwc/${bundleName}/${parsers.getFilename(doc.fileName)}.${lwcDefType}`
+    let record = await sfdcConnector.findLwcByNameAndDefType(bundleName, lwcDefType, filePath)
+    if (!record) {
+      record = {
+        Format: lwcDefType,
+        LightningComponentBundleId: bundleId,
+        FilePath: filePath
+      }
+    }
+    await sfdcConnector.upsertLwcObj({ ...record, Source: doc.getText() })
+    diagnosticCollection.set(doc.uri, [])
+    done('👍🏻')
+  } catch (e) {
+    updateProblemsPanelFromAuraError(e, doc)
+    done('👎🏻')
+  }
+}
+
 const compileMetadataContainerObject = async (doc: vscode.TextDocument, done: DoneCallback) => {
   const compile = await toolingService.requestCompile()
   const results = await compile(parsers.getToolingType(doc), {
@@ -86,6 +123,7 @@ export default async function compile (doc: vscode.TextDocument) {
   StatusBar.startLongJob(async done => {
     switch (type) {
       case 'AuraDefinition': return compileAuraDefinition(doc, done)
+      case 'LightningComponentResource': return compileLightninWebComponent(doc, done)
       default: return compileMetadataContainerObject(doc, done)
     }
   })

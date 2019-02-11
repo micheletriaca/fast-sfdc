@@ -5,7 +5,7 @@ import * as vscode from 'vscode'
 import utils from '../utils/utils'
 
 const getCfgPath = () => path.join(vscode.workspace.rootPath as string, 'fastsfdc.json')
-const CURRENT_API_VERSION = '43.0'
+const CURRENT_API_VERSION = '45.0'
 
 export default {
   getConfigSync (): Config {

@@ -34,6 +34,14 @@ export interface ApexComponentMetadata extends Metadata {
   label: string  
 }
 
+export interface LwcMetadata extends Metadata {
+  description: string
+  isExposed: boolean,
+  targets: {
+    target: string[]
+  }  
+}
+
 export interface MetaObj {
   Id?: string
   FullName: string,
@@ -42,7 +50,7 @@ export interface MetaObj {
   Metadata?: AnyMetadata
 }
 
-type AnyMetadata = ApexClassMetadata | ApexPageMetadata | ApexComponentMetadata | Metadata
+type AnyMetadata = ApexClassMetadata | ApexPageMetadata | ApexComponentMetadata | LwcMetadata | Metadata
 
 type AuraDefType = 'APPLICATION' 
   | 'CONTROLLER' 
@@ -68,6 +76,13 @@ export interface AuraObj {
   AuraDefinitionBundleId?: string,
   DefType: AuraDefType,
   Format: AuraFormat
+}
+
+export interface LwcObj {
+  Id?: string,
+  LightningComponentBundleId?: string,
+  FullName?: string,
+  Metadata?: any
 }
 
 export interface AuraBundle {
