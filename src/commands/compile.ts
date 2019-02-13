@@ -73,6 +73,7 @@ const createLightningWebComponentMetadata = async (doc: vscode.TextDocument) => 
   const targetConfigs = metadata.targetConfigs ? utils.buildXml({ targetConfigs: metadata.targetConfigs }, true) : ''
   metadata.targets = utils.toArray(metadata.targets, 'target')
   metadata.targetConfigs = Buffer.from(targetConfigs).toString('base64')
+  return metadata
 }
 
 const compileLightninWebComponent = async (doc: vscode.TextDocument, done: DoneCallback) => {
@@ -83,7 +84,7 @@ const compileLightninWebComponent = async (doc: vscode.TextDocument, done: DoneC
     if (lwcDefType === 'xml') {
       await sfdcConnector.upsertObj('LightningComponentBundle', {
         Id: bundleId,
-        Metadata: createLightningWebComponentMetadata(doc)
+        Metadata: await createLightningWebComponentMetadata(doc)
       })
     }
     const filePath = `lwc/${bundleName}/${parsers.getFilename(doc.fileName)}.${lwcDefType}`
