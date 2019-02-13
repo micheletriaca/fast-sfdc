@@ -49,7 +49,7 @@ function getMetadata (metaType: string, metaName: string, apiVersionS: string): 
     case 'AuraDefinitionBundle':
       return { apiVersion, description: metaName }
     case 'LightningComponentBundle':
-      return { apiVersion, isExposed: false, description: metaName }
+      return { apiVersion, isExposed: true, description: metaName }
     default:
       throw Error('unknown meta type')
   }
