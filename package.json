@@ -56,6 +56,10 @@
       {
         "command": "FastSfdc.executeAnonymous",
         "title": "Fast-Sfdc: Execute anonymous"
+      },
+      {
+        "command": "FastSfdc.retrieveSingle",
+        "title": "Fast-Sfdc: Retrieve current file"
       }
     ],
     "menus": {
@@ -98,6 +102,10 @@
         },
         {
           "command": "FastSfdc.executeAnonymous",
+          "when": "fast-sfdc-active"
+        },
+        {
+          "command": "FastSfdc.retrieveSingle",
           "when": "fast-sfdc-active"
         }
       ],

@@ -6,6 +6,7 @@ import createAuraDefinition from './create-aura-definition'
 import retrieve from './retrieve'
 import deploy from './deploy'
 import executeAnonymous from './execute-anonymous'
+import retrieveSingle from './retrieve-single'
 
 export default {
   credentials,
@@ -15,5 +16,6 @@ export default {
   createAuraDefinition,
   retrieve,
   deploy,
-  executeAnonymous
+  executeAnonymous,
+  retrieveSingle
 }

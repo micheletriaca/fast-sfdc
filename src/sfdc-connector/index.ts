@@ -159,6 +159,29 @@ export default {
     })
   },
 
+  retrieveSingleMetadata: async (filePath: string) => {
+    const tmp = filePath.split('/')
+    const fileFolder = tmp[tmp.length-2]
+    const fileName = filePath.substring(filePath.lastIndexOf('/')+1, filePath.lastIndexOf('.'))
+
+    const describe = await metadata('describeMetadata', {})
+    var metadataTypes = describe.metadataObjects.filter((o: any) => o.directoryName === fileFolder)
+    var retrieveTypes = metadataTypes.map((o: any) => {
+      return {
+        name: o.xmlName,
+        members: fileName,
+      }
+    })
+
+    return metadata('retrieve', {
+      RetrieveRequest: {
+        apiVersion: config.apiVersion,
+        unpackaged: { types: retrieveTypes },
+        singlePackage: true
+      }
+    })
+  },
+
   pollRetrieveMetadataStatus: async (retrieveMetadataId: string) => {
     while (true) {
       await utils.sleep(5000)
