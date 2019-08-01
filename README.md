@@ -5,6 +5,8 @@ Built from scratch, no jsforce/salesforceDX dependencies, <b>LIGHTNING FAST!</b>
 
 ## Features
 
+![Command Palette](./images/commands.png "Command Palette")
+
 ### Deploy, Retrieve & Compile
 Canonical deployment and retrieval of metadata based on your package.xml configuration is fully featured, but you can also deploy or retrieve single files!
 Compile on save for apex classes, visualforce pages, aura bundles and <b>lightning web components</b> is supported!
