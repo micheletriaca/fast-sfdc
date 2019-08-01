@@ -121,6 +121,9 @@ export default async function compile (doc: vscode.TextDocument) {
   const cfg = await configService.getConfig()
   if (!cfg.stored) return
 
+  const creds = cfg.credentials[cfg.currentCredential]
+  if (!creds.deployOnSave) return
+
   StatusBar.startLongJob(async done => {
     switch (type) {
       case 'AuraDefinition': return compileAuraDefinition(doc, done)

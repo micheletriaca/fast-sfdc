@@ -8,11 +8,12 @@ export interface Config {
 export interface ConfigCredential {
   username?: string
   password?: string
-  url?: string
+  url?: string,
+  deployOnSave?: boolean
 }
 
 export interface Metadata {
-  apiVersion: number  
+  apiVersion: number
 }
 
 export interface AuraMetadata extends Metadata {
@@ -31,7 +32,7 @@ export interface ApexPageMetadata extends Metadata {
 
 export interface ApexComponentMetadata extends Metadata {
   description: string,
-  label: string  
+  label: string
 }
 
 export interface LwcMetadata extends Metadata {
@@ -39,7 +40,7 @@ export interface LwcMetadata extends Metadata {
   isExposed: boolean,
   targets: {
     target: string[]
-  }  
+  }
 }
 
 export interface MetaObj {
@@ -52,20 +53,20 @@ export interface MetaObj {
 
 type AnyMetadata = ApexClassMetadata | ApexPageMetadata | ApexComponentMetadata | LwcMetadata | Metadata
 
-type AuraDefType = 'APPLICATION' 
-  | 'CONTROLLER' 
-  | 'COMPONENT' 
-  | 'EVENT' 
-  | 'HELPER' 
-  | 'INTERFACE' 
-  | 'RENDERER' 
-  | 'STYLE' 
-  | 'PROVIDER' 
-  | 'MODEL' 
-  | 'TESTSUITE' 
-  | 'DOCUMENTATION' 
-  | 'TOKENS' 
-  | 'DESIGN' 
+type AuraDefType = 'APPLICATION'
+  | 'CONTROLLER'
+  | 'COMPONENT'
+  | 'EVENT'
+  | 'HELPER'
+  | 'INTERFACE'
+  | 'RENDERER'
+  | 'STYLE'
+  | 'PROVIDER'
+  | 'MODEL'
+  | 'TESTSUITE'
+  | 'DOCUMENTATION'
+  | 'TOKENS'
+  | 'DESIGN'
   | 'SVG'
 
 type AuraFormat = 'XML' | 'JS' | 'CSS'
