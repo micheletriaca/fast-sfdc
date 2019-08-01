@@ -2,7 +2,11 @@
   "name": "fast-sfdc",
   "displayName": "fast-sfdc",
   "description": "",
-  "version": "0.0.1",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/micheletriaca/fast-sfdc"
+  },
+  "version": "1.0.0",
   "publisher": "micheletriaca",
   "engines": {
     "vscode": "^1.24.0"
