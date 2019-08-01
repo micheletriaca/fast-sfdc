@@ -18,7 +18,7 @@ async function getUrl (): Promise<string> {
   return res && res.description || ''
 }
 
-async function getDeplyOnSave (): Promise<boolean> {
+async function getDeployOnSave (): Promise<boolean> {
   const res = await vscode.window.showQuickPick([
     {
       label: 'true'
@@ -43,7 +43,7 @@ export default async function enterCredentials (addMode: Boolean = false) {
   creds.password = await utils.inputText('Please enter your SFDC password and token', creds.password, { password: true })
   if (!creds.password) return
 
-  creds.deployOnSave = await getDeplyOnSave()
+  creds.deployOnSave = await getDeployOnSave()
 
   if (addMode) {
     config.credentials.push(creds)
