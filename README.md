@@ -1,65 +1,37 @@
 # fast-sfdc README
 
-This is the README for your extension "fast-sfdc". After writing up a brief description, we recommend including the following sections.
+Standalone VSCode extension for fast development in the salesforce.com platform.
+Built from scratch, no jsforce/salesforceDX dependencies, <b>LIGHTNING FAST!</b> ⚡️
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+![Command Palette](./images/commands.png "Command Palette")
 
-For example if there is an image subfolder under your extension project workspace:
+### Deploy, Retrieve & Compile
+Canonical deployment and retrieval of metadata based on your package.xml configuration is fully featured, but you can also deploy or retrieve single files!
+Compile on save for apex classes, visualforce pages, aura bundles and <b>lightning web components</b> is supported!
 
-\!\[feature X\]\(images/feature-x.png\)
+### Metadata Creation
+Straightforward metadata creation and deployment for apex classes, visualforce pages & components, aura bundles, LWC.
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+### Multi-org support
+Store different credentials for fast org-switch and deploy when needed or in a hurry!
+
+### 🔥 Lightning Web Components 🔥
+<b>Full support for lightning web components</b>: from their creation to their deployment!
+
+### Execute Anonymous
+Run your code snippets directly from vscode. Buggy developer console is now a distant memory.
 
 ## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+Your project structure should follow the canonical /src/metadata_folders structure.
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+None at the moment.
+Please open an issue in the github repository!
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
-
 ### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Initial release.
