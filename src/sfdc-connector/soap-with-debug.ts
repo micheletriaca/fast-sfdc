@@ -1,4 +1,4 @@
-import * as XML from 'node-salesforce-connection/XML'
+import * as XML from 'node-salesforce-connection/xml'
 
 export default async function (conn: any, wsdl: any, method: string, args: any, { headers }: any = {}) {
   const httpsOptions = {
