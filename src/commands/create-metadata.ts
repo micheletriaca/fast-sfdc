@@ -37,7 +37,7 @@ function getDocument (metaType: string, metaName: string, objName?: string) {
 }
 
 function getMetadata (metaType: string, metaName: string, apiVersionS: string): AnyMetadata {
-  const apiVersion = parseInt(apiVersionS as string, 10)
+  const apiVersion = parseInt(apiVersionS, 10)
   switch (metaType) {
     case 'ApexClassMember':
     case 'ApexTriggerMember':

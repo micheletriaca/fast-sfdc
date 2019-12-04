@@ -5,7 +5,7 @@ import statusbar from '../statusbar'
 import * as decompress from 'decompress'
 import * as b64 from 'base64-async'
 
-export default async function retrieveSingle() {
+export default function retrieveSingle () {
   statusbar.startLongJob(async done => {
     if (!vscode.window.activeTextEditor || !vscode.window.activeTextEditor.document) return done('👎🏻')
     const fileName = vscode.window.activeTextEditor.document.fileName

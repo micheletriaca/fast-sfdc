@@ -32,10 +32,10 @@ export default {
     loadingCounter = Math.max(loadingCounter - 1, 0)
   },
 
-  async startLongJob (doLongJob: (done: DoneCallback) => void) {
+  startLongJob (doLongJob: (done: DoneCallback) => void) {
     exports.default.startLoading()
     try {
-      await doLongJob((newTxt: string) => {
+      doLongJob((newTxt: string) => {
         exports.default.stopLoading()
         if (!loadingCounter) exports.default.setText(newTxt)
       })

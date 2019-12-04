@@ -6,7 +6,7 @@ import statusbar from '../statusbar'
 
 const sbItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 4)
 
-export default async function deploy (checkOnly: boolean = false) {
+export default function deploy (checkOnly: boolean = false) {
   statusbar.startLongJob(async done => {
     const srcPath = path.resolve(vscode.workspace.rootPath as string, 'src')
     const zip = new AdmZip()
