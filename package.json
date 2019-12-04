@@ -1,18 +1,26 @@
 {
   "name": "fast-sfdc",
   "displayName": "fast-sfdc",
-  "description": "",
+  "description": "Standalone VSCode extension for fast development in the salesforce.com platform. Built from scratch, no jsforce/salesforceDX dependencies, LIGHTNING FAST!",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/micheletriaca/fast-sfdc"
+    "type": "git",
+    "url": "https://github.com/micheletriaca/fast-sfdc"
   },
   "version": "1.0.0",
-  "publisher": "micheletriaca",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "publisher": "m1ck83",
   "engines": {
     "vscode": "^1.24.0"
   },
   "categories": [
     "Other"
+  ],
+  "keywords": [
+    "apex",
+    "visualforce",
+    "lwc",
+    "salesforce",
+    "sfdc"
   ],
   "activationEvents": [
     "workspaceContains:**/package.xml",
