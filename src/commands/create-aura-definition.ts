@@ -31,8 +31,8 @@ export default async function createAuraDefinition (docUri: vscode.Uri) {
     const source = codeTemplates.getAuraTemplate(selected.label)
 
     const { AuraDefinitionBundleId } = await sfdcConnector.findAuraByNameAndDefType(
-      parsers.getFilename(docUri.path),
-      parsers.getAuraDefType(docUri.path)
+      parsers.getFilename(docUri.fsPath),
+      parsers.getAuraDefType(docUri.fsPath)
     )
 
     await sfdcConnector.upsertAuraObj({

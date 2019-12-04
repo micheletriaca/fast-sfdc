@@ -3,9 +3,9 @@ import * as SfdcConn from 'node-salesforce-connection'
 import configService from '../services/config-service'
 import utils from '../utils/utils'
 import soapWithDebug from './soap-with-debug'
+import * as path from 'path'
 
-let config: Config
-configService.getConfig().then(cfg => config = cfg)
+let config = configService.getConfigSync()
 const conn = new SfdcConn()
 
 const getBasePath = () => `/services/data/v${config.apiVersion}/tooling`
@@ -160,18 +160,13 @@ export default {
   },
 
   retrieveSingleMetadata: async (filePath: string) => {
-    const tmp = filePath.split('/')
-    const fileFolder = tmp[tmp.length-2]
-    const fileName = filePath.substring(filePath.lastIndexOf('/')+1, filePath.lastIndexOf('.'))
+    const tmp = filePath.split(path.sep)
+    const fileFolder = tmp[tmp.length - 2]
+    const fileName = filePath.substring(filePath.lastIndexOf(path.sep) + 1, filePath.lastIndexOf('.'))
 
     const describe = await metadata('describeMetadata', {})
-    var metadataTypes = describe.metadataObjects.filter((o: any) => o.directoryName === fileFolder)
-    var retrieveTypes = metadataTypes.map((o: any) => {
-      return {
-        name: o.xmlName,
-        members: fileName,
-      }
-    })
+    const metadataTypes = describe.metadataObjects.filter((o: any) => o.directoryName === fileFolder)
+    const retrieveTypes = metadataTypes.map((o: any) => ({ name: o.xmlName, members: fileName }))
 
     return metadata('retrieve', {
       RetrieveRequest: {
@@ -198,12 +193,10 @@ export default {
     }
   },
 
-  deployMetadata: async (base64Content: string, opts: any) => {
-    return metadata('deploy', {
-      ZipFile: base64Content,
-      DeployOptions: opts
-    })
-  },
+  deployMetadata: (base64Content: string, opts: any) => metadata('deploy', {
+    ZipFile: base64Content,
+    DeployOptions: opts
+  }),
 
   pollDeployMetadataStatus: async (
     deployMetadataId: string,
@@ -221,19 +214,17 @@ export default {
     }
   },
 
-  executeAnonymous: async (scriptData: string) => {
-    return metadata('executeAnonymous', {
-      String: scriptData
-    }, 'Apex', {
-      headers: {
-        DebuggingHeader: {
-          categories: {
-            category: 'Apex_code',
-            level: 'FINEST'
-          },
-          debugLevel: 'DETAIL'
-        }
+  executeAnonymous: (scriptData: string) => metadata('executeAnonymous', {
+    String: scriptData
+  }, 'Apex', {
+    headers: {
+      DebuggingHeader: {
+        categories: {
+          category: 'Apex_code',
+          level: 'FINEST'
+        },
+        debugLevel: 'DETAIL'
       }
-    })
-  }
+    }
+  })
 }

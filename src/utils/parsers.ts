@@ -4,8 +4,8 @@ import { AuraDefType } from '../fast-sfdc'
 
 export default {
   getToolingType (document: vscode.TextDocument): string {
-    const isAuraBundle = document.uri.path.indexOf(`${path.sep}aura${path.sep}`) !== -1
-    const isLwcBundle = document.uri.path.indexOf(`${path.sep}lwc${path.sep}`) !== -1
+    const isAuraBundle = document.uri.fsPath.indexOf(`${path.sep}aura${path.sep}`) !== -1
+    const isLwcBundle = document.uri.fsPath.indexOf(`${path.sep}lwc${path.sep}`) !== -1
 
     if (isAuraBundle) return 'AuraDefinition'
     if (isLwcBundle) return 'LightningComponentResource'
@@ -70,15 +70,15 @@ export default {
   },
 
   getAuraBundleName (docUri: vscode.Uri) {
-    return docUri.path.substring(docUri.path.indexOf(`aura${path.sep}`) + 5, docUri.path.lastIndexOf(path.sep))
+    return docUri.fsPath.substring(docUri.fsPath.indexOf(`aura${path.sep}`) + 5, docUri.fsPath.lastIndexOf(path.sep))
   },
 
   getLwcBundleName (docUri: vscode.Uri) {
-    const firstIndex = docUri.path.indexOf(`lwc${path.sep}`) + 4
-    return docUri.path.substring(firstIndex, docUri.path.indexOf(path.sep, firstIndex))
+    const firstIndex = docUri.fsPath.indexOf(`lwc${path.sep}`) + 4
+    return docUri.fsPath.substring(firstIndex, docUri.fsPath.indexOf(path.sep, firstIndex))
   },
 
   getLastFolder (docUri: vscode.Uri) {
-    return docUri.path.substring(0, docUri.path.lastIndexOf(path.sep))
+    return docUri.fsPath.substring(0, docUri.fsPath.lastIndexOf(path.sep))
   }
 }
