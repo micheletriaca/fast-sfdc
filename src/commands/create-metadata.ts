@@ -98,7 +98,10 @@ async function createRemoteMeta (docBody: string, docMeta: AnyMetadata, docName:
 }
 
 async function storeOnFileSystem (docBody: string, docMeta: AnyMetadata, docName: string, docType: DocType) {
-  const builder = new xml2js.Builder({ xmldec: { version: '1.0', encoding: 'UTF-8' } })
+  const builder = new xml2js.Builder({
+    xmldec: { version: '1.0', encoding: 'UTF-8' },
+    renderOpts: { 'pretty': true, 'indent': '    ', 'newline': '\n' }
+  })
   let p = path.join(vscode.workspace.rootPath as string, 'src', docType.folder, docName + docType.extension)
   if (docType.toolingType === 'AuraDefinitionBundle' || docType.toolingType === 'LightningComponentBundle') {
     const bundleDirPath = path.join(vscode.workspace.rootPath as string, 'src', docType.folder, docName)
@@ -112,7 +115,7 @@ async function storeOnFileSystem (docBody: string, docMeta: AnyMetadata, docName
       apiVersion: docMeta.apiVersion + '.0',
       $: { xmlns: 'http://soap.sforce.com/2006/04/metadata' }
     }
-  }))
+  }) + '\n')
   await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(vscode.Uri.file(p)))
 }
 
