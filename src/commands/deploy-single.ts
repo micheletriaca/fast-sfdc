@@ -4,8 +4,10 @@ import statusbar from '../statusbar'
 import configService from '../services/config-service'
 import logger from '../logger'
 
-export default function deploy (checkOnly: boolean = false) {
+export default function deploySingle () {
   statusbar.startLongJob(async done => {
+    if (!vscode.window.activeTextEditor || !vscode.window.activeTextEditor.document) return done('👎🏻')
+    const fileName = vscode.window.activeTextEditor.document.fileName
     const config = configService.getConfigSync()
     const creds = config.credentials[config.currentCredential]
     try {
@@ -18,7 +20,8 @@ export default function deploy (checkOnly: boolean = false) {
           serverUrl: creds.url,
           username: creds.username,
           password: creds.password
-        }
+        },
+        files: fileName.replace(vscode.workspace.rootPath || '', '')
       })
       done(deployResult.status === 'Succeeded' ? '👍🏻' : '👎🏻')
     } catch (e) {

@@ -1,18 +1,35 @@
 import statusbar from '../statusbar'
 import * as path from 'path'
 import * as vscode from 'vscode'
-import sfdcConnector from '../sfdc-connector'
-import * as decompress from 'decompress'
-import * as b64 from 'base64-async'
+import configService from '../services/config-service'
+import * as fs from 'fs'
+import * as sfdyRetrieve from 'sfdy/src/retrieve'
+import logger from '../logger'
 
 export default async function retrieve () {
   statusbar.startLongJob(async done => {
-    const srcFolder = path.resolve(vscode.workspace.rootPath as string, 'src')
-    const packageXmlPath = path.resolve(srcFolder, 'package.xml')
-    const retrieveJob = await sfdcConnector.retrieveMetadata(packageXmlPath)
-    const retrieveResult = await sfdcConnector.pollRetrieveMetadataStatus(retrieveJob.id)
-    const zipBuffer = await b64.decode(retrieveResult.zipFile)
-    await decompress(zipBuffer, srcFolder)
-    done('👍🏻')
+    const config = configService.getConfigSync()
+    const creds = config.credentials[config.currentCredential]
+    const sfdyConfig = fs.readFileSync(path.resolve(vscode.workspace.rootPath || '', '.sfdy.json'))
+    try {
+      logger.clear()
+      logger.show()
+      await sfdyRetrieve({
+        logger: (msg: string) => logger.appendLine(msg),
+        basePath: vscode.workspace.rootPath,
+        loginOpts: {
+          serverUrl: creds.url,
+          username: creds.username,
+          password: creds.password
+        },
+        config: (sfdyConfig && JSON.parse(sfdyConfig.toString('utf8'))) || {}
+      })
+      done('👍🏻')
+    } catch (e) {
+      logger.appendLine('Something went wrong')
+      logger.appendLine(e.message)
+      logger.show()
+      done('👎🏻')
+    }
   })
 }

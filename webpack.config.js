@@ -21,6 +21,7 @@ const config = {
     extensions: ['.ts', '.js']
   },
   module: {
+    noParse: /\/native-require.js$/,
     rules: [
       {
         test: /\.ts$/,

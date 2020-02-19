@@ -3,6 +3,7 @@ import * as vscode from 'vscode'
 import cmds from './commands'
 import statusBar from './statusbar'
 import configService from './services/config-service'
+import logger from './logger'
 
 export function activate (ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.workspace.onDidSaveTextDocument(textDocument => cmds.compile(textDocument)))
@@ -17,10 +18,11 @@ export function activate (ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.deploy', cmds.deploy))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.validate', () => cmds.deploy(true)))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.retrieveSingle', cmds.retrieveSingle))
+  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.deploySingle', cmds.deploySingle))
   statusBar.initStatusBar()
   vscode.commands.executeCommand('setContext', 'fast-sfdc-active', true)
   const cfg = configService.getConfigSync()
   vscode.commands.executeCommand('setContext', 'fast-sfdc-configured', cfg.stored)
   vscode.commands.executeCommand('setContext', 'fast-sfdc-more-credentials', cfg.credentials.length > 1)
-  console.log('Extension "fast-sfdc" is now active!')
+  logger.appendLine('Extension "fast-sfdc" is now active!')
 }

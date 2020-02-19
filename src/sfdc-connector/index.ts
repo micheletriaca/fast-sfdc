@@ -3,7 +3,6 @@ import * as SfdcConn from 'node-salesforce-connection'
 import configService from '../services/config-service'
 import utils from '../utils/utils'
 import soapWithDebug from './soap-with-debug'
-import * as path from 'path'
 
 let config = configService.getConfigSync()
 const conn = new SfdcConn()
@@ -145,74 +144,6 @@ export default {
     FROM LightningComponentBundle
     WHERE DeveloperName = '${bundleName}'
   `)).records[0].Id,
-
-  retrieveMetadata: async (packageXmlPath: string) => {
-    const pkg = await utils.readFile(packageXmlPath)
-    const pkgJson = (await utils.parseXml(pkg)).Package
-    delete pkgJson['$']
-    return metadata('retrieve', {
-      RetrieveRequest: {
-        apiVersion: config.apiVersion,
-        unpackaged: pkgJson,
-        singlePackage: true
-      }
-    })
-  },
-
-  retrieveSingleMetadata: async (filePath: string) => {
-    const tmp = filePath.split(path.sep)
-    const fileFolder = tmp[tmp.length - 2]
-    const fileName = filePath.substring(filePath.lastIndexOf(path.sep) + 1, filePath.lastIndexOf('.'))
-
-    const describe = await metadata('describeMetadata', {})
-    const metadataTypes = describe.metadataObjects.filter((o: any) => o.directoryName === fileFolder)
-    const retrieveTypes = metadataTypes.map((o: any) => ({ name: o.xmlName, members: fileName }))
-
-    return metadata('retrieve', {
-      RetrieveRequest: {
-        apiVersion: config.apiVersion,
-        unpackaged: { types: retrieveTypes },
-        singlePackage: true
-      }
-    })
-  },
-
-  pollRetrieveMetadataStatus: async (retrieveMetadataId: string) => {
-    while (true) {
-      await utils.sleep(5000)
-      const res = await metadata('checkRetrieveStatus', {
-        id: retrieveMetadataId,
-        includeZip: true
-      })
-      if (res.done === 'true') {
-        console.log('retrieve completed')
-        return res
-      } else {
-        console.log('checking retrieve status...', res.status)
-      }
-    }
-  },
-
-  deployMetadata: (base64Content: string, opts: any) => metadata('deploy', {
-    ZipFile: base64Content,
-    DeployOptions: opts
-  }),
-
-  pollDeployMetadataStatus: async (
-    deployMetadataId: string,
-    progressCallback: Function | undefined,
-    pollInterval: number = 10000
-  ) => {
-    while (true) {
-      await utils.sleep(pollInterval)
-      const res = await metadata('checkDeployStatus', {
-        asyncProcessId: deployMetadataId,
-        includeDetails: true
-      })
-      if (progressCallback) progressCallback(res)
-      if (res.done === 'true') return res
-    }
-  },
 
   executeAnonymous: (scriptData: string) => metadata('executeAnonymous', {
     String: scriptData
