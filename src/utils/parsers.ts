@@ -16,9 +16,6 @@ export default {
       case '.trigger': return 'ApexTriggerMember'
       case '.component': return 'ApexComponentMember'
       case '.page': return 'ApexPageMember'
-      case '.permissionset': return 'PermissionSet'
-      case '.object': return 'CustomObject'
-      case '.labels': return 'CustomLabels'
       default: return ''
     }
   },
