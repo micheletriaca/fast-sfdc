@@ -224,7 +224,7 @@
   "dependencies": {
     "elegant-spinner": "^1.0.1",
     "node-salesforce-connection": "^2.3.1",
-    "sfdy": "^1.0.18",
+    "sfdy": "^1.0.19",
     "xml2js": "^0.4.19"
   }
 }
