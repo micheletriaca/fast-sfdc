@@ -18,7 +18,8 @@ export default function deploy (checkOnly: boolean = false) {
           serverUrl: creds.url,
           username: creds.username,
           password: creds.password
-        }
+        },
+        checkOnly
       })
       done(deployResult.status === 'Succeeded' ? '👍🏻' : '👎🏻')
     } catch (e) {
