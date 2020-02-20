@@ -21,6 +21,7 @@ export default function deploySingle () {
           username: creds.username,
           password: creds.password
         },
+        checkOnly: false,
         files: fileName.replace(vscode.workspace.rootPath || '', '')
       })
       done(deployResult.status === 'Succeeded' ? '👍🏻' : '👎🏻')
