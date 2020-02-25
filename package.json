@@ -58,6 +58,10 @@
         "title": "Fast-Sfdc: Retrieve metadata"
       },
       {
+        "command": "FastSfdc.retrieveProfiles",
+        "title": "Fast-Sfdc: Retrieve profiles"
+      },
+      {
         "command": "FastSfdc.deploy",
         "title": "Fast-Sfdc: Deploy metadata"
       },

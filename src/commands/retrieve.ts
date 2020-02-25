@@ -6,7 +6,7 @@ import * as fs from 'fs'
 import * as sfdyRetrieve from 'sfdy/src/retrieve'
 import logger from '../logger'
 
-export default async function retrieve () {
+export default function retrieve (profileOnly = false) {
   statusbar.startLongJob(async done => {
     const config = configService.getConfigSync()
     const creds = config.credentials[config.currentCredential]
@@ -17,6 +17,7 @@ export default async function retrieve () {
       await sfdyRetrieve({
         logger: (msg: string) => logger.appendLine(msg),
         basePath: vscode.workspace.rootPath,
+        profileOnly,
         loginOpts: {
           serverUrl: creds.url,
           username: creds.username,

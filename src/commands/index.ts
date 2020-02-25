@@ -8,6 +8,7 @@ import deploy from './deploy'
 import deploySingle from './deploy-single'
 import executeAnonymous from './execute-anonymous'
 import retrieveSingle from './retrieve-single'
+import retrieveProfiles from './retrieve-profiles'
 
 export default {
   credentials,
@@ -19,5 +20,6 @@ export default {
   deploy,
   deploySingle,
   executeAnonymous,
-  retrieveSingle
+  retrieveSingle,
+  retrieveProfiles
 }
