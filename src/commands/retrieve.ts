@@ -6,11 +6,12 @@ import * as fs from 'fs'
 import * as sfdyRetrieve from 'sfdy/src/retrieve'
 import logger from '../logger'
 
-export default function retrieve (profileOnly = false) {
+export default function retrieve (profileOnly = false, fileName: string | undefined = undefined) {
   statusbar.startLongJob(async done => {
     const config = configService.getConfigSync()
     const creds = config.credentials[config.currentCredential]
-    const sfdyConfig = fs.readFileSync(path.resolve(vscode.workspace.rootPath || '', '.sfdy.json'))
+    const sfdyConfigExists = fs.existsSync(path.resolve(vscode.workspace.rootPath || '', '.sfdy.json'))
+    const sfdyConfig = sfdyConfigExists ? fs.readFileSync(path.resolve(vscode.workspace.rootPath || '', '.sfdy.json')) : '{}'
     try {
       logger.clear()
       logger.show()
@@ -23,7 +24,8 @@ export default function retrieve (profileOnly = false) {
           username: creds.username,
           password: creds.password
         },
-        config: (sfdyConfig && JSON.parse(sfdyConfig.toString('utf8'))) || {}
+        files: fileName ? fileName.replace(vscode.workspace.rootPath || '', '') : undefined,
+        config: (sfdyConfig && JSON.parse(sfdyConfig.toString())) || {}
       })
       done('👍🏻')
     } catch (e) {

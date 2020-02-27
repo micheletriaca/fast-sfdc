@@ -10,8 +10,9 @@ export default function deploy (checkOnly: boolean = false, fileName: string | u
   statusbar.startLongJob(async done => {
     const config = configService.getConfigSync()
     const creds = config.credentials[config.currentCredential]
-    const sfdyConfig = fs.readFileSync(path.resolve(vscode.workspace.rootPath || '', '.sfdy.json'))
-    const preDeployPlugins = (sfdyConfig && JSON.parse(sfdyConfig.toString('utf8')).preDeployPlugins) || []
+    const sfdyConfigExists = fs.existsSync(path.resolve(vscode.workspace.rootPath || '', '.sfdy.json'))
+    const sfdyConfig = sfdyConfigExists ? fs.readFileSync(path.resolve(vscode.workspace.rootPath || '', '.sfdy.json')) : '{}'
+    const preDeployPlugins = (sfdyConfig && JSON.parse(sfdyConfig.toString()).preDeployPlugins) || []
     try {
       logger.clear()
       logger.show()
