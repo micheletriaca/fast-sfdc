@@ -14,6 +14,30 @@ const spinner = elegantSpinner()
 let loadingTimer: NodeJS.Timer
 let loadingCounter = 0
 
+const queue: Function[] = []
+let running: Boolean = false
+
+const runNextJob = () => {
+  const f = queue.shift()
+  if (f) {
+    running = true
+    try {
+      f((newTxt: string) => {
+        exports.default.stopLoading()
+        if (!loadingCounter) exports.default.setText(newTxt)
+        runNextJob()
+      })
+    } catch (e) {
+      vscode.window.showErrorMessage(e.message || JSON.stringify(e))
+      exports.default.stopLoading()
+      if (!loadingCounter) exports.default.setText('👎🏻')
+      runNextJob()
+    }
+  } else {
+    running = false
+  }
+}
+
 export default {
   initStatusBar () {
     sbItem.text = MENU_PREFIX()
@@ -21,7 +45,7 @@ export default {
   },
 
   startLoading () {
-    if (!loadingCounter++) loadingTimer = setInterval(() => sbItem.text = `${MENU_PREFIX()}: ${spinner()}`, 50)
+    if (!loadingCounter++) loadingTimer = setInterval(() => sbItem.text = `${MENU_PREFIX()}: ${spinner()}${loadingCounter > 1 ? ' (' + loadingCounter + ')' : ''}`, 50)
   },
 
   stopLoading () {
@@ -34,16 +58,8 @@ export default {
 
   startLongJob (doLongJob: (done: DoneCallback) => void) {
     exports.default.startLoading()
-    try {
-      doLongJob((newTxt: string) => {
-        exports.default.stopLoading()
-        if (!loadingCounter) exports.default.setText(newTxt)
-      })
-    } catch (e) {
-      vscode.window.showErrorMessage(e.message || JSON.stringify(e))
-      exports.default.stopLoading()
-      if (!loadingCounter) exports.default.setText('👎🏻')
-    }
+    queue.push(doLongJob)
+    if (!running) runNextJob()
   },
 
   setText (newTxt: string) {
