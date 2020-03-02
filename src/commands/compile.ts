@@ -115,6 +115,34 @@ const compileMetadataContainerObject = async (doc: vscode.TextDocument, done: Do
   done(results.State === 'Completed' ? '👍🏻' : '👎🏻')
 }
 
+let queue: Function[] = []
+let running: Boolean = false
+
+const wrapFunction = (f: Function, doc: vscode.TextDocument): Function => {
+  return async (done: DoneCallback) => {
+    return f(doc, done)
+  }
+}
+
+const runQueuedFunctions = () => {
+  let f = queue.shift()
+  if (f) {
+    running = true
+    runLongJob(f)
+  } else {
+    running = false
+    console.log('coda svuotata')
+  }
+}
+
+const runLongJob = (f: Function) => {
+  StatusBar.startLongJob(async done => {
+    await f(done)
+    console.log('finito')
+    runQueuedFunctions()
+  })
+}
+
 export default async function compile (doc: vscode.TextDocument) {
   const type = parsers.getToolingType(doc)
   if (!type) return
@@ -124,11 +152,18 @@ export default async function compile (doc: vscode.TextDocument) {
   const creds = cfg.credentials[cfg.currentCredential]
   if (!creds.deployOnSave) return
 
-  StatusBar.startLongJob(async done => {
-    switch (type) {
-      case 'AuraDefinition': return compileAuraDefinition(doc, done)
-      case 'LightningComponentResource': return compileLightninWebComponent(doc, done)
-      default: return compileMetadataContainerObject(doc, done)
-    }
-  })
+  switch (type) {
+    case 'AuraDefinition':
+      queue.push(wrapFunction(compileAuraDefinition, doc))
+      break
+    case 'LightningComponentResource':
+      queue.push(wrapFunction(compileLightninWebComponent, doc))
+      break
+    default: queue.push(wrapFunction(compileMetadataContainerObject, doc))
+  }
+  console.log('accodato')
+
+  if (running) return
+
+  runQueuedFunctions()
 }
