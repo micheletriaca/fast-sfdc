@@ -6,6 +6,7 @@ import configService from '../services/config-service'
 import { DoneCallback } from '../fast-sfdc'
 import toolingService from '../services/tooling-service'
 import utils from '../utils/utils'
+import logger from '../logger'
 
 const diagnosticCollection = vscode.languages.createDiagnosticCollection('FastSfdc')
 
@@ -106,11 +107,13 @@ const compileLightninWebComponent = async (doc: vscode.TextDocument, done: DoneC
 }
 
 const compileMetadataContainerObject = async (doc: vscode.TextDocument, done: DoneCallback) => {
+  logger.appendLine(`Compiling ${doc.fileName}`)
   const compile = await toolingService.requestCompile()
   const results = await compile(parsers.getToolingType(doc), {
     Body: doc.getText(),
     FullName: parsers.getFilename(doc.fileName)
   })
+  logger.appendLine('Done.')
   updateProblemsPanel(results.DeployDetails.componentFailures, doc)
   done(results.State === 'Completed' ? '👍🏻' : '👎🏻')
 }

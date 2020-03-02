@@ -3,6 +3,7 @@ import * as SfdcConn from 'node-salesforce-connection'
 import configService from '../services/config-service'
 import utils from '../utils/utils'
 import soapWithDebug from './soap-with-debug'
+import logger from '../logger'
 
 let config = configService.getConfigSync()
 const conn = new SfdcConn()
@@ -111,6 +112,7 @@ export default {
         WHERE Id = '${containerAsyncRequestId}'`
       )
       if (res.records[0].State !== 'Queued') return res.records[0]
+      logger.appendLine(`Polling...`)
     }
   },
 

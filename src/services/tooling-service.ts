@@ -1,6 +1,7 @@
 import sfdcConnector from '../sfdc-connector'
 import utils from '../utils/utils'
 import { MetaObj } from '../fast-sfdc'
+import logger from '../logger'
 
 let metaContainerName = 'FastSfdc-' + Date.now()
 const createMetadataContainer = utils.memoize(sfdcConnector.createMetadataContainer)
@@ -29,6 +30,7 @@ export default {
       objsInContainer.set(memberKey, id)
       const containerAsyncRequestId = await sfdcConnector.createContainerAsyncRequest(metaContainerId)
       const results = await sfdcConnector.pollDeploymentStatus(containerAsyncRequestId)
+      logger.appendLine(`Status: ${results.State}`)
       if (results.State === 'Completed') objsInContainer.clear()
       return results
     }
