@@ -50,6 +50,10 @@
         "title": "Fast-Sfdc: Create new..."
       },
       {
+        "command": "FastSfdc.runTest",
+        "title": "Fast-Sfdc: Run tests"
+      },
+      {
         "command": "FastSfdc.createAuraDefinition",
         "title": "Fast-Sfdc: Create aura..."
       },
@@ -106,6 +110,10 @@
         },
         {
           "command": "FastSfdc.createMeta",
+          "when": "fast-sfdc-active"
+        },
+        {
+          "command": "FastSfdc.runTest",
           "when": "fast-sfdc-active"
         },
         {
