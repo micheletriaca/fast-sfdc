@@ -135,12 +135,17 @@ export default async function createMeta () {
   const docMeta = getMetadata(docType.toolingType, docName, config.apiVersion as string)
 
   StatusBar.startLongJob(async done => {
-    switch (docType.toolingType) {
-      case 'AuraDefinitionBundle': await createRemoteAuraBundle(docBody, docMeta as AuraMetadata, docName); break
-      case 'LightningComponentBundle': await createRemoteLwcBundle(docBody, docMeta as LwcMetadata, docName); break
-      default: await createRemoteMeta(docBody, docMeta, docName, docType)
+    try {
+      switch (docType.toolingType) {
+        case 'AuraDefinitionBundle': await createRemoteAuraBundle(docBody, docMeta as AuraMetadata, docName); break
+        case 'LightningComponentBundle': await createRemoteLwcBundle(docBody, docMeta as LwcMetadata, docName); break
+        default: await createRemoteMeta(docBody, docMeta, docName, docType)
+      }
+      await storeOnFileSystem(docBody, docMeta, docName, docType)
+      done('👍🏻')
+    } catch (e) {
+      vscode.window.showErrorMessage(e.message)
+      done('👎🏻')
     }
-    await storeOnFileSystem(docBody, docMeta, docName, docType)
-    done('👍🏻')
   })
 }

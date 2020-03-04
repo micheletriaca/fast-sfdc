@@ -107,15 +107,20 @@ const compileLightninWebComponent = async (doc: vscode.TextDocument, done: DoneC
 }
 
 const compileMetadataContainerObject = async (doc: vscode.TextDocument, done: DoneCallback) => {
-  logger.appendLine(`Compiling ${doc.fileName}`)
-  const compile = await toolingService.requestCompile()
-  const results = await compile(parsers.getToolingType(doc), {
-    Body: doc.getText(),
-    FullName: parsers.getFilename(doc.fileName)
-  })
-  logger.appendLine('Done.')
-  updateProblemsPanel(results.DeployDetails.componentFailures, doc)
-  done(results.State === 'Completed' ? '👍🏻' : '👎🏻')
+  try {
+    logger.appendLine(`Compiling ${doc.fileName}`)
+    const compile = await toolingService.requestCompile()
+    const results = await compile(parsers.getToolingType(doc), {
+      Body: doc.getText(),
+      FullName: parsers.getFilename(doc.fileName)
+    })
+    logger.appendLine('Done.')
+    updateProblemsPanel(results.DeployDetails.componentFailures, doc)
+    done(results.State === 'Completed' ? '👍🏻' : '👎🏻')
+  } catch (e) {
+    vscode.window.showErrorMessage(e.message)
+    done('👎🏻')
+  }
 }
 
 export default async function compile (doc: vscode.TextDocument) {
@@ -127,7 +132,7 @@ export default async function compile (doc: vscode.TextDocument) {
   const creds = cfg.credentials[cfg.currentCredential]
   if (!creds.deployOnSave) return
 
-  StatusBar.startLongJob(async done => {
+  StatusBar.startLongJob(done => {
     switch (type) {
       case 'AuraDefinition': return compileAuraDefinition(doc, done)
       case 'LightningComponentResource': return compileLightninWebComponent(doc, done)
