@@ -14,10 +14,11 @@ export default class CodeLensRunTest implements vscode.CodeLensProvider {
 
     let codeLens: vscode.CodeLens[] = []
     const docLine = document.lineCount
+    const isTestToken = new RegExp('@isTest', 'i')
     for (let i = 0; i < docLine - 1; i++) {
-      let line = document.lineAt(i)
-      if (line.text.indexOf('@isTest') === -1) continue
-      let methodName = (codeLens.length > 0) ? getMethodName(document, i) : ''
+      const line = document.lineAt(i)
+      if (!isTestToken.test(line.text)) continue
+      const methodName = (codeLens.length > 0) ? getMethodName(document, i) : ''
       codeLens.push(new vscode.CodeLens(line.range,
         {
           command: 'FastSfdc.runTest',
