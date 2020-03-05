@@ -28,6 +28,8 @@ const printResults = (result: Result) => {
 
 export default async function runTest (className: string, methodName: string) {
   StatusBar.startLongJob(async done => {
+    logger.show()
+    logger.appendLine('Executing tests...')
     let request: any = { className }
     if (methodName) request.testMethods = [methodName]
     try {
