@@ -35,7 +35,7 @@ export default class CodeLensProvider implements vscode.CodeLensProvider {
         codeLens.push(new vscode.CodeLens(line.range,
           {
             command: 'FastSfdc.runTest',
-            title: i === 0 ? 'FastSfdc - Run all tests' : 'FastSfdc - Run test',
+            title: counter === 1 ? 'FastSfdc - Run all tests' : 'FastSfdc - Run test',
             arguments: [filename, methodName]
           }
         ))
