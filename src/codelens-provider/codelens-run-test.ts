@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
-import parsers from './utils/parsers'
+import parsers from '../utils/parsers'
 
-export default class CodeLensProvider implements vscode.CodeLensProvider {
+export default class CodeLensRunTest implements vscode.CodeLensProvider {
   async provideCodeLenses (document: vscode.TextDocument): Promise<vscode.CodeLens[]> {
     const filename = parsers.getFilename(document.fileName)
     const regex = new RegExp('.*\(\)\s*{.*')
