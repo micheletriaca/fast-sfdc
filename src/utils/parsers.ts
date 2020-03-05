@@ -66,6 +66,11 @@ export default {
     return fullPath.substring(fullPath.lastIndexOf(path.sep) + 1, fullPath.lastIndexOf('.'))
   },
 
+  getMethodName (methodSign: string) {
+    const voidType = ' void '
+    return methodSign.substring(methodSign.lastIndexOf(voidType) + voidType.length, methodSign.lastIndexOf('(')).trim()
+  },
+
   getAuraBundleName (docUri: vscode.Uri) {
     return docUri.fsPath.substring(docUri.fsPath.indexOf(`aura${path.sep}`) + 5, docUri.fsPath.lastIndexOf(path.sep))
   },

@@ -4,6 +4,7 @@ import cmds from './commands'
 import statusBar from './statusbar'
 import configService from './services/config-service'
 import logger from './logger'
+import CodeLensRunTest from './codelens-provider/codelens-run-test'
 
 export function activate (ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.workspace.onDidSaveTextDocument(textDocument => cmds.compile(textDocument)))
@@ -20,6 +21,8 @@ export function activate (ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.validate', () => cmds.deploy(true)))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.retrieveSingle', cmds.retrieveSingle))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.deploySingle', cmds.deploySingle))
+  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.runTest', cmds.runTest))
+  ctx.subscriptions.push(vscode.languages.registerCodeLensProvider({ language: 'apex', scheme: 'file' }, new CodeLensRunTest()))
   statusBar.initStatusBar()
   vscode.commands.executeCommand('setContext', 'fast-sfdc-active', true)
   const cfg = configService.getConfigSync()

@@ -65,6 +65,14 @@ export default {
     return (await post('/sobjects/MetadataContainer/', { name })).id
   },
 
+  async runTestAsync (classNames: string): Promise<string> {
+    return (post('/runTestsAsynchronous', { classNames }))
+  },
+
+  async runTestSync (tests: any[]): Promise<any> {
+    return (post('/runTestsSynchronous', { tests }))
+  },
+
   async upsertObj (toolingType: string, record: MetaObj | AuraObj | LwcObj | AuraBundle) {
     return (record.Id ? this.editObj : this.createObj)(toolingType, record)
   },
