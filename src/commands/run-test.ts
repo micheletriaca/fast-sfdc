@@ -1,20 +1,23 @@
+import * as vscode from 'vscode'
 import StatusBar from '../statusbar'
 import sfdcConnector from '../sfdc-connector'
-import logger from '../logger'
+import logger, { diagnosticCollection } from '../logger'
 
-export interface Result {
-  successes: TestResult[],
-  failures: TestResult[]
+import { TestExecutionResult, TestResult } from '../fast-sfdc'
+
+const lineString = 'line '
+const getStackTraceRange = (stackTrace: string, doc: vscode.TextDocument): vscode.Range => {
+  const line = stackTrace.substring(stackTrace.lastIndexOf(lineString) + lineString.length, stackTrace.lastIndexOf(','))
+  const docLine = doc.lineAt(parseInt(line, 10) - 1 || 0)
+  const tmpRange = docLine.range || new vscode.Range(0, 0, 0, 0)
+  const failureRange = new vscode.Range(
+    tmpRange.start.line, docLine.firstNonWhitespaceCharacterIndex,
+    tmpRange.end.line, tmpRange.end.character
+  )
+  return failureRange
 }
 
-export interface TestResult {
-  name: string,
-  methodName: string,
-  message: string,
-  stackTrace: string
-}
-
-const printResults = (result: Result) => {
+const printResults = (result: TestExecutionResult, document: vscode.TextDocument) => {
   logger.appendLine(`*** Test execution results ***`)
   result.successes.forEach((v: TestResult) => {
     logger.appendLine(`${v.name}.${v.methodName} - OK`)
@@ -24,9 +27,21 @@ const printResults = (result: Result) => {
     logger.appendLine(`${v.name}.${v.methodName} - KO: ${v.message}. ${v.stackTrace}`)
   })
   logger.show()
+
+  updateProblemsPanel(result.failures, document)
 }
 
-export default async function runTest (className: string, methodName: string) {
+function updateProblemsPanel (errors: any[], doc: vscode.TextDocument) {
+  diagnosticCollection.set(
+    doc.uri,
+    errors.map(v => {
+      const failureRange = getStackTraceRange(v.stackTrace, doc)
+      return new vscode.Diagnostic(failureRange, `${v.message}. ${v.stackTrace}`, vscode.DiagnosticSeverity.Error)
+    })
+  )
+}
+
+export default async function runTest (document: vscode.TextDocument, className: string, methodName: string) {
   StatusBar.startLongJob(async done => {
     logger.show()
     logger.appendLine('Executing tests...')
@@ -34,7 +49,7 @@ export default async function runTest (className: string, methodName: string) {
     if (methodName) request.testMethods = [methodName]
     try {
       const res = await sfdcConnector.runTestSync([request])
-      printResults(res)
+      printResults(res, document)
       done('👍🏻')
     } catch (e) {
       return done(e)

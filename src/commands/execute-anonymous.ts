@@ -3,6 +3,7 @@ import * as path from 'path'
 import sfdcConnector from '../sfdc-connector'
 import statusbar from '../statusbar'
 
+// TODO: cambiare name e usare { diagnosticCollection } in logger?
 const diagnosticCollection = vscode.languages.createDiagnosticCollection('FastSfdc-DebugLog')
 
 export default async function executeAnonymous () {

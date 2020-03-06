@@ -94,4 +94,16 @@ export interface AuraBundle {
   MasterLabel: string
 }
 
+export interface TestExecutionResult {
+  successes: TestResult[],
+  failures: TestResult[]
+}
+
+export interface TestResult {
+  name: string,
+  methodName: string,
+  message: string,
+  stackTrace: string
+}
+
 export type DoneCallback = (s: string) => void

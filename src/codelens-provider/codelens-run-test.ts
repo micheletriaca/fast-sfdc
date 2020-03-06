@@ -23,7 +23,7 @@ export default class CodeLensRunTest implements vscode.CodeLensProvider {
         {
           command: 'FastSfdc.runTest',
           title: codeLens.length === 0 ? 'FastSfdc - Run all tests' : 'FastSfdc - Run test',
-          arguments: [filename, methodName]
+          arguments: [document, filename, methodName]
         }
       ))
     }
