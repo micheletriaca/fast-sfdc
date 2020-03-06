@@ -65,10 +65,6 @@ export default {
     return (await post('/sobjects/MetadataContainer/', { name })).id
   },
 
-  async runTestAsync (classNames: string): Promise<string> {
-    return (post('/runTestsAsynchronous', { classNames }))
-  },
-
   async runTestSync (tests: any[]): Promise<any> {
     return (post('/runTestsSynchronous', { tests }))
   },
