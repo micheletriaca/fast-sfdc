@@ -6,9 +6,7 @@ import configService from '../services/config-service'
 import { DoneCallback } from '../fast-sfdc'
 import toolingService from '../services/tooling-service'
 import utils from '../utils/utils'
-import logger from '../logger'
-
-const diagnosticCollection = vscode.languages.createDiagnosticCollection('FastSfdc')
+import logger, { diagnosticCollection } from '../logger'
 
 function updateProblemsPanel (errors: any[], doc: vscode.TextDocument) {
   diagnosticCollection.set(doc.uri, errors
