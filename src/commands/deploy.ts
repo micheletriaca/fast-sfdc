@@ -11,14 +11,16 @@ export default function deploy (checkOnly: boolean = false, fileName: string | u
     const config = configService.getConfigSync()
     const creds = config.credentials[config.currentCredential]
     const sfdyConfigExists = fs.existsSync(path.resolve(vscode.workspace.rootPath || '', '.sfdy.json'))
-    const sfdyConfig = sfdyConfigExists ? fs.readFileSync(path.resolve(vscode.workspace.rootPath || '', '.sfdy.json')) : '{}'
-    const preDeployPlugins = (sfdyConfig && JSON.parse(sfdyConfig.toString()).preDeployPlugins) || []
+    const sfdyConfig = sfdyConfigExists ? JSON.parse(fs.readFileSync(path.resolve(vscode.workspace.rootPath || '', '.sfdy.json')).toString()) : {}
+    const preDeployPlugins = sfdyConfig.preDeployPlugins || []
+    const renderers = sfdyConfig.renderers || []
     try {
       logger.clear()
       logger.show()
       const deployResult = await sfdyDeploy({
         logger: (msg: string) => logger.appendLine(msg),
         preDeployPlugins,
+        renderers,
         basePath: vscode.workspace.rootPath,
         loginOpts: {
           serverUrl: creds.url,

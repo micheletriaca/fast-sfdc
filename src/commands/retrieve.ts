@@ -11,21 +11,25 @@ export default function retrieve (profileOnly = false, fileName: string | undefi
     const config = configService.getConfigSync()
     const creds = config.credentials[config.currentCredential]
     const sfdyConfigExists = fs.existsSync(path.resolve(vscode.workspace.rootPath || '', '.sfdy.json'))
-    const sfdyConfig = sfdyConfigExists ? fs.readFileSync(path.resolve(vscode.workspace.rootPath || '', '.sfdy.json')) : '{}'
+    const sfdyConfig = sfdyConfigExists ? JSON.parse(fs.readFileSync(path.resolve(vscode.workspace.rootPath || '', '.sfdy.json')).toString()) : {}
+    const files = [
+      profileOnly ? 'profiles/**/*' : '',
+      fileName ? fileName.replace(vscode.workspace.rootPath || '', '') : undefined
+    ].filter(x => x).join(',')
+
     try {
       logger.clear()
       logger.show()
       await sfdyRetrieve({
         logger: (msg: string) => logger.appendLine(msg),
         basePath: vscode.workspace.rootPath,
-        profileOnly,
         loginOpts: {
           serverUrl: creds.url,
           username: creds.username,
           password: creds.password
         },
-        files: fileName ? fileName.replace(vscode.workspace.rootPath || '', '') : undefined,
-        config: (sfdyConfig && JSON.parse(sfdyConfig.toString())) || {}
+        files,
+        config: sfdyConfig
       })
       done('👍🏻')
     } catch (e) {
