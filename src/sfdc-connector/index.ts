@@ -6,9 +6,10 @@ import soapWithDebug from './soap-with-debug'
 import logger from '../logger'
 
 let config = configService.getConfigSync()
+let apiVersion: string
 const conn = new SfdcConn()
 
-const getBasePath = () => `/services/data/v${config.apiVersion}/tooling`
+const getBasePath = () => `/services/data/v${apiVersion}/tooling`
 const rest = async function (endpoint: string, ...args: any[]) {
   try {
     if (!conn.sessionId) await connect()
@@ -25,7 +26,7 @@ const rest = async function (endpoint: string, ...args: any[]) {
 }
 
 const metadata = async function (method: string, args: any, wsdl: string = 'Metadata', headers: any = {}) {
-  const metadataWsdl = conn.wsdl(config.apiVersion, wsdl)
+  const metadataWsdl = conn.wsdl(apiVersion, wsdl)
   try {
     if (!conn.sessionId) await connect()
     return await soapWithDebug(conn, metadataWsdl, method, args, headers)
@@ -48,9 +49,10 @@ const query = (q: string) => get(`/query?q=${encodeURIComponent(q.replace(/ +/g,
 const connect = async function (cfg?: Config) {
   if (cfg) config = cfg
   const creds = config.credentials[config.currentCredential]
+  apiVersion = await configService.getPackageXmlVersion()
   await conn.soapLogin({
     hostname: creds.url,
-    apiVersion: config.apiVersion,
+    apiVersion,
     username: creds.username,
     password: creds.password
   })

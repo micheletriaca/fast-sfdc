@@ -130,9 +130,8 @@ export default async function createMeta () {
   const sObjectName = isTrigger ? await utils.inputText('enter SObject name') : ''
   if (isTrigger && !sObjectName) return
 
-  const config = await configService.getConfig()
   const docBody = getDocument(docType.toolingType, docName, sObjectName)
-  const docMeta = getMetadata(docType.toolingType, docName, config.apiVersion as string)
+  const docMeta = getMetadata(docType.toolingType, docName, await configService.getPackageXmlVersion())
 
   StatusBar.startLongJob(async done => {
     try {
