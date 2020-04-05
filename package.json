@@ -6,7 +6,7 @@
     "type": "git",
     "url": "https://github.com/micheletriaca/fast-sfdc"
   },
-  "homepage": "https://github.com/micheletriaca/fast-sfdc#readme",  
+  "homepage": "https://github.com/micheletriaca/fast-sfdc#readme",
   "version": "1.0.0",
   "license": "SEE LICENSE IN LICENSE.md",
   "publisher": "m1ck83",
@@ -124,7 +124,7 @@
         {
           "command": "FastSfdc.retrieveProfiles",
           "when": "fast-sfdc-active"
-        },        
+        },
         {
           "command": "FastSfdc.deploy",
           "when": "fast-sfdc-active"
@@ -282,6 +282,7 @@
   },
   "dependencies": {
     "elegant-spinner": "^1.0.1",
+    "node-machine-id": "^1.1.12",
     "node-salesforce-connection": "^2.3.1",
     "sfdy": "^1.0.30",
     "xml2js": "^0.4.19"

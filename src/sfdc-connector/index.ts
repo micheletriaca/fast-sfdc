@@ -64,6 +64,8 @@ export default {
   metadata,
 
   async createMetadataContainer (name: string): Promise<string> {
+    const old = await query(`SELECT Id FROM MetadataContainer WHERE Name = '${name}'`)
+    if (old.records.length) await this.deleteObj('MetadataContainer', old.records[0].Id)
     return (await post('/sobjects/MetadataContainer/', { name })).id
   },
 
