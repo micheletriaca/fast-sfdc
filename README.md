@@ -18,7 +18,7 @@ Straightforward metadata creation and deployment for apex classes, visualforce p
 
 `fast-sfdc` uses [sfdy](https://www.npmjs.com/package/sfdy) as the engine to deploy and retrieve metadata. Thanks to that, it supports a bunch of useful metadata patches (see [here](https://github.com/micheletriaca/sfdy#apply-standard-patches-to-metadata-after-retrieve))
 
-To setup a `.sfdy.json` config in your project, just open the command palette and type `Fast-Sfdc: Init metadata patches`
+To setup a `.sfdy.json` config in your project, just open the command palette and type `Fast-Sfdc: Init metadata patching`
 
 ### Multi-org support
 Store different credentials for fast org-switch and deploy when needed or in a hurry!

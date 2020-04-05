@@ -24,6 +24,7 @@ export function activate (ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.deploySingle', cmds.deploySingle))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.deployFolder', cmds.deployFolder))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.runTest', cmds.runTest))
+  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.initSfdy', cmds.initSfdy))
   ctx.subscriptions.push(vscode.languages.registerCodeLensProvider({ language: 'apex', scheme: 'file' }, new CodeLensRunTest()))
   statusBar.initStatusBar()
   vscode.commands.executeCommand('setContext', 'fast-sfdc-active', true)

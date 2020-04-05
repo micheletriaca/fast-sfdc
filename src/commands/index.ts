@@ -12,6 +12,7 @@ import executeAnonymous from './execute-anonymous'
 import retrieveSingle from './retrieve-single'
 import retrieveProfiles from './retrieve-profiles'
 import retrieveFolder from './retrieve-folder'
+import initSfdy from './init-sfdy'
 
 export default {
   credentials,
@@ -27,5 +28,6 @@ export default {
   retrieveSingle,
   retrieveProfiles,
   retrieveFolder,
-  deployFolder
+  deployFolder,
+  initSfdy
 }

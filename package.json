@@ -89,7 +89,11 @@
       {
         "command": "FastSfdc.deployFolder",
         "title": "Fast-Sfdc: Deploy current folder"
-      }
+      },
+      {
+        "command": "FastSfdc.initSfdy",
+        "title": "Fast-Sfdc: Init metadata patching"
+      }      
     ],
     "menus": {
       "commandPalette": [
@@ -152,7 +156,11 @@
         {
           "command": "FastSfdc.deployFolder",
           "when": "false"
-        }
+        },
+        {
+          "command": "FastSfdc.initSfdy",
+          "when": "fast-sfdc-active"
+        }        
       ],
       "editor/context": [
         {
