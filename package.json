@@ -6,6 +6,7 @@
     "type": "git",
     "url": "https://github.com/micheletriaca/fast-sfdc"
   },
+  "icon": "images/icon.png",
   "homepage": "https://github.com/micheletriaca/fast-sfdc#readme",
   "version": "1.0.0",
   "license": "SEE LICENSE IN LICENSE.md",
