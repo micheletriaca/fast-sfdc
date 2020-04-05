@@ -93,7 +93,7 @@
       {
         "command": "FastSfdc.initSfdy",
         "title": "Fast-Sfdc: Init metadata patching"
-      }      
+      }
     ],
     "menus": {
       "commandPalette": [
@@ -160,7 +160,7 @@
         {
           "command": "FastSfdc.initSfdy",
           "when": "fast-sfdc-active"
-        }        
+        }
       ],
       "editor/context": [
         {
@@ -292,7 +292,7 @@
     "elegant-spinner": "^1.0.1",
     "node-machine-id": "^1.1.12",
     "node-salesforce-connection": "^2.3.1",
-    "sfdy": "^1.0.30",
+    "sfdy": "^1.1.0",
     "xml2js": "^0.4.19"
   }
 }
