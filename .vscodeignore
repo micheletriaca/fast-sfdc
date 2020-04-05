@@ -7,6 +7,5 @@ tslint.json
 node_modules
 src/
 .editorconfig
-.gitattributes
 webpack.config.js
 dist/extension.js.map

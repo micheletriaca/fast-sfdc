@@ -285,6 +285,7 @@
     "@types/node": "^8.10.51",
     "@types/xml2js": "^0.4.4",
     "original-fs": "^1.0.0",
+    "terser-webpack-plugin": "^2.3.5",
     "ts-loader": "^5.3.3",
     "tslint": "^5.18.0",
     "tslint-config-standard": "^8.0.1",
@@ -298,6 +299,6 @@
     "node-machine-id": "^1.1.12",
     "node-salesforce-connection": "^2.3.1",
     "sfdy": "^1.1.0",
-    "xml2js": "^0.4.19"
+    "xml2js": "^0.4.23"
   }
 }
