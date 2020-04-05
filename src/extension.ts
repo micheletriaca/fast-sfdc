@@ -17,6 +17,7 @@ export function activate (ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.createAuraDefinition', cmds.createAuraDefinition))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.retrieve', cmds.retrieve))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.retrieveProfiles', cmds.retrieveProfiles))
+  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.retrieveFolder', cmds.retrieveFolder))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.deploy', cmds.deploy))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.validate', () => cmds.deploy(true)))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.retrieveSingle', cmds.retrieveSingle))
