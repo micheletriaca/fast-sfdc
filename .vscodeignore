@@ -3,7 +3,6 @@
 .gitignore
 .editorconfig
 tsconfig.json
-vsc-extension-quickstart.md
 tslint.json
 node_modules
 src/
