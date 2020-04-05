@@ -98,12 +98,12 @@
         "title": "Fast-Sfdc: Deploy current file"
       },
       {
-        "command": "FastSfdc.retrieveFolder",
-        "title": "Fast-Sfdc: Retrieve current folder"
+        "command": "FastSfdc.retrieveSelected",
+        "title": "Fast-Sfdc: Retrieve selected files"
       },
       {
-        "command": "FastSfdc.deployFolder",
-        "title": "Fast-Sfdc: Deploy current folder"
+        "command": "FastSfdc.deploySelected",
+        "title": "Fast-Sfdc: Deploy selected files"
       },
       {
         "command": "FastSfdc.initSfdy",
@@ -165,11 +165,11 @@
           "when": "fast-sfdc-active"
         },
         {
-          "command": "FastSfdc.retrieveFolder",
+          "command": "FastSfdc.retrieveSelected",
           "when": "false"
         },
         {
-          "command": "FastSfdc.deployFolder",
+          "command": "FastSfdc.deploySelected",
           "when": "false"
         },
         {
@@ -201,23 +201,13 @@
           "group": "z_commands"
         },
         {
-          "command": "FastSfdc.retrieveFolder",
-          "when": "fast-sfdc-active && explorerResourceIsFolder",
+          "command": "FastSfdc.retrieveSelected",
+          "when": "fast-sfdc-active",
           "group": "z_commands"
         },
         {
-          "command": "FastSfdc.retrieveSingle",
-          "when": "fast-sfdc-active && !explorerResourceIsFolder",
-          "group": "z_commands"
-        },
-        {
-          "command": "FastSfdc.deployFolder",
-          "when": "fast-sfdc-active && explorerResourceIsFolder",
-          "group": "z_commands"
-        },
-        {
-          "command": "FastSfdc.deploySingle",
-          "when": "fast-sfdc-active && !explorerResourceIsFolder",
+          "command": "FastSfdc.deploySelected",
+          "when": "fast-sfdc-active",
           "group": "z_commands"
         }
       ]

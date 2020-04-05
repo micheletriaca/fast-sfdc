@@ -6,29 +6,28 @@ import * as fs from 'fs'
 import * as sfdyRetrieve from 'sfdy/src/retrieve'
 import logger from '../logger'
 
-export default function retrieve (profileOnly = false, fileName: string | undefined = undefined) {
+export default function retrieve (files: string[] = []) {
   statusbar.startLongJob(async done => {
+    const rootFolder = vscode.workspace.rootPath || ''
     const config = configService.getConfigSync()
     const creds = config.credentials[config.currentCredential]
-    const sfdyConfigExists = fs.existsSync(path.resolve(vscode.workspace.rootPath || '', '.sfdy.json'))
-    const sfdyConfig = sfdyConfigExists ? JSON.parse(fs.readFileSync(path.resolve(vscode.workspace.rootPath || '', '.sfdy.json')).toString()) : {}
-    const files = [
-      profileOnly ? 'profiles/**/*' : '',
-      fileName ? fileName.replace(vscode.workspace.rootPath || '', '') : undefined
-    ].filter(x => x).join(',')
+    const sfdyConfigExists = fs.existsSync(path.resolve(rootFolder, '.sfdy.json'))
+    const sfdyConfig = sfdyConfigExists ? JSON.parse(fs.readFileSync(path.resolve(rootFolder, '.sfdy.json')).toString()) : {}
+    const sanitizedFiles = files.map(x => x.replace(rootFolder, '')).join(',')
 
     try {
       logger.clear()
       logger.show()
+      if (sanitizedFiles) logger.appendLine('Requested files: ' + sanitizedFiles)
       await sfdyRetrieve({
         logger: (msg: string) => logger.appendLine(msg),
-        basePath: vscode.workspace.rootPath,
+        basePath: rootFolder,
         loginOpts: {
           serverUrl: creds.url,
           username: creds.username,
           password: creds.password
         },
-        files,
+        files: sanitizedFiles,
         config: sfdyConfig
       })
       done('👍🏻')

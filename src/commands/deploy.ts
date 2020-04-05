@@ -6,14 +6,17 @@ import statusbar from '../statusbar'
 import configService from '../services/config-service'
 import logger from '../logger'
 
-export default function deploy (checkOnly: boolean = false, fileName: string | undefined = undefined) {
+export default function deploy (checkOnly: boolean = false, files: string[] = []) {
   statusbar.startLongJob(async done => {
+    const rootFolder = vscode.workspace.rootPath || ''
     const config = configService.getConfigSync()
     const creds = config.credentials[config.currentCredential]
-    const sfdyConfigExists = fs.existsSync(path.resolve(vscode.workspace.rootPath || '', '.sfdy.json'))
-    const sfdyConfig = sfdyConfigExists ? JSON.parse(fs.readFileSync(path.resolve(vscode.workspace.rootPath || '', '.sfdy.json')).toString()) : {}
+    const sfdyConfigExists = fs.existsSync(path.resolve(rootFolder, '.sfdy.json'))
+    const sfdyConfig = sfdyConfigExists ? JSON.parse(fs.readFileSync(path.resolve(rootFolder, '.sfdy.json')).toString()) : {}
     const preDeployPlugins = sfdyConfig.preDeployPlugins || []
     const renderers = sfdyConfig.renderers || []
+    const sanitizedFiles = files.map(x => x.replace(rootFolder, '')).join(',')
+
     try {
       logger.clear()
       logger.show()
@@ -21,14 +24,14 @@ export default function deploy (checkOnly: boolean = false, fileName: string | u
         logger: (msg: string) => logger.appendLine(msg),
         preDeployPlugins,
         renderers,
-        basePath: vscode.workspace.rootPath,
+        basePath: rootFolder,
         loginOpts: {
           serverUrl: creds.url,
           username: creds.username,
           password: creds.password
         },
         checkOnly,
-        files: fileName ? fileName.replace(vscode.workspace.rootPath || '', '') : undefined
+        files: sanitizedFiles
       })
       done(deployResult.status === 'Succeeded' ? '👍🏻' : '👎🏻')
     } catch (e) {
