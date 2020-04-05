@@ -7,6 +7,7 @@ import createAuraDefinition from './create-aura-definition'
 import retrieve from './retrieve'
 import deploy from './deploy'
 import deploySingle from './deploy-single'
+import deployFolder from './deploy-folder'
 import executeAnonymous from './execute-anonymous'
 import retrieveSingle from './retrieve-single'
 import retrieveProfiles from './retrieve-profiles'
@@ -25,5 +26,6 @@ export default {
   executeAnonymous,
   retrieveSingle,
   retrieveProfiles,
-  retrieveFolder
+  retrieveFolder,
+  deployFolder
 }

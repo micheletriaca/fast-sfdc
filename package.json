@@ -6,6 +6,7 @@
     "type": "git",
     "url": "https://github.com/micheletriaca/fast-sfdc"
   },
+  "homepage": "https://github.com/micheletriaca/fast-sfdc#readme",  
   "version": "1.0.0",
   "license": "SEE LICENSE IN LICENSE.md",
   "publisher": "m1ck83",
@@ -80,6 +81,14 @@
       {
         "command": "FastSfdc.deploySingle",
         "title": "Fast-Sfdc: Deploy current file"
+      },
+      {
+        "command": "FastSfdc.retrieveFolder",
+        "title": "Fast-Sfdc: Retrieve current folder"
+      },
+      {
+        "command": "FastSfdc.deployFolder",
+        "title": "Fast-Sfdc: Deploy current folder"
       }
     ],
     "menus": {
@@ -113,6 +122,10 @@
           "when": "fast-sfdc-active"
         },
         {
+          "command": "FastSfdc.retrieveProfiles",
+          "when": "fast-sfdc-active"
+        },        
+        {
           "command": "FastSfdc.deploy",
           "when": "fast-sfdc-active"
         },
@@ -127,19 +140,61 @@
         {
           "command": "FastSfdc.retrieveSingle",
           "when": "fast-sfdc-active"
+        },
+        {
+          "command": "FastSfdc.deploySingle",
+          "when": "fast-sfdc-active"
+        },
+        {
+          "command": "FastSfdc.retrieveFolder",
+          "when": "false"
+        },
+        {
+          "command": "FastSfdc.deployFolder",
+          "when": "false"
         }
       ],
       "editor/context": [
         {
           "command": "FastSfdc.createAuraDefinition",
-          "when": "resourceExtname == .cmp",
+          "when": "fast-sfdc-active && resourceExtname == .cmp",
+          "group": "z_commands"
+        },
+        {
+          "command": "FastSfdc.retrieveSingle",
+          "when": "fast-sfdc-active",
+          "group": "z_commands"
+        },
+        {
+          "command": "FastSfdc.deploySingle",
+          "when": "fast-sfdc-active",
           "group": "z_commands"
         }
       ],
       "explorer/context": [
         {
           "command": "FastSfdc.createAuraDefinition",
-          "when": "resourceExtname == .cmp",
+          "when": "fast-sfdc-active && resourceExtname == .cmp",
+          "group": "z_commands"
+        },
+        {
+          "command": "FastSfdc.retrieveFolder",
+          "when": "fast-sfdc-active && explorerResourceIsFolder",
+          "group": "z_commands"
+        },
+        {
+          "command": "FastSfdc.retrieveSingle",
+          "when": "fast-sfdc-active && !explorerResourceIsFolder",
+          "group": "z_commands"
+        },
+        {
+          "command": "FastSfdc.deployFolder",
+          "when": "fast-sfdc-active && explorerResourceIsFolder",
+          "group": "z_commands"
+        },
+        {
+          "command": "FastSfdc.deploySingle",
+          "when": "fast-sfdc-active && !explorerResourceIsFolder",
           "group": "z_commands"
         }
       ]
