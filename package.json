@@ -29,6 +29,20 @@
   ],
   "main": "./dist/extension",
   "contributes": {
+    "keybindings": [
+      {
+        "command": "FastSfdc.deploySingle",
+        "key": "ctrl+i d",
+        "mac": "cmd+i d",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "FastSfdc.retrieveSingle",
+        "key": "ctrl+i r",
+        "mac": "cmd+i r",
+        "when": "editorTextFocus"
+      }
+    ],    
     "commands": [
       {
         "command": "FastSfdc.enterCredentials",
