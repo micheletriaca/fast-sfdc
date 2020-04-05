@@ -9,9 +9,9 @@
   "homepage": "https://github.com/micheletriaca/fast-sfdc#readme",
   "version": "1.0.0",
   "license": "SEE LICENSE IN LICENSE.md",
-  "publisher": "m1ck83",
+  "publisher": "m1ck_t83",
   "engines": {
-    "vscode": "^1.24.0"
+    "vscode": "^1.32.0"
   },
   "categories": [
     "Other"
