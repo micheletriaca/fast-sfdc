@@ -4,6 +4,7 @@ import connector from '../sfdc-connector'
 import StatusBar from '../statusbar'
 import utils from '../utils/utils'
 import { ConfigCredential } from '../fast-sfdc'
+import toolingService from '../services/tooling-service'
 
 async function getUrl (): Promise<string> {
   const res = await vscode.window.showQuickPick([
@@ -59,6 +60,7 @@ export default async function enterCredentials (addMode: Boolean = false) {
   try {
     StatusBar.startLoading()
     await connector.connect(config)
+    toolingService.resetMetadataContainer()
     StatusBar.stopLoading()
     vscode.window.showInformationMessage('Credentials ok!')
   } catch (error) {
