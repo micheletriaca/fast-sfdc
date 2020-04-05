@@ -9,7 +9,7 @@ import * as xml2js from 'xml2js'
 import * as fs from 'fs'
 import sfdcConnector from '../sfdc-connector'
 
-interface DocType { label: string, toolingType: string, folder: string, extension: string }
+interface DocType { label: string; toolingType: string; folder: string; extension: string }
 
 async function chooseType (): Promise<DocType | undefined> {
   const res: DocType | undefined = await vscode.window.showQuickPick([
@@ -30,8 +30,8 @@ function getDocument (metaType: string, metaName: string, objName?: string) {
     case 'ApexComponentMember': return '<apex:component>\nHello world!\n</apex:component>'
     case 'ApexTriggerMember': return `trigger ${metaName} on ${objName} (before insert) {\n\n}`
     case 'AuraDefinitionBundle': return '<aura:component ' +
-      'implements="flexipage:availableForRecordHome,force:hasRecordId" access="global">\n\n\</aura:component>'
-    case 'LightningComponentBundle': return `import { LightningElement, track } from 'lwc';\nexport default class CmpCtrl extends LightningElement {\n\n}`
+      'implements="flexipage:availableForRecordHome,force:hasRecordId" access="global">\n\n</aura:component>'
+    case 'LightningComponentBundle': return 'import { LightningElement, track } from \'lwc\';\nexport default class CmpCtrl extends LightningElement {\n\n}'
     default: return ''
   }
 }
@@ -100,7 +100,7 @@ async function createRemoteMeta (docBody: string, docMeta: AnyMetadata, docName:
 async function storeOnFileSystem (docBody: string, docMeta: AnyMetadata, docName: string, docType: DocType) {
   const builder = new xml2js.Builder({
     xmldec: { version: '1.0', encoding: 'UTF-8' },
-    renderOpts: { 'pretty': true, 'indent': '    ', 'newline': '\n' }
+    renderOpts: { pretty: true, indent: '    ', newline: '\n' }
   })
   let p = path.join(vscode.workspace.rootPath as string, 'src', docType.folder, docName + docType.extension)
   if (docType.toolingType === 'AuraDefinitionBundle' || docType.toolingType === 'LightningComponentBundle') {

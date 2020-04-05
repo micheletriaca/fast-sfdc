@@ -7,7 +7,7 @@ import codeTemplates from '../utils/code-templates'
 import statusbar from '../statusbar'
 import * as path from 'path'
 
-type AuraOption = { label: AuraDefType, format: AuraFormat }
+type AuraOption = { label: AuraDefType; format: AuraFormat }
 
 const auraTypes: AuraOption[] = [
   { label: 'COMPONENT', format: 'XML' },

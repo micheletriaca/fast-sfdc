@@ -15,7 +15,7 @@ let loadingTimer: NodeJS.Timer
 let loadingCounter = 0
 
 const queue: Function[] = []
-let running: Boolean = false
+let running = false
 
 const runNextJob = () => {
   const f = queue.shift()
@@ -45,7 +45,7 @@ export default {
   },
 
   startLoading () {
-    if (!loadingCounter++) loadingTimer = setInterval(() => sbItem.text = `${MENU_PREFIX()}: ${spinner()}${loadingCounter > 1 ? ' (' + loadingCounter + ')' : ''}`, 50)
+    if (!loadingCounter++) loadingTimer = setInterval(() => (sbItem.text = `${MENU_PREFIX()}: ${spinner()}${loadingCounter > 1 ? ' (' + loadingCounter + ')' : ''}`), 50)
   },
 
   stopLoading () {
@@ -63,6 +63,6 @@ export default {
   },
 
   setText (newTxt: string) {
-    sbItem.text = `${MENU_PREFIX()}${newTxt && ': ' + newTxt || ''}`
+    sbItem.text = `${MENU_PREFIX()}${(newTxt && ': ' + newTxt) || ''}`
   }
 }

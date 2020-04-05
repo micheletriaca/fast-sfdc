@@ -1,11 +1,10 @@
-//@ts-check
+// @ts-check
 'use strict'
 
 const path = require('path')
-const Webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
 
-/**@type {import('webpack').Configuration}*/
+/** @type {import('webpack').Configuration} */
 const config = {
   target: 'node',
   entry: './src/extension.ts',
@@ -28,12 +27,12 @@ const config = {
         parallel: true,
         cache: true,
         terserOptions: {
-          ecma: 6,
-        },
-      })      
+          ecma: 6
+        }
+      })
     ]
-  },  
-  resolve: {    
+  },
+  resolve: {
     extensions: ['.ts', '.js']
   },
   module: {

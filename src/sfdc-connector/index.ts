@@ -9,6 +9,18 @@ let config = configService.getConfigSync()
 let apiVersion: string
 const conn = new SfdcConn()
 
+const connect = async function (cfg?: Config) {
+  if (cfg) config = cfg
+  const creds = config.credentials[config.currentCredential]
+  apiVersion = await configService.getPackageXmlVersion()
+  await conn.soapLogin({
+    hostname: creds.url,
+    apiVersion,
+    username: creds.username,
+    password: creds.password
+  })
+}
+
 const getBasePath = () => `/services/data/v${apiVersion}/tooling`
 const rest = async function (endpoint: string, ...args: any[]) {
   try {
@@ -25,7 +37,7 @@ const rest = async function (endpoint: string, ...args: any[]) {
   }
 }
 
-const metadata = async function (method: string, args: any, wsdl: string = 'Metadata', headers: any = {}) {
+const metadata = async function (method: string, args: any, wsdl = 'Metadata', headers: any = {}) {
   const metadataWsdl = conn.wsdl(apiVersion, wsdl)
   try {
     if (!conn.sessionId) await connect()
@@ -46,17 +58,6 @@ const patch = async (endpoint: string, body: any) => rest(endpoint, { method: 'P
 const del = async (endpoint: string) => rest(endpoint, { method: 'DELETE' })
 const get = async (endpoint: string) => rest(endpoint)
 const query = (q: string) => get(`/query?q=${encodeURIComponent(q.replace(/ +/g, ' '))}`)
-const connect = async function (cfg?: Config) {
-  if (cfg) config = cfg
-  const creds = config.credentials[config.currentCredential]
-  apiVersion = await configService.getPackageXmlVersion()
-  await conn.soapLogin({
-    hostname: creds.url,
-    apiVersion,
-    username: creds.username,
-    password: creds.password
-  })
-}
 
 export default {
   connect,
@@ -109,6 +110,7 @@ export default {
 
   async pollDeploymentStatus (containerAsyncRequestId: string) {
     let retryCount = 0
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       await utils.sleep(retryCount++ > 3 ? 1000 : 200)
       const res = await query(`SELECT
@@ -120,7 +122,7 @@ export default {
         WHERE Id = '${containerAsyncRequestId}'`
       )
       if (res.records[0].State !== 'Queued') return res.records[0]
-      logger.appendLine(`Polling...`)
+      logger.appendLine('Polling...')
     }
   },
 

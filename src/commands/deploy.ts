@@ -6,7 +6,7 @@ import statusbar from '../statusbar'
 import configService from '../services/config-service'
 import logger from '../logger'
 
-export default function deploy (checkOnly: boolean = false, files: string[] = []) {
+export default function deploy (checkOnly = false, files: string[] = []) {
   statusbar.startLongJob(async done => {
     const rootFolder = vscode.workspace.rootPath || ''
     const config = configService.getConfigSync()

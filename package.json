@@ -284,12 +284,20 @@
     "@types/mocha": "^2.2.42",
     "@types/node": "^8.10.51",
     "@types/xml2js": "^0.4.4",
+    "@typescript-eslint/eslint-plugin": "^2.26.0",
+    "@typescript-eslint/parser": "^2.26.0",
+    "eslint": "^6.8.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-node": "^11.0.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
     "original-fs": "^1.0.0",
     "terser-webpack-plugin": "^2.3.5",
     "ts-loader": "^5.3.3",
     "tslint": "^5.18.0",
     "tslint-config-standard": "^8.0.1",
-    "typescript": "^2.6.1",
+    "typescript": "^3.8.3",
     "vscode": "^1.1.36",
     "webpack": "^4.29.6",
     "webpack-cli": "^3.2.3"
@@ -300,5 +308,8 @@
     "node-salesforce-connection": "^2.3.1",
     "sfdy": "^1.1.0",
     "xml2js": "^0.4.23"
-  }
+  },
+  "eslintIgnore": [
+    "dist/**/*"    
+  ]
 }

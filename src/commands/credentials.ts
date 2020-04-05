@@ -16,7 +16,7 @@ async function getUrl (): Promise<string> {
       description: 'test.salesforce.com'
     }
   ], { ignoreFocusOut: true })
-  return res && res.description || ''
+  return (res && res.description) || ''
 }
 
 async function getDeployOnSave (): Promise<boolean> {
@@ -27,10 +27,10 @@ async function getDeployOnSave (): Promise<boolean> {
       label: 'false'
     }
   ], { ignoreFocusOut: true, placeHolder: 'Deploy on save?' })
-  return res && res.label === 'true' || false
+  return (res && res.label === 'true') || false
 }
 
-export default async function enterCredentials (addMode: Boolean = false) {
+export default async function enterCredentials (addMode = false) {
   const config = await configService.getConfig()
 
   const creds: ConfigCredential = {}

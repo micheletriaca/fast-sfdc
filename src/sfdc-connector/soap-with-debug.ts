@@ -7,7 +7,7 @@ export default async function (conn: any, wsdl: any, method: string, args: any, 
     method: 'POST',
     headers: {
       'Content-Type': 'text/xml',
-      'SOAPAction': '""'
+      SOAPAction: '""'
     }
   }
   const sessionHeader = { SessionHeader: { sessionId: conn.sessionId } }

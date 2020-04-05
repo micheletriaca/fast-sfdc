@@ -17,8 +17,18 @@ const getStackTraceRange = (stackTrace: string, doc: vscode.TextDocument): vscod
   return failureRange
 }
 
+function updateProblemsPanel (errors: any[], doc: vscode.TextDocument) {
+  diagnosticCollection.set(
+    doc.uri,
+    errors.map(v => {
+      const failureRange = getStackTraceRange(v.stackTrace, doc)
+      return new vscode.Diagnostic(failureRange, `${v.message}. ${v.stackTrace}`, vscode.DiagnosticSeverity.Error)
+    })
+  )
+}
+
 const printResults = (result: TestExecutionResult, document: vscode.TextDocument) => {
-  logger.appendLine(`*** Test execution results ***`)
+  logger.appendLine('*** Test execution results ***')
   result.successes.forEach((v: TestResult) => {
     logger.appendLine(`${v.name}.${v.methodName} - OK`)
   })
@@ -31,21 +41,11 @@ const printResults = (result: TestExecutionResult, document: vscode.TextDocument
   updateProblemsPanel(result.failures, document)
 }
 
-function updateProblemsPanel (errors: any[], doc: vscode.TextDocument) {
-  diagnosticCollection.set(
-    doc.uri,
-    errors.map(v => {
-      const failureRange = getStackTraceRange(v.stackTrace, doc)
-      return new vscode.Diagnostic(failureRange, `${v.message}. ${v.stackTrace}`, vscode.DiagnosticSeverity.Error)
-    })
-  )
-}
-
 export default async function runTest (document: vscode.TextDocument, className: string, methodName: string) {
   StatusBar.startLongJob(async done => {
     logger.show()
     logger.appendLine('Executing tests...')
-    let request: any = { className }
+    const request: any = { className }
     if (methodName) request.testMethods = [methodName]
     try {
       const res = await sfdcConnector.runTestSync([request])

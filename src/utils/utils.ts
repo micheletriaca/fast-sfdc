@@ -34,9 +34,9 @@ export default {
     explicitRoot: false,
     valueProcessors: [xml2js.processors.parseBooleans]
   }).parseString)(str),
-  buildXml: (str: object, headless: boolean = false) => new xml2js.Builder({ headless }).buildObject(str),
-  toArray: (x: any, path: string) => x === undefined || x == null ? { [path]: [] } : (Array.isArray(x[path]) ? { [path] : x[path] } : { [path]: [x[path]] }),
-  inputText: async (placeHolder: string, defValue: string = '', opts?: any) => {
+  buildXml: (str: object, headless = false) => new xml2js.Builder({ headless }).buildObject(str),
+  toArray: (x: any, path: string) => x === undefined || x == null ? { [path]: [] } : (Array.isArray(x[path]) ? { [path]: x[path] } : { [path]: [x[path]] }),
+  inputText: async (placeHolder: string, defValue = '', opts?: any) => {
     return await vscode.window.showInputBox({
       ignoreFocusOut: true,
       placeHolder,

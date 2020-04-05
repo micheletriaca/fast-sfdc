@@ -67,7 +67,7 @@ const compileAuraDefinition = async (doc: vscode.TextDocument, done: DoneCallbac
   }
 }
 
-const createLightningWebComponentMetadata = async (doc: vscode.TextDocument) => {
+const createLightningWebComponentMetadata = async (doc: vscode.TextDocument): Promise<any> => {
   const metadata = { ...await utils.parseXmlStrict(doc.getText()), $: undefined }
   const targetConfigs = metadata.targetConfigs ? utils.buildXml({ targetConfigs: metadata.targetConfigs }, true) : ''
   metadata.targets = utils.toArray(metadata.targets, 'target')
