@@ -7,6 +7,7 @@ export interface Config {
 export interface ConfigCredential {
   username?: string;
   password?: string;
+  environment?: string;
   url?: string;
   deployOnSave?: boolean;
 }

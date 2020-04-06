@@ -44,6 +44,9 @@ export default async function enterCredentials (addMode = false) {
   creds.password = await utils.inputText('Please enter your SFDC password and token', creds.password, { password: true })
   if (!creds.password) return
 
+  creds.environment = await utils.inputText('Give this environment a name (it will be used in sfdy patches)', creds.environment)
+  if (!creds.password) return
+
   creds.deployOnSave = await getDeployOnSave()
 
   if (addMode) {
