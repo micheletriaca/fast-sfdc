@@ -215,19 +215,10 @@
     "languages": [
       {
         "id": "xml",
-        "aliases": [
-          "Aura"
-        ],
         "extensions": [
-          ".cmp"
-        ]
-      },
-      {
-        "id": "xml",
-        "extensions": [
+          ".cmp",
           ".object",
           ".layout",
-          ".resource",
           ".remoteSite",
           ".labels",
           ".app",
