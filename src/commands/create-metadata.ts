@@ -76,13 +76,13 @@ async function createRemoteLwcBundle (docBody: string, docMeta: LwcMetadata, doc
     Metadata: {},
     FullName: docName
   })
-  const auraCmpId = await sfdcConnector.upsertLwcObj({
+  const lwcCmpId = await sfdcConnector.upsertLwcObj({
     FilePath: `lwc/${docName}/${docName}.js`,
     Source: docBody,
     LightningComponentBundleId: lwcBundleId,
     Format: 'js'
   })
-  return auraCmpId
+  return lwcCmpId
 }
 
 async function createRemoteMeta (docBody: string, docMeta: AnyMetadata, docName: string, docType: DocType) {
