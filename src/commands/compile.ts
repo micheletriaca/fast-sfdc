@@ -87,10 +87,12 @@ const compileLightninWebComponent = async (doc: vscode.TextDocument, done: DoneC
       })
     }
     const filePath = `lwc/${bundleName}/${parsers.getFilename(doc.fileName)}.${lwcDefType}`
-    let record = await sfdcConnector.findLwcByNameAndDefType(bundleName, lwcDefType, filePath)
+    // meta.xml resources are saved with format js during metadata deployments. nobody knows why
+    const resourceFormat = lwcDefType === 'xml' ? 'js' : lwcDefType
+    let record = await sfdcConnector.findLwcByNameAndDefType(bundleName, resourceFormat, filePath)
     if (!record) {
       record = {
-        Format: lwcDefType,
+        Format: resourceFormat,
         LightningComponentBundleId: bundleId,
         FilePath: filePath
       }
