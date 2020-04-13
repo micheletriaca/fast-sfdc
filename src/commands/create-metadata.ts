@@ -8,6 +8,7 @@ import * as path from 'path'
 import * as xml2js from 'xml2js'
 import * as fs from 'fs'
 import sfdcConnector from '../sfdc-connector'
+import packageService from '../services/package-service'
 
 interface DocType { label: string; toolingType: string; folder: string; extension: string }
 
@@ -98,12 +99,13 @@ async function createRemoteMeta (docBody: string, docMeta: AnyMetadata, docName:
 }
 
 async function storeOnFileSystem (docBody: string, docMeta: AnyMetadata, docName: string, docType: DocType) {
+  const isAuraBundle = docType.toolingType === 'AuraDefinitionBundle' || docType.toolingType === 'LightningComponentBundle'
   const builder = new xml2js.Builder({
     xmldec: { version: '1.0', encoding: 'UTF-8' },
     renderOpts: { pretty: true, indent: '    ', newline: '\n' }
   })
   let p = path.join(vscode.workspace.rootPath as string, 'src', docType.folder, docName + docType.extension)
-  if (docType.toolingType === 'AuraDefinitionBundle' || docType.toolingType === 'LightningComponentBundle') {
+  if (isAuraBundle) {
     const bundleDirPath = path.join(vscode.workspace.rootPath as string, 'src', docType.folder, docName)
     fs.mkdirSync(bundleDirPath)
     p = path.join(bundleDirPath, docName + docType.extension)
@@ -116,6 +118,13 @@ async function storeOnFileSystem (docBody: string, docMeta: AnyMetadata, docName
       $: { xmlns: 'http://soap.sforce.com/2006/04/metadata' }
     }
   }) + '\n')
+  const sfdcConnector = await packageService.getSfdcConnector()
+  const metaPath = (
+    isAuraBundle
+      ? path.join(docType.folder, docName, docName + docType.extension)
+      : path.join(docType.folder, docName + docType.extension)
+  )
+  await packageService.addToPackage([metaPath], sfdcConnector)
   await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(vscode.Uri.file(p)))
 }
 

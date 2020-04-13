@@ -27,3 +27,7 @@ type SfdcConnector = GenericObject
 type PackageMapping = GenericObject
 type Package = { types: PackageType[]; version: string[] };
 type PackageType = { members: string[]; name: string[] }
+
+declare module 'sfdy/src/services/path-service' {
+  export function setBasePath(basePath: string): void
+}
