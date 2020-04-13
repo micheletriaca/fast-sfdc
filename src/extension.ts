@@ -23,6 +23,7 @@ export function activate (ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.retrieveSingle', cmds.retrieveSelected))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.deploySingle', cmds.deploySelected))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.deploySelected', cmds.deploySelected))
+  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.destroySelected', cmds.destroySelected))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.runTest', cmds.runTest))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.initSfdy', cmds.initSfdy))
   ctx.subscriptions.push(vscode.languages.registerCodeLensProvider({ language: 'apex', scheme: 'file' }, new CodeLensRunTest()))

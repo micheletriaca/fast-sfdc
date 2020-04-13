@@ -106,6 +106,10 @@
         "title": "Fast-Sfdc: Deploy selected files"
       },
       {
+        "command": "FastSfdc.destroySelected",
+        "title": "Fast-Sfdc: Delete selected files from Salesforce"
+      },
+      {
         "command": "FastSfdc.initSfdy",
         "title": "Fast-Sfdc: Init metadata patching"
       }
@@ -173,6 +177,10 @@
           "when": "false"
         },
         {
+          "command": "FastSfdc.destroySelected",
+          "when": "false"
+        },
+        {
           "command": "FastSfdc.initSfdy",
           "when": "fast-sfdc-active"
         }
@@ -207,6 +215,11 @@
         },
         {
           "command": "FastSfdc.deploySelected",
+          "when": "fast-sfdc-active",
+          "group": "z_commands"
+        },
+        {
+          "command": "FastSfdc.destroySelected",
           "when": "fast-sfdc-active",
           "group": "z_commands"
         }
@@ -271,6 +284,7 @@
     "test": "npm run compile && node ./node_modules/vscode/bin/test"
   },
   "devDependencies": {
+    "@types/delete-empty": "^2.0.0",
     "@types/elegant-spinner": "^1.0.0",
     "@types/mocha": "^2.2.42",
     "@types/node": "^8.10.51",
@@ -294,10 +308,11 @@
     "webpack-cli": "^3.2.3"
   },
   "dependencies": {
+    "delete-empty": "^3.0.0",
     "elegant-spinner": "^1.0.1",
     "node-machine-id": "^1.1.12",
     "node-salesforce-connection": "^2.3.1",
-    "sfdy": "^1.1.0",
+    "sfdy": "^1.2.0",
     "xml2js": "^0.4.23"
   },
   "eslintIgnore": [
