@@ -2,7 +2,6 @@
 'use strict'
 
 const path = require('path')
-const TerserPlugin = require('terser-webpack-plugin')
 
 /** @type {import('webpack').Configuration} */
 const config = {
@@ -17,20 +16,6 @@ const config = {
   devtool: 'source-map',
   externals: {
     vscode: 'commonjs vscode'
-  },
-  optimization: {
-    mergeDuplicateChunks: true,
-    minimize: true,
-    minimizer: [
-      new TerserPlugin({
-        sourceMap: true,
-        parallel: true,
-        cache: true,
-        terserOptions: {
-          ecma: 6
-        }
-      })
-    ]
   },
   resolve: {
     extensions: ['.ts', '.js']
