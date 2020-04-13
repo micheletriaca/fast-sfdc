@@ -14,6 +14,9 @@ Compile on save for apex classes, visualforce pages, triggers, visualforce compo
 ### Metadata Creation
 Straightforward metadata creation and deployment for apex classes, visualforce pages & components, triggers, aura bundles, LWC.
 
+### Destructive changesets
+Deleting metadata from your org is just easy as right-clicking on the metadata in the file explorer
+
 ### Metadata Patching
 
 `fast-sfdc` uses [sfdy](https://www.npmjs.com/package/sfdy) as the engine to deploy and retrieve metadata. Thanks to that, it supports a bunch of useful metadata patches (see [here](https://github.com/micheletriaca/sfdy#apply-standard-patches-to-metadata-after-retrieve))
@@ -40,5 +43,4 @@ Please open an issue in the github repository!
 
 ## Release Notes
 
-### 1.1.0
-Initial release.
+See [here](CHANGELOG.md)
