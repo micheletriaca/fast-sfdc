@@ -8,7 +8,7 @@ import toolingService from '../services/tooling-service'
 import * as fs from 'fs'
 import * as path from 'path'
 
-async function getUrl(): Promise<string> {
+async function getUrl (): Promise<string> {
   const res = await vscode.window.showQuickPick([
     {
       label: 'Production / Developer',
@@ -21,7 +21,7 @@ async function getUrl(): Promise<string> {
   return (res && res.description) || ''
 }
 
-async function getDeployOnSave(): Promise<boolean> {
+async function getDeployOnSave (): Promise<boolean> {
   const res = await vscode.window.showQuickPick([
     {
       label: 'true'
@@ -32,7 +32,7 @@ async function getDeployOnSave(): Promise<boolean> {
   return (res && res.label === 'true') || false
 }
 
-export default async function enterCredentials(addMode = false) {
+export default async function enterCredentials (addMode = false) {
   const config = await configService.getConfig()
 
   const creds: ConfigCredential = {}

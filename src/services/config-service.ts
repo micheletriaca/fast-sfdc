@@ -11,7 +11,7 @@ const getCfgPath = () => path.join(vscode.workspace.rootPath as string, CONFIG_N
 export default {
   getConfigPath: getCfgPath,
   getConfigFileName: () => { return CONFIG_NAME },
-  getConfigSync(): Config {
+  getConfigSync (): Config {
     const cfgPath = getCfgPath()
     if (!vscode.workspace.rootPath || !fs.existsSync(cfgPath)) {
       return { stored: false, credentials: [], currentCredential: 0 }
