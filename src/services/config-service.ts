@@ -4,10 +4,14 @@ import * as fs from 'fs'
 import * as vscode from 'vscode'
 import utils from '../utils/utils'
 
-const getCfgPath = () => path.join(vscode.workspace.rootPath as string, 'fastsfdc.json')
+const CONFIG_NAME = 'fastsfdc.json'
+
+const getCfgPath = () => path.join(vscode.workspace.rootPath as string, CONFIG_NAME)
 
 export default {
-  getConfigSync (): Config {
+  getConfigPath: getCfgPath,
+  getConfigFileName: () => { return CONFIG_NAME },
+  getConfigSync(): Config {
     const cfgPath = getCfgPath()
     if (!vscode.workspace.rootPath || !fs.existsSync(cfgPath)) {
       return { stored: false, credentials: [], currentCredential: 0 }

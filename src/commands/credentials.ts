@@ -5,8 +5,10 @@ import StatusBar from '../statusbar'
 import utils from '../utils/utils'
 import { ConfigCredential } from '../fast-sfdc'
 import toolingService from '../services/tooling-service'
+import * as fs from 'fs'
+import * as path from 'path'
 
-async function getUrl (): Promise<string> {
+async function getUrl(): Promise<string> {
   const res = await vscode.window.showQuickPick([
     {
       label: 'Production / Developer',
@@ -19,7 +21,7 @@ async function getUrl (): Promise<string> {
   return (res && res.description) || ''
 }
 
-async function getDeployOnSave (): Promise<boolean> {
+async function getDeployOnSave(): Promise<boolean> {
   const res = await vscode.window.showQuickPick([
     {
       label: 'true'
@@ -30,7 +32,7 @@ async function getDeployOnSave (): Promise<boolean> {
   return (res && res.label === 'true') || false
 }
 
-export default async function enterCredentials (addMode = false) {
+export default async function enterCredentials(addMode = false) {
   const config = await configService.getConfig()
 
   const creds: ConfigCredential = {}
@@ -59,6 +61,18 @@ export default async function enterCredentials (addMode = false) {
   await configService.storeConfig(config)
   vscode.commands.executeCommand('setContext', 'fast-sfdc-configured', true)
   vscode.commands.executeCommand('setContext', 'fast-sfdc-more-credentials', config.credentials.length > 1)
+
+  if (config.credentials.length === 1) {
+    try {
+      const editGitIgnore = await vscode.window.showQuickPick([{ label: 'Yes', value: true }, { label: 'No', value: false }], { ignoreFocusOut: true, placeHolder: 'Would you like to add fastsfdc config file to .gitignore?' })
+      if (editGitIgnore && editGitIgnore.value) {
+        const gitIgnorePath = path.join(vscode.workspace.rootPath || '', '.gitignore')
+        fs.appendFileSync(gitIgnorePath, `\n**/${configService.getConfigFileName()}\n`)
+      }
+    } catch (err) {
+      vscode.window.showErrorMessage('There was a problem updating the .gitignore file')
+    }
+  }
 
   try {
     StatusBar.startLoading()
