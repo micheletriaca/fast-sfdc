@@ -37,16 +37,16 @@ const rest = async function (endpoint: string, ...args: any[]) {
   }
 }
 
-const metadata = async function (method: string, args: any, wsdl = 'Metadata', headers: any = {}) {
-  const metadataWsdl = conn.wsdl(apiVersion, wsdl)
+const metadata = async function (method: string, args: any, wsdl = 'Metadata', headers: any = {}, retry = true): Promise<any> {
   try {
     if (!conn.sessionId) await connect()
+    const metadataWsdl = conn.wsdl(apiVersion, wsdl)
     return await soapWithDebug(conn, metadataWsdl, method, args, headers)
   } catch (e) {
     if (e.code === 'ENOTFOUND') throw Error('Unreachable host. Check connection')
-    else if (e.response && (e.response.statusCode === 401 || e.response.statusCode === 403)) {
-      await connect()
-      return soapWithDebug(conn, metadataWsdl, method, args, headers)
+    else if (e.response && (e.response.statusCode === 401 || e.response.statusCode === 403) && retry) {
+      conn.sessionId = undefined
+      return metadata(method, args, wsdl, headers, false)
     } else {
       throw e
     }

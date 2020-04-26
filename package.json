@@ -38,6 +38,12 @@
         "when": "editorTextFocus"
       },
       {
+        "command": "FastSfdc.executeAnonymous",
+        "key": "ctrl+i e",
+        "mac": "cmd+i e",
+        "when": "editorTextFocus"
+      },
+      {
         "command": "FastSfdc.retrieveSingle",
         "key": "ctrl+i r",
         "mac": "cmd+i r",
