@@ -15,7 +15,7 @@ export default function deploy (checkOnly = false, destructive = false, files: s
     const config = configService.getConfigSync()
     const creds = config.credentials[config.currentCredential]
     process.env.environment = creds.environment
-    const { preDeployPlugins = [], renderers = [] } = configService.getSfdyConfigSync()
+    const sfdyConfig = configService.getSfdyConfigSync()
     const sanitizedFiles = files.map(x => x.replace(rootFolder, '')).join(',')
 
     try {
@@ -23,8 +23,8 @@ export default function deploy (checkOnly = false, destructive = false, files: s
       logger.show()
       const deployResult = await sfdyDeploy({
         logger: (msg: string) => logger.appendLine(msg),
-        preDeployPlugins,
-        renderers,
+        preDeployPlugins: sfdyConfig.preDeployPlugins,
+        renderers: sfdyConfig.renderers,
         basePath: rootFolder,
         destructive,
         loginOpts: {
@@ -33,6 +33,7 @@ export default function deploy (checkOnly = false, destructive = false, files: s
           password: creds.password
         },
         checkOnly,
+        config: sfdyConfig,
         files: sanitizedFiles
       })
       const isDeployOk = deployResult.status === 'Succeeded'
