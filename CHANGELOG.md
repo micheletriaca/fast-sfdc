@@ -1,4 +1,7 @@
 # Change Log
+## 1.3.1
+* Bugfixing
+
 ## 1.3.0
 * Static resource bundles ([#15](issues/15))
 * Auto-add `fastsfdc.json` file to `.gitignore`. Thanks [tr4uma](https://github.com/tr4uma)
