@@ -31,3 +31,10 @@ type PackageType = { members: string[]; name: string[] }
 declare module 'sfdy/src/services/path-service' {
   export function setBasePath(basePath: string): void
 }
+
+type SfdyConfig = {
+  readonly stored: boolean;
+  staticResources: {
+    useBundleRenderer: string[];
+  };
+}

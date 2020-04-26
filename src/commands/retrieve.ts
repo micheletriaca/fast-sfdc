@@ -6,7 +6,7 @@ import * as fs from 'fs'
 import * as sfdyRetrieve from 'sfdy/src/retrieve'
 import logger from '../logger'
 
-export default function retrieve (files: string[] = []) {
+export default function retrieve (files: string[] = [], filesAreMeta = false) {
   statusbar.startLongJob(async done => {
     const rootFolder = vscode.workspace.rootPath || ''
     const config = configService.getConfigSync()
@@ -28,7 +28,7 @@ export default function retrieve (files: string[] = []) {
           username: creds.username,
           password: creds.password
         },
-        files: sanitizedFiles,
+        [filesAreMeta ? 'meta' : 'files']: sanitizedFiles,
         config: sfdyConfig
       })
       done('👍🏻')

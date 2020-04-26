@@ -10,6 +10,7 @@ import executeAnonymous from './execute-anonymous'
 import initSfdy from './init-sfdy'
 import retrieve from './retrieve'
 import retrieveSelected from './retrieve-selected'
+import configureStaticResourceBundles from './static-resource-bundles'
 import runTest from './run-test'
 
 export default {
@@ -25,5 +26,6 @@ export default {
   initSfdy,
   retrieve,
   retrieveSelected,
-  runTest
+  runTest,
+  configureStaticResourceBundles
 }

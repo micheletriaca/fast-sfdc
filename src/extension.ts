@@ -21,6 +21,7 @@ export function activate (ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.deploy', cmds.deploy))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.validate', () => cmds.deploy(true)))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.retrieveSingle', cmds.retrieveSelected))
+  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.configureStaticResourceBundles', cmds.configureStaticResourceBundles))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.deploySingle', cmds.deploySelected))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.deploySelected', cmds.deploySelected))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.destroySelected', cmds.destroySelected))
