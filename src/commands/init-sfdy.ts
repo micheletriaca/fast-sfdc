@@ -1,11 +1,11 @@
-import * as fs from 'fs'
 import * as vscode from 'vscode'
-import * as path from 'path'
+import configService from '../services/config-service'
 
 export default async function initSfdy () {
-  const sfdyPath = path.join(vscode.workspace.rootPath || '', '.sfdy.json')
-  if (!fs.existsSync(sfdyPath)) {
-    fs.writeFileSync(sfdyPath, JSON.stringify({
+  const sfdyCfg = configService.getSfdyConfigSync()
+  if (!sfdyCfg.stored) {
+    configService.storeSfdyConfig({
+      stored: true,
       permissionSets: {
         stripUselessFls: true
       },
@@ -28,8 +28,12 @@ export default async function initSfdy () {
       roles: {
         stripPartnerRoles: true
       },
+      staticResources: {
+        useBundleRenderer: []
+      },
       stripManagedPackageFields: []
-    }, null, 2))
+    })
   }
-  vscode.window.showTextDocument(await vscode.workspace.openTextDocument(vscode.Uri.file(sfdyPath)))
+  const uri = vscode.Uri.file(configService.getSfdyConfigPath())
+  vscode.window.showTextDocument(await vscode.workspace.openTextDocument(uri))
 }

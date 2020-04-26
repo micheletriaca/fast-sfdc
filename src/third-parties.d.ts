@@ -34,7 +34,31 @@ declare module 'sfdy/src/services/path-service' {
 
 type SfdyConfig = {
   readonly stored: boolean;
-  staticResources: {
-    useBundleRenderer: string[];
+  preDeployPlugins?: string[];
+  postRetrievePlugins?: string[];
+  renderers?: string[];
+  staticResources?: {
+    useBundleRenderer?: string[];
   };
+  permissionSets?: {
+    stripUselessFls: boolean;
+  };
+  objectTranslations?: {
+    stripUntranslatedFields?: boolean;
+    stripNotVersionedFields?: boolean;
+  };
+  profiles?: {
+    addAllUserPermissions?: boolean;
+    addDisabledVersionedObjects?: boolean;
+    addExtraObjects?: string[];
+    addExtraTabVisibility?: string[];
+    addExtraApplications?: string[];
+    stripUserPermissionsFromStandardProfiles?: boolean;
+    stripUnversionedStuff?: boolean;
+  };
+  roles?: {
+    stripPartnerRoles?: boolean;
+  };
+  stripManagedPackageFields?: string[];
+
 }

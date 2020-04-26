@@ -15,10 +15,7 @@ export default function deploy (checkOnly = false, destructive = false, files: s
     const config = configService.getConfigSync()
     const creds = config.credentials[config.currentCredential]
     process.env.environment = creds.environment
-    const sfdyConfigExists = fs.existsSync(path.resolve(rootFolder, '.sfdy.json'))
-    const sfdyConfig = sfdyConfigExists ? JSON.parse(fs.readFileSync(path.resolve(rootFolder, '.sfdy.json')).toString()) : {}
-    const preDeployPlugins = sfdyConfig.preDeployPlugins || []
-    const renderers = sfdyConfig.renderers || []
+    const { preDeployPlugins = [], renderers = [] } = configService.getSfdyConfigSync()
     const sanitizedFiles = files.map(x => x.replace(rootFolder, '')).join(',')
 
     try {

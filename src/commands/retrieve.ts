@@ -1,8 +1,6 @@
 import statusbar from '../statusbar'
-import * as path from 'path'
 import * as vscode from 'vscode'
 import configService from '../services/config-service'
-import * as fs from 'fs'
 import * as sfdyRetrieve from 'sfdy/src/retrieve'
 import logger from '../logger'
 
@@ -12,8 +10,7 @@ export default function retrieve (files: string[] = [], filesAreMeta = false) {
     const config = configService.getConfigSync()
     const creds = config.credentials[config.currentCredential]
     process.env.environment = creds.environment
-    const sfdyConfigExists = fs.existsSync(path.resolve(rootFolder, '.sfdy.json'))
-    const sfdyConfig = sfdyConfigExists ? JSON.parse(fs.readFileSync(path.resolve(rootFolder, '.sfdy.json')).toString()) : {}
+    const sfdyConfig = configService.getSfdyConfigSync()
     const sanitizedFiles = files.map(x => x.replace(rootFolder, '')).join(',')
 
     try {
