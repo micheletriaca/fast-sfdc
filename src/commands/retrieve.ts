@@ -16,7 +16,6 @@ export default function retrieve (files: string[] = [], filesAreMeta = false) {
     try {
       logger.clear()
       logger.show()
-      if (sanitizedFiles) logger.appendLine('Requested files: ' + sanitizedFiles)
       await sfdyRetrieve({
         logger: (msg: string) => logger.appendLine(msg),
         basePath: rootFolder,

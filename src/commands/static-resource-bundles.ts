@@ -34,11 +34,12 @@ export default async function configureBundles () {
     matchOnDetail: true
   })
 
-  const allFilesToRefresh = [...savedSr, ...(selectedSr || []).map(x => x.label)].map(x => 'StaticResource/' + x.replace('.resource', ''))
+  if (!selectedSr) return
+  const allFilesToRefresh = [...savedSr, ...(selectedSr || []).map(x => x.label)].map(x => 'staticresources/' + x)
   sfdyConfig.staticResources = sfdyConfig.staticResources || {}
   sfdyConfig.staticResources.useBundleRenderer = (selectedSr || []).map(x => x.label)
   await configService.storeSfdyConfig(sfdyConfig)
   if (allFilesToRefresh.length > 0) {
-    retrieve(allFilesToRefresh, true)
+    retrieve(allFilesToRefresh)
   }
 }

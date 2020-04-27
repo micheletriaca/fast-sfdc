@@ -1,17 +1,22 @@
 import retrieve from './retrieve'
 import * as vscode from 'vscode'
+import * as path from 'path'
+import * as fs from 'fs'
 
-const isInContext = (uri: vscode.Uri) => /^.*\/src\/.*$/.test(uri.path)
-const isFolder = (path: string) => !path.includes('/')
+const basePath = path.join(vscode.workspace.rootPath as string, 'src') + '/'
+const isInContext = (uri: vscode.Uri) => uri.path.startsWith(basePath)
+const isFolder = (p: string) => fs.statSync(path.resolve(vscode.workspace.rootPath || '', 'src', p)).isDirectory()
 
 export default function retrieveSelected (uri: vscode.Uri, allUris: vscode.Uri[]) {
   if (allUris && allUris.length) {
     retrieve(allUris
       .filter(x => isInContext(x))
-      .map(x => x.path.substring(x.path.lastIndexOf('src/') + 4))
+      .map(x => x.path.substring(basePath.length))
       .map(x => isFolder(x) ? x + '/**/*' : x))
   } else if (vscode.window.activeTextEditor && vscode.window.activeTextEditor.document) {
     const fileName = vscode.window.activeTextEditor.document.fileName
-    retrieve([fileName])
+    if (isInContext(vscode.Uri.file(fileName))) {
+      retrieve([fileName.substring(basePath.length)])
+    }
   }
 }
