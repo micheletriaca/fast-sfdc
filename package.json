@@ -151,39 +151,39 @@
         },
         {
           "command": "FastSfdc.createMeta",
-          "when": "fast-sfdc-active"
+          "when": "fast-sfdc-active && fast-sfdc-configured"
         },
         {
           "command": "FastSfdc.retrieve",
-          "when": "fast-sfdc-active"
+          "when": "fast-sfdc-active && fast-sfdc-configured"
         },
         {
           "command": "FastSfdc.configureStaticResourceBundles",
-          "when": "fast-sfdc-active"
+          "when": "fast-sfdc-active && fast-sfdc-configured"
         },
         {
           "command": "FastSfdc.retrieveProfiles",
-          "when": "fast-sfdc-active"
+          "when": "fast-sfdc-active && fast-sfdc-configured"
         },
         {
           "command": "FastSfdc.deploy",
-          "when": "fast-sfdc-active"
+          "when": "fast-sfdc-active && fast-sfdc-configured"
         },
         {
           "command": "FastSfdc.validate",
-          "when": "fast-sfdc-active"
+          "when": "fast-sfdc-active && fast-sfdc-configured"
         },
         {
           "command": "FastSfdc.executeAnonymous",
-          "when": "fast-sfdc-active"
+          "when": "fast-sfdc-active && fast-sfdc-configured"
         },
         {
           "command": "FastSfdc.retrieveSingle",
-          "when": "fast-sfdc-active"
+          "when": "fast-sfdc-active && fast-sfdc-configured"
         },
         {
           "command": "FastSfdc.deploySingle",
-          "when": "fast-sfdc-active"
+          "when": "fast-sfdc-active && fast-sfdc-configured"
         },
         {
           "command": "FastSfdc.retrieveSelected",
@@ -199,45 +199,45 @@
         },
         {
           "command": "FastSfdc.initSfdy",
-          "when": "fast-sfdc-active"
+          "when": "fast-sfdc-active && fast-sfdc-configured"
         }
       ],
       "editor/context": [
         {
           "command": "FastSfdc.createAuraDefinition",
-          "when": "fast-sfdc-active && resourceExtname == .cmp",
+          "when": "fast-sfdc-active && fast-sfdc-configured && resourceExtname == .cmp",
           "group": "z_commands"
         },
         {
           "command": "FastSfdc.retrieveSingle",
-          "when": "fast-sfdc-active",
+          "when": "fast-sfdc-active && fast-sfdc-configured",
           "group": "z_commands"
         },
         {
           "command": "FastSfdc.deploySingle",
-          "when": "fast-sfdc-active",
+          "when": "fast-sfdc-active && fast-sfdc-configured",
           "group": "z_commands"
         }
       ],
       "explorer/context": [
         {
           "command": "FastSfdc.createAuraDefinition",
-          "when": "fast-sfdc-active && resourceExtname == .cmp",
+          "when": "fast-sfdc-active && fast-sfdc-configured && resourceExtname == .cmp",
           "group": "z_commands"
         },
         {
           "command": "FastSfdc.retrieveSelected",
-          "when": "fast-sfdc-active",
+          "when": "fast-sfdc-active && fast-sfdc-configured",
           "group": "z_commands"
         },
         {
           "command": "FastSfdc.deploySelected",
-          "when": "fast-sfdc-active",
+          "when": "fast-sfdc-active && fast-sfdc-configured",
           "group": "z_commands"
         },
         {
           "command": "FastSfdc.destroySelected",
-          "when": "fast-sfdc-active",
+          "when": "fast-sfdc-active && fast-sfdc-configured",
           "group": "z_commands"
         }
       ]
