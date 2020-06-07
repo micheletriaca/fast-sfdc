@@ -1,4 +1,10 @@
 # Change Log
+## 1.3.3
+* Bugfixing: [Every Command in palette is visible regardless of credential insertion](issues/21)
+* Bugfixing: [Create new fails if package.xml hasn't any type](issues/20)
+* Bugfixing: [Create new fails if related metadata folder not exists](issues/19)
+* Bugfixing: [Create new lwc. Init js-meta.xml file](issues/17)
+
 ## 1.3.2
 * Bugfixing
 
