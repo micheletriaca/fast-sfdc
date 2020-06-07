@@ -52,7 +52,8 @@ export default async function runTest (document: vscode.TextDocument, className:
       printResults(res, document)
       done('👍🏻')
     } catch (e) {
-      return done(e)
+      done('👎🏻')
+      throw e
     }
   })
 }
