@@ -31,16 +31,22 @@ export default {
   },
   async addToPackage (files: string[], sfdcConnector: SfdcConnector) {
     const { storedPackage, deltaPackage } = await getStoredAndDeltaPackage(files, sfdcConnector)
-    storedPackage.types = storedPackage.types.map(t => {
-      if (t.members.find(m => m === '*')) return t
-      const dt = deltaPackage.types.find(dt => dt.name[0] === t.name[0])
-      if (!dt) return t
-      dt.members
-        .filter(dm => t.members.indexOf(dm) === -1)
-        .forEach(dm => t.members.push(dm))
-      t.members.sort()
-      return t
-    })
+    const stTypes = storedPackage.types || []
+    for (let i = 0; i < (deltaPackage.types || []).length; i++) {
+      const t = deltaPackage.types[i]
+      const stType = stTypes.find(st => st.name[0] === t.name[0]) || stTypes[stTypes.push({ members: [], name: [t.name[0]] }) - 1]
+      if (!stType.members.find(m => m === '*')) {
+        for (let j = 0; j < t.members.length; j++) {
+          const dm = t.members[j]
+          if (!stType.members.find(m => m === dm)) {
+            stType.members.push(dm)
+          }
+        }
+        stType.members.sort()
+      }
+    }
+    stTypes.sort((a, b) => a.name[0] > b.name[0] ? 1 : -1)
+    storedPackage.types = stTypes
     const packagePath = path.resolve(vscode.workspace.rootPath || '', 'src', 'package.xml')
     fs.writeFileSync(packagePath, buildXml({ Package: storedPackage }) + '\n')
   },

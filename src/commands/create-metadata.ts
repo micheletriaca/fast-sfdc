@@ -5,7 +5,6 @@ import configService from '../services/config-service'
 import toolingService from '../services/tooling-service'
 import utils from '../utils/utils'
 import * as path from 'path'
-import * as fs from 'fs'
 import sfdcConnector from '../sfdc-connector'
 import packageService from '../services/package-service'
 import { buildXml } from 'sfdy/src/utils/xml-utils'
@@ -115,7 +114,6 @@ async function storeOnFileSystem (docBody: string, docMeta: AnyMetadata, docName
   let p = path.join(vscode.workspace.rootPath as string, 'src', docType.folder, docName + docType.extension)
   if (isAuraBundle) {
     const bundleDirPath = path.join(vscode.workspace.rootPath as string, 'src', docType.folder, docName)
-    fs.mkdirSync(bundleDirPath)
     p = path.join(bundleDirPath, docName + docType.extension)
   }
   await utils.writeFile(p, docBody)
