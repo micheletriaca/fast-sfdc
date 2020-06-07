@@ -5,10 +5,10 @@ import configService from '../services/config-service'
 import toolingService from '../services/tooling-service'
 import utils from '../utils/utils'
 import * as path from 'path'
-import * as xml2js from 'xml2js'
 import * as fs from 'fs'
 import sfdcConnector from '../sfdc-connector'
 import packageService from '../services/package-service'
+import { buildXml } from 'sfdy/src/utils/xml-utils'
 
 interface DocType { label: string; toolingType: string; folder: string; extension: string }
 
@@ -32,7 +32,7 @@ function getDocument (metaType: string, metaName: string, objName?: string) {
     case 'ApexTriggerMember': return `trigger ${metaName} on ${objName} (before insert) {\n\n}`
     case 'AuraDefinitionBundle': return '<aura:component ' +
       'implements="flexipage:availableForRecordHome,force:hasRecordId" access="global">\n\n</aura:component>'
-    case 'LightningComponentBundle': return 'import { LightningElement, track } from \'lwc\';\nexport default class CmpCtrl extends LightningElement {\n\n}'
+    case 'LightningComponentBundle': return 'import { LightningElement } from \'lwc\'\nexport default class CmpCtrl extends LightningElement {\n\n}'
     default: return ''
   }
 }
@@ -74,12 +74,24 @@ async function createRemoteAuraBundle (docBody: string, docMeta: AuraMetadata, d
 
 async function createRemoteLwcBundle (docBody: string, docMeta: LwcMetadata, docName: string) {
   const lwcBundleId = await sfdcConnector.upsertObj('LightningComponentBundle', {
-    Metadata: {},
+    Metadata: docMeta,
     FullName: docName
   })
   const lwcCmpId = await sfdcConnector.upsertLwcObj({
     FilePath: `lwc/${docName}/${docName}.js`,
     Source: docBody,
+    LightningComponentBundleId: lwcBundleId,
+    Format: 'js'
+  })
+  await sfdcConnector.upsertLwcObj({
+    FilePath: `lwc/${docName}/${docName}.js-meta.xml`,
+    Source: buildXml({
+      LightningComponentBundle: {
+        ...docMeta,
+        apiVersion: docMeta.apiVersion + '.0',
+        $: { xmlns: 'http://soap.sforce.com/2006/04/metadata' }
+      }
+    }),
     LightningComponentBundleId: lwcBundleId,
     Format: 'js'
   })
@@ -100,10 +112,6 @@ async function createRemoteMeta (docBody: string, docMeta: AnyMetadata, docName:
 
 async function storeOnFileSystem (docBody: string, docMeta: AnyMetadata, docName: string, docType: DocType) {
   const isAuraBundle = docType.toolingType === 'AuraDefinitionBundle' || docType.toolingType === 'LightningComponentBundle'
-  const builder = new xml2js.Builder({
-    xmldec: { version: '1.0', encoding: 'UTF-8' },
-    renderOpts: { pretty: true, indent: '    ', newline: '\n' }
-  })
   let p = path.join(vscode.workspace.rootPath as string, 'src', docType.folder, docName + docType.extension)
   if (isAuraBundle) {
     const bundleDirPath = path.join(vscode.workspace.rootPath as string, 'src', docType.folder, docName)
@@ -111,13 +119,13 @@ async function storeOnFileSystem (docBody: string, docMeta: AnyMetadata, docName
     p = path.join(bundleDirPath, docName + docType.extension)
   }
   await utils.writeFile(p, docBody)
-  await utils.writeFile(`${p}-meta.xml`, builder.buildObject({
+  await utils.writeFile(`${p}-meta.xml`, buildXml({
     [docType.toolingType.replace(/Member$/, '')]: {
       ...docMeta,
       apiVersion: docMeta.apiVersion + '.0',
       $: { xmlns: 'http://soap.sforce.com/2006/04/metadata' }
     }
-  }) + '\n')
+  }))
   const sfdcConnector = await packageService.getSfdcConnector()
   const metaPath = (
     isAuraBundle
