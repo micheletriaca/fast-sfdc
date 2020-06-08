@@ -43,8 +43,9 @@ const metadata = async function (method: string, args: any, wsdl = 'Metadata', h
     const metadataWsdl = conn.wsdl(apiVersion, wsdl)
     return await soapWithDebug(conn, metadataWsdl, method, args, headers)
   } catch (e) {
+    const invalidSessionId = e.detail && e.detail.faultcode && e.detail.faultcode === 'sf:INVALID_SESSION_ID'
     if (e.code === 'ENOTFOUND') throw Error('Unreachable host. Check connection')
-    else if (e.response && (e.response.statusCode === 401 || e.response.statusCode === 403) && retry) {
+    else if (((e.response && (e.response.statusCode === 401 || e.response.statusCode === 403)) || invalidSessionId) && retry) {
       conn.sessionId = undefined
       return metadata(method, args, wsdl, headers, false)
     } else {
