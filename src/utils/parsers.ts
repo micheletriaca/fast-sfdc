@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import * as path from 'path'
+import * as path from 'upath'
 import { AuraDefType } from '../fast-sfdc'
 
 export default {
@@ -63,7 +63,8 @@ export default {
   },
 
   getFilename (fullPath: string) {
-    return fullPath.substring(fullPath.lastIndexOf(path.sep) + 1, fullPath.lastIndexOf('.'))
+    const fp = path.normalize(fullPath)
+    return fp.substring(fp.lastIndexOf(path.sep) + 1, fp.lastIndexOf('.'))
   },
 
   getMethodName (methodSign: string) {
@@ -72,15 +73,18 @@ export default {
   },
 
   getAuraBundleName (docUri: vscode.Uri) {
-    return docUri.fsPath.substring(docUri.fsPath.indexOf(`aura${path.sep}`) + 5, docUri.fsPath.lastIndexOf(path.sep))
+    const p = path.toUnix(docUri.fsPath)
+    return p.substring(p.indexOf(`aura${path.sep}`) + 5, p.lastIndexOf(path.sep))
   },
 
   getLwcBundleName (docUri: vscode.Uri) {
-    const firstIndex = docUri.fsPath.indexOf(`lwc${path.sep}`) + 4
-    return docUri.fsPath.substring(firstIndex, docUri.fsPath.indexOf(path.sep, firstIndex))
+    const p = path.toUnix(docUri.fsPath)
+    const firstIndex = p.indexOf(`lwc${path.sep}`) + 4
+    return p.substring(firstIndex, p.indexOf(path.sep, firstIndex))
   },
 
   getLastFolder (docUri: vscode.Uri) {
-    return docUri.fsPath.substring(0, docUri.fsPath.lastIndexOf(path.sep))
+    const p = path.toUnix(docUri.fsPath)
+    return p.substring(0, p.lastIndexOf(path.sep))
   }
 }

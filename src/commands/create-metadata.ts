@@ -4,7 +4,7 @@ import StatusBar from '../statusbar'
 import configService from '../services/config-service'
 import toolingService from '../services/tooling-service'
 import utils from '../utils/utils'
-import * as path from 'path'
+import * as path from 'upath'
 import sfdcConnector from '../sfdc-connector'
 import packageService from '../services/package-service'
 import { buildXml } from 'sfdy/src/utils/xml-utils'
@@ -111,9 +111,9 @@ async function createRemoteMeta (docBody: string, docMeta: AnyMetadata, docName:
 
 async function storeOnFileSystem (docBody: string, docMeta: AnyMetadata, docName: string, docType: DocType) {
   const isAuraBundle = docType.toolingType === 'AuraDefinitionBundle' || docType.toolingType === 'LightningComponentBundle'
-  let p = path.join(vscode.workspace.rootPath as string, 'src', docType.folder, docName + docType.extension)
+  let p = path.join(utils.getWorkspaceFolder(), 'src', docType.folder, docName + docType.extension)
   if (isAuraBundle) {
-    const bundleDirPath = path.join(vscode.workspace.rootPath as string, 'src', docType.folder, docName)
+    const bundleDirPath = path.join(utils.getWorkspaceFolder(), 'src', docType.folder, docName)
     p = path.join(bundleDirPath, docName + docType.extension)
   }
   await utils.writeFile(p, docBody)

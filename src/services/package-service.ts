@@ -3,9 +3,9 @@ import { buildXml } from 'sfdy/src/utils/xml-utils'
 import { setBasePath } from 'sfdy/src/services/path-service'
 import configService from './config-service'
 import * as SfdcConn from 'sfdy/src/utils/sfdc-utils'
-import * as path from 'path'
-import * as vscode from 'vscode'
+import * as path from 'upath'
 import * as fs from 'fs'
+import utils from '../utils/utils'
 
 const getStoredAndDeltaPackage = async (files: string[], sfdcConnector: SfdcConnector) => {
   const storedPackage = await getPackageXml()
@@ -17,7 +17,7 @@ const getStoredAndDeltaPackage = async (files: string[], sfdcConnector: SfdcConn
 
 export default {
   async getSfdcConnector (): Promise<SfdcConnector> {
-    setBasePath(vscode.workspace.rootPath || '')
+    setBasePath(utils.getWorkspaceFolder())
     const cfg = configService.getConfigSync()
     const loginOpts = cfg.credentials[cfg.currentCredential]
     const storedPackage = await getPackageXml()
@@ -47,7 +47,7 @@ export default {
     }
     stTypes.sort((a, b) => a.name[0] > b.name[0] ? 1 : -1)
     storedPackage.types = stTypes
-    const packagePath = path.resolve(vscode.workspace.rootPath || '', 'src', 'package.xml')
+    const packagePath = path.resolve(utils.getWorkspaceFolder(), 'src', 'package.xml')
     fs.writeFileSync(packagePath, buildXml({ Package: storedPackage }) + '\n')
   },
   async removeFromPackage (files: string[], sfdcConnector: SfdcConnector) {
@@ -56,7 +56,7 @@ export default {
     storedPackage.types = storedPackage.types
       .map(t => ({ ...t, members: t.members.filter(m => !itemsToRemove.has(`${t.name[0]}/${m}`)) }))
       .filter(t => !!t.members.length)
-    const packagePath = path.resolve(vscode.workspace.rootPath || '', 'src', 'package.xml')
+    const packagePath = path.resolve(utils.getWorkspaceFolder(), 'src', 'package.xml')
     fs.writeFileSync(packagePath, buildXml({ Package: storedPackage }) + '\n')
   }
 }

@@ -5,7 +5,7 @@ import { AuraDefType, AuraFormat } from '../fast-sfdc'
 import sfdcConnector from '../sfdc-connector'
 import codeTemplates from '../utils/code-templates'
 import statusbar from '../statusbar'
-import * as path from 'path'
+import * as path from 'upath'
 
 type AuraOption = { label: AuraDefType; format: AuraFormat }
 

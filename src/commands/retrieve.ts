@@ -1,12 +1,12 @@
 import statusbar from '../statusbar'
-import * as vscode from 'vscode'
 import configService from '../services/config-service'
 import * as sfdyRetrieve from 'sfdy/src/retrieve'
 import logger from '../logger'
+import utils from '../utils/utils'
 
 export default function retrieve (files: string[] = [], filesAreMeta = false) {
   statusbar.startLongJob(async done => {
-    const rootFolder = vscode.workspace.rootPath || ''
+    const rootFolder = utils.getWorkspaceFolder()
     const config = configService.getConfigSync()
     const creds = config.credentials[config.currentCredential]
     process.env.environment = creds.environment

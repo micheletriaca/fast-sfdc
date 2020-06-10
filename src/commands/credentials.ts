@@ -6,7 +6,7 @@ import utils from '../utils/utils'
 import { ConfigCredential } from '../fast-sfdc'
 import toolingService from '../services/tooling-service'
 import * as fs from 'fs'
-import * as path from 'path'
+import * as path from 'upath'
 
 async function getUrl (): Promise<string> {
   const res = await vscode.window.showQuickPick([
@@ -66,7 +66,7 @@ export default async function enterCredentials (addMode = false) {
     try {
       const editGitIgnore = await vscode.window.showQuickPick([{ label: 'Yes', value: true }, { label: 'No', value: false }], { ignoreFocusOut: true, placeHolder: 'Would you like to add fastsfdc config file to .gitignore?' })
       if (editGitIgnore && editGitIgnore.value) {
-        const gitIgnorePath = path.join(vscode.workspace.rootPath || '', '.gitignore')
+        const gitIgnorePath = path.join(utils.getWorkspaceFolder(), '.gitignore')
         fs.appendFileSync(gitIgnorePath, `\n**/${configService.getConfigFileName()}\n`)
       }
     } catch (err) {

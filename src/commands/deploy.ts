@@ -1,17 +1,17 @@
-import * as vscode from 'vscode'
 import * as sfdyDeploy from 'sfdy/src/deploy'
 import * as fs from 'fs'
-import * as path from 'path'
+import * as path from 'upath'
 import * as deleteEmpty from 'delete-empty'
 import statusbar from '../statusbar'
 import configService from '../services/config-service'
 import logger from '../logger'
 import packageService from '../services/package-service'
 import { getListOfSrcFiles, getPackageMapping } from 'sfdy/src/utils/package-utils'
+import utils from '../utils/utils'
 
 export default function deploy (checkOnly = false, destructive = false, files: string[] = []) {
   statusbar.startLongJob(async done => {
-    const rootFolder = vscode.workspace.rootPath || ''
+    const rootFolder = utils.getWorkspaceFolder()
     const config = configService.getConfigSync()
     const creds = config.credentials[config.currentCredential]
     process.env.environment = creds.environment
@@ -43,9 +43,9 @@ export default function deploy (checkOnly = false, destructive = false, files: s
         const packageMapping = await getPackageMapping(sfdcConnector)
         const listOfSrcFilesToDelete = await getListOfSrcFiles(packageMapping, files)
         listOfSrcFilesToDelete.forEach(f => {
-          fs.unlinkSync(path.resolve(vscode.workspace.rootPath || '', 'src', f))
+          fs.unlinkSync(path.resolve(utils.getWorkspaceFolder(), 'src', f))
         })
-        await deleteEmpty(path.resolve(vscode.workspace.rootPath || '', 'src'))
+        await deleteEmpty(path.resolve(utils.getWorkspaceFolder(), 'src'))
       }
       done(isDeployOk ? '👍🏻' : '👎🏻')
     } catch (e) {

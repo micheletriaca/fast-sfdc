@@ -1,7 +1,8 @@
 import * as vscode from 'vscode'
-import * as path from 'path'
+import * as path from 'upath'
 import sfdcConnector from '../sfdc-connector'
 import statusbar from '../statusbar'
+import utils from '../utils/utils'
 
 // TODO: cambiare name e usare { diagnosticCollection } in logger?
 const diagnosticCollection = vscode.languages.createDiagnosticCollection('FastSfdc-DebugLog')
@@ -26,7 +27,7 @@ export default async function executeAnonymous () {
       )])
       done('👎🏻')
     } else {
-      const newFile = vscode.Uri.parse('untitled:' + path.join(vscode.workspace.rootPath as string, 'debuglog.dbg'))
+      const newFile = vscode.Uri.parse('untitled:' + path.join(utils.getWorkspaceFolder(), 'debuglog.dbg'))
       const document = await vscode.workspace.openTextDocument(newFile)
       const edit = new vscode.WorkspaceEdit()
       edit.insert(newFile, new vscode.Position(0, 0), res.debugLog)

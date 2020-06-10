@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 import configService from '../services/config-service'
-import * as path from 'path'
+import * as path from 'upath'
 import * as multimatch from 'multimatch'
 import * as _ from 'highland'
 import { readdirSync, readFileSync } from 'fs'
@@ -9,7 +9,7 @@ import retrieve from './retrieve'
 
 export default async function configureBundles () {
   const sfdyConfig = configService.getSfdyConfigSync()
-  const srPath = path.resolve(vscode.workspace.rootPath || '', 'src', 'staticresources')
+  const srPath = path.resolve(utils.getWorkspaceFolder(), 'src', 'staticresources')
   const files = await _(readdirSync(srPath))
     .filter(x => x.endsWith('.resource-meta.xml'))
     .map(async x => ({

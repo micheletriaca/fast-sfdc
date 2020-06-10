@@ -44,6 +44,10 @@ export default {
     sbItem.show()
   },
 
+  hideStatusBar () {
+    sbItem.hide()
+  },
+
   startLoading () {
     if (!loadingCounter++) loadingTimer = setInterval(() => (sbItem.text = `${MENU_PREFIX()}: ${spinner()}${loadingCounter > 1 ? ' (' + loadingCounter + ')' : ''}`), 50)
   },
