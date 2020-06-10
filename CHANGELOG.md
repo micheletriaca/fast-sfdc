@@ -1,4 +1,8 @@
 # Change Log
+## 1.3.4
+* Bugfixing: [Windows compatibility](issues/22)
+* Bugfixing: Better handling of session token expiration
+
 ## 1.3.3
 * Bugfixing: [Every Command in palette is visible regardless of credential insertion](issues/21)
 * Bugfixing: [Create new fails if package.xml hasn't any type](issues/20)

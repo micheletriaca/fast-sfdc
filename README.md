@@ -42,11 +42,6 @@ Run your code snippets directly from vscode. Buggy developer console is now a di
 Just open a test class and click on the codelen
 ![Tests](./images/tests.png "Tests")
 
-## Known Issues
-
-None at the moment.
-Please open an issue in the github repository!
-
 ## Release Notes
 
 See [here](CHANGELOG.md)
