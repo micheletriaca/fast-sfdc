@@ -8,12 +8,10 @@ import * as fs from 'fs'
 import * as constants from 'sfdy/src/utils/constants'
 import utils from '../utils/utils'
 
-const getStoredAndDeltaPackage = async (files: string[], sfdcConnector: SfdcConnector) => {
+const getStoredAndDeltaPackage = async (files: string[], sfdcConnector: SfdcConnector, isMeta = false) => {
   const storedPackage = await getPackageXml()
-  return {
-    deltaPackage: await getPackageXml({ specificFiles: files, sfdcConnector }),
-    storedPackage
-  }
+  const deltaPackage = await getPackageXml({ [isMeta ? 'specificMeta' : 'specificFiles']: files, sfdcConnector })
+  return { deltaPackage, storedPackage }
 }
 
 export default {
@@ -35,34 +33,41 @@ export default {
     })
     return sfdcConnector
   },
-  async addToPackage (files: string[], sfdcConnector: SfdcConnector) {
-    const { storedPackage, deltaPackage } = await getStoredAndDeltaPackage(files, sfdcConnector)
-    const stTypes = storedPackage.types || []
-    for (let i = 0; i < (deltaPackage.types || []).length; i++) {
-      const t = deltaPackage.types[i]
-      const stType = stTypes.find(st => st.name[0] === t.name[0]) || stTypes[stTypes.push({ members: [], name: [t.name[0]] }) - 1]
-      if (!stType.members.find(m => m === '*')) {
-        for (let j = 0; j < t.members.length; j++) {
-          const dm = t.members[j]
-          if (!stType.members.find(m => m === dm)) {
-            stType.members.push(dm)
-          }
-        }
-        stType.members.sort()
-      }
+  async addToPackage (files: string[], sfdcConnector: SfdcConnector, isMeta = false) {
+    if (files.length === 0) return
+    const { storedPackage, deltaPackage } = await getStoredAndDeltaPackage(files, sfdcConnector, isMeta)
+    const stTypeMap = new Map((storedPackage.types || []).map(x => [x.name[0], x.members]))
+    for (const t of (deltaPackage.types || [])) {
+      const members = new Set([...stTypeMap.get(t.name[0]) || [], ...t.members])
+      stTypeMap.set(t.name[0], members.has('*') ? ['*'] : [...members].sort())
     }
-    stTypes.sort((a, b) => a.name[0] > b.name[0] ? 1 : -1)
-    storedPackage.types = stTypes
-    const packagePath = path.resolve(utils.getWorkspaceFolder(), 'src', 'package.xml')
-    fs.writeFileSync(packagePath, buildXml({ Package: storedPackage }) + '\n')
+    this.storePackage({
+      ...storedPackage,
+      types: [...stTypeMap]
+        .map(([name, members]) => ({ members, name: [name] }))
+        .sort((a, b) => a.name[0] > b.name[0] ? 1 : -1)
+    })
   },
-  async removeFromPackage (files: string[], sfdcConnector: SfdcConnector) {
-    const { storedPackage, deltaPackage } = await getStoredAndDeltaPackage(files, sfdcConnector)
+  async addMetaToPackage (meta: string[]) {
+    this.addToPackage(meta, await this.getSfdcConnector(), true)
+  },
+  async removeFromPackage (files: string[], sfdcConnector: SfdcConnector, isMeta = false) {
+    if (files.length === 0) return
+    const { storedPackage, deltaPackage } = await getStoredAndDeltaPackage(files, sfdcConnector, isMeta)
     const itemsToRemove = new Set(deltaPackage.types.flatMap(t => t.members.map(m => `${t.name[0]}/${m}`)))
-    storedPackage.types = storedPackage.types
-      .map(t => ({ ...t, members: t.members.filter(m => !itemsToRemove.has(`${t.name[0]}/${m}`)) }))
-      .filter(t => !!t.members.length)
+    this.storePackage({
+      ...storedPackage,
+      types: storedPackage.types
+        .map(t => ({ ...t, members: t.members.filter(m => !itemsToRemove.has(`${t.name[0]}/${m}`)) }))
+        .filter(t => !!t.members.length)
+        .sort((a, b) => a.name[0] > b.name[0] ? 1 : -1)
+    })
+  },
+  async removeMetaFromPackage (meta: string[]) {
+    this.removeFromPackage(meta, await this.getSfdcConnector(), true)
+  },
+  storePackage (pkg: Package) {
     const packagePath = path.resolve(utils.getWorkspaceFolder(), 'src', 'package.xml')
-    fs.writeFileSync(packagePath, buildXml({ Package: storedPackage }) + '\n')
+    fs.writeFileSync(packagePath, buildXml({ Package: pkg }) + '\n')
   }
 }

@@ -1,4 +1,4 @@
-import { Config, MetaObj, AuraObj, LwcObj, AuraBundle } from '../fast-sfdc'
+import { Config, MetaObj, AuraObj, LwcObj, AuraBundle, DescribeMetadataResult, ListMetadataResult } from '../fast-sfdc'
 import * as SfdcConn from 'node-salesforce-connection'
 import * as constants from 'sfdy/src/utils/constants'
 import configService from '../services/config-service'
@@ -81,6 +81,20 @@ export default {
       apiVersion
     }
   },
+  async describeMetadata (): Promise<DescribeMetadataResult> {
+    if (!conn.sessionId) await connect()
+    const res = await this.metadata('describeMetadata', { asOfVersion: apiVersion })
+    return res
+  },
+
+  async listMetadata (metadataObjects: {type: string; folder?: string}[]): Promise<ListMetadataResult[]> {
+    const res = await this.metadata('listMetadata', {
+      queries: metadataObjects,
+      asOfVersion: apiVersion
+    })
+    return res
+  },
+
   async createMetadataContainer (name: string): Promise<string> {
     const old = await query(`SELECT Id FROM MetadataContainer WHERE Name = '${name}'`)
     if (old.records.length) await this.deleteObj('MetadataContainer', old.records[0].Id)

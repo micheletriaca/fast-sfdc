@@ -33,6 +33,15 @@
   ],
   "main": "./dist/extension",
   "contributes": {
+    "views": {
+      "package-explorer": [
+        {
+          "id": "packageEditor",
+          "name": "metadata",
+          "when": "fast-sfdc-active && fast-sfdc-configured"
+        }
+      ]
+    },
     "keybindings": [
       {
         "command": "FastSfdc.deploySingle",
@@ -57,9 +66,29 @@
         "key": "ctrl+i c",
         "mac": "cmd+i c",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "packageEditor.focus",
+        "key": "ctrl+i p",
+        "mac": "cmd+i p"
       }
     ],
     "commands": [
+      {
+        "command": "FastSfdc.filterPackageTreeview",
+        "title": "show all Metadata Types/show only project Metadata Types",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "FastSfdc.filterPackageOnlyInOrg",
+        "title": "Show only unversioned Metadata/Show versioned and unversioned Metadata",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "FastSfdc.refreshPackageTreeview",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
       {
         "command": "FastSfdc.enterCredentials",
         "title": "Fast-Sfdc: Enter credentials..."
@@ -125,6 +154,11 @@
         "title": "Fast-Sfdc: Retrieve selected files"
       },
       {
+        "command": "FastSfdc.retrieveSelectedMeta",
+        "title": "Fast-Sfdc: Retrieve selected metadata",
+        "icon": "$(cloud-download)"
+      },
+      {
         "command": "FastSfdc.deploySelected",
         "title": "Fast-Sfdc: Deploy selected files"
       },
@@ -141,6 +175,16 @@
         "title": "Fast-Sfdc: Configure static resource bundles.."
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "package-explorer",
+          "title": "SFDC Explorer",
+          "icon": "$(cloud-download)",
+          "when": "fast-sfdc-active && fast-sfdc-configured"
+        }
+      ]
+    },
     "menus": {
       "commandPalette": [
         {
@@ -267,6 +311,30 @@
           "when": "fast-sfdc-active && fast-sfdc-configured",
           "group": "z_commands"
         }
+      ],
+      "view/title": [
+        {
+          "command": "FastSfdc.filterPackageTreeview",
+          "when": "view == packageEditor && fast-sfdc-active && fast-sfdc-configured",
+          "group": "navigation"
+        },
+        {
+          "command": "FastSfdc.filterPackageOnlyInOrg",
+          "when": "view == packageEditor && fast-sfdc-active && fast-sfdc-configured",
+          "group": "navigation"
+        },
+        {
+          "command": "FastSfdc.refreshPackageTreeview",
+          "when": "view == packageEditor && fast-sfdc-active && fast-sfdc-configured",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "FastSfdc.retrieveSelectedMeta",
+          "when": "view == packageEditor && fast-sfdc-active && fast-sfdc-configured && viewItem != downloading",
+          "group": "inline"
+        }
       ]
     },
     "languages": [
@@ -334,7 +402,7 @@
     "@types/highland": "^2.12.9",
     "@types/mocha": "^2.2.42",
     "@types/node": "^8.10.60",
-    "@types/vscode": "^1.32.0",
+    "@types/vscode": "^1.66.0",
     "@types/xml2js": "^0.4.5",
     "@typescript-eslint/eslint-plugin": "^5.16.0",
     "@typescript-eslint/parser": "^5.16.0",
@@ -355,6 +423,7 @@
   },
   "dependencies": {
     "delete-empty": "^3.0.0",
+    "exstream.js": "^0.21.0",
     "fs-extra": "^9.0.1",
     "highland": "^2.13.5",
     "multimatch": "^4.0.0",
