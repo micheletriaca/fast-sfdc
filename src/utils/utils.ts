@@ -13,7 +13,6 @@ export default {
       return result
     }
   },
-
   sleep: async (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),
   promisify: util.promisify,
   readFile: fs.readFile,
