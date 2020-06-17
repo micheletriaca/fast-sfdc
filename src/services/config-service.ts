@@ -25,7 +25,7 @@ export default {
   getConfigSync (): Config {
     const cfgPath = getCfgPath()
     if (!fs.existsSync(cfgPath)) {
-      return { stored: false, credentials: [], currentCredential: 0 }
+      return { stored: false, credentials: [], currentCredential: 0, showOutputWindow: true }
     } else {
       const storedCfg = fs.readFileSync(cfgPath, 'utf8')
       return { ...JSON.parse(storedCfg), stored: true }
@@ -35,7 +35,7 @@ export default {
   async getConfig (): Promise<Config> {
     const cfgPath = getCfgPath()
     if (!fs.existsSync(cfgPath)) {
-      return Promise.resolve({ stored: false, credentials: [], currentCredential: 0 })
+      return Promise.resolve({ stored: false, credentials: [], currentCredential: 0, showOutputWindow: true })
     } else {
       const storedCfg = await utils.readFile(cfgPath, 'utf8')
       return { ...JSON.parse(storedCfg), stored: true }

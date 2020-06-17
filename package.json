@@ -119,6 +119,10 @@
         "title": "Fast-Sfdc: Delete selected files from Salesforce"
       },
       {
+        "command": "FastSfdc.toggleOutputWindowVisibility",
+        "title": "Fast-Sfdc: Toggle output window visibility"
+      },
+      {
         "command": "FastSfdc.initSfdy",
         "title": "Fast-Sfdc: Init metadata patching"
       },
@@ -199,6 +203,10 @@
         },
         {
           "command": "FastSfdc.initSfdy",
+          "when": "fast-sfdc-active && fast-sfdc-configured"
+        },
+        {
+          "command": "FastSfdc.toggleOutputWindowVisibility",
           "when": "fast-sfdc-active && fast-sfdc-configured"
         }
       ],
