@@ -1,7 +1,4 @@
 # Change Log
-## 1.3.5
-* Added `toggle output window visibility` feature
-
 ## 1.3.4
 * Bugfixing: [Windows compatibility](issues/22)
 * Bugfixing: Better handling of session token expiration
