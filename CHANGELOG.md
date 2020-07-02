@@ -1,6 +1,9 @@
 # Change Log
+## 1.3.6
+* Updated `sfdy` to v1.3.6
+
 ## 1.3.5
-* Updated sfdy to 1.3.4
+* Updated `sfdy` to v1.3.4
 
 ## 1.3.4
 * Bugfixing: [Windows compatibility](issues/22)
