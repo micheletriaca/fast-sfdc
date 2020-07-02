@@ -1,4 +1,7 @@
 # Change Log
+## 1.3.5
+* Updated sfdy to 1.3.4
+
 ## 1.3.4
 * Bugfixing: [Windows compatibility](issues/22)
 * Bugfixing: Better handling of session token expiration
