@@ -60,7 +60,7 @@ export default async function enterCredentials (addMode = false) {
 
   await configService.storeConfig(config)
   vscode.commands.executeCommand('setContext', 'fast-sfdc-configured', true)
-  vscode.commands.executeCommand('setContext', 'fast-sfdc-more-credentials', config.credentials.length > 1)
+  vscode.commands.executeCommand('setContext', 'fast-sfdc-more-credentials', config.credentials.length > 2)
 
   if (config.credentials.length === 1) {
     try {
