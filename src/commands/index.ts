@@ -1,4 +1,5 @@
 import changeCredentials from './change-credentials'
+import removeCredentials from './remove-credentials'
 import compile from './compile'
 import createAuraDefinition from './create-aura-definition'
 import createMeta from './create-metadata'
@@ -16,6 +17,7 @@ import runTest from './run-test'
 
 export default {
   changeCredentials,
+  removeCredentials,
   compile,
   createAuraDefinition,
   createMeta,
