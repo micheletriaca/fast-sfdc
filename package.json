@@ -71,6 +71,10 @@
         "title": "Fast-Sfdc: Switch credentials..."
       },
       {
+        "command": "FastSfdc.removeCredentials",
+        "title": "Fast-Sfdc: Delete credentials..."
+      },
+      {
         "command": "FastSfdc.createMeta",
         "title": "Fast-Sfdc: Create new..."
       },
@@ -143,6 +147,10 @@
         },
         {
           "command": "FastSfdc.changeCredentials",
+          "when": "fast-sfdc-active && fast-sfdc-more-credentials"
+        },
+        {
+          "command": "FastSfdc.removeCredentials",
           "when": "fast-sfdc-active && fast-sfdc-more-credentials"
         },
         {
