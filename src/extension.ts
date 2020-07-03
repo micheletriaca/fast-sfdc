@@ -17,7 +17,7 @@ const activateExtension = () => {
     statusBar.initStatusBar()
     const cfg = configService.getConfigSync()
     vscode.commands.executeCommand('setContext', 'fast-sfdc-configured', cfg.stored)
-    vscode.commands.executeCommand('setContext', 'fast-sfdc-more-credentials', cfg.credentials.length > 2)
+    vscode.commands.executeCommand('setContext', 'fast-sfdc-more-credentials', cfg.credentials.length > 1)
     logger.appendLine('Extension "fast-sfdc" is now active!')
   }
 }

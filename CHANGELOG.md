@@ -1,4 +1,14 @@
 # Change Log
+## 1.4.2
+* Bugfixing
+
+## 1.4.1
+* Bugfixing
+
+## 1.4.0
+* Added `Delete credentials` command. Thanks [makostas1996](https://github.com/makostas1996)
+* Bugfixing
+
 ## 1.3.6
 * Updated `sfdy` to v1.3.6
 

@@ -26,7 +26,7 @@ export default async function removeCredentials () {
 
   await configService.storeConfig(config)
 
-  vscode.commands.executeCommand('setContext', 'fast-sfdc-more-credentials', config.credentials.length > 2)
+  vscode.commands.executeCommand('setContext', 'fast-sfdc-more-credentials', config.credentials.length > 1)
 
   vscode.window.showInformationMessage('Credential removed!')
 }
