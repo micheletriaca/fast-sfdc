@@ -20,7 +20,9 @@ export default function deploy (checkOnly = false, destructive = false, files: s
 
     try {
       logger.clear()
-      logger.show()
+      if (config.showOutputWindow) {
+        logger.show()
+      }
       const deployResult = await sfdyDeploy({
         logger: (msg: string) => logger.appendLine(msg),
         preDeployPlugins: sfdyConfig.preDeployPlugins,
@@ -51,7 +53,9 @@ export default function deploy (checkOnly = false, destructive = false, files: s
     } catch (e) {
       logger.appendLine('Something went wrong')
       logger.appendLine(e.message)
-      logger.show()
+      if (config.showOutputWindow) {
+        logger.show()
+      }
       done('👎🏻')
     }
   })

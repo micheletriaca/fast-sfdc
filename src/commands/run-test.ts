@@ -4,6 +4,7 @@ import sfdcConnector from '../sfdc-connector'
 import logger, { diagnosticCollection } from '../logger'
 
 import { TestExecutionResult, TestResult } from '../fast-sfdc'
+import configService from '../services/config-service'
 
 const lineString = 'line '
 const getStackTraceRange = (stackTrace: string, doc: vscode.TextDocument): vscode.Range => {
@@ -36,14 +37,21 @@ const printResults = (result: TestExecutionResult, document: vscode.TextDocument
   result.failures.forEach((v: TestResult) => {
     logger.appendLine(`${v.name}.${v.methodName} - KO: ${v.message}. ${v.stackTrace}`)
   })
-  logger.show()
+
+  const config = configService.getConfigSync()
+  if (config.showOutputWindow) {
+    logger.show()
+  }
 
   updateProblemsPanel(result.failures, document)
 }
 
 export default async function runTest (document: vscode.TextDocument, className: string, methodName: string) {
   StatusBar.startLongJob(async done => {
-    logger.show()
+    const config = await configService.getConfig()
+    if (config.showOutputWindow) {
+      logger.show()
+    }
     logger.appendLine('Executing tests...')
     const request: any = { className }
     if (methodName) request.testMethods = [methodName]
