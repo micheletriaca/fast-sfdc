@@ -1,4 +1,7 @@
 # Change Log
+## 1.4.2
+* Bugfixing
+
 ## 1.4.1
 * Bugfixing
 
