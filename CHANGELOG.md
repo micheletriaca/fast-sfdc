@@ -1,4 +1,7 @@
 # Change Log
+## 1.4.3
+* Bugfixing: Fixed broken `Deploy metadata` command
+
 ## 1.4.2
 * Bugfixing
 
