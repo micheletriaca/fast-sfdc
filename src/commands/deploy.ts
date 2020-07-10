@@ -34,7 +34,7 @@ export default function deploy (checkOnly = false, destructive = false, files: s
         },
         checkOnly,
         config: sfdyConfig,
-        files: sanitizedFiles
+        files: sanitizedFiles.length > 0 ? sanitizedFiles : undefined
       })
       const isDeployOk = deployResult.status === 'Succeeded'
       if (isDeployOk && !checkOnly && destructive) {
