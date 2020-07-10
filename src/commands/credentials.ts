@@ -22,13 +22,10 @@ async function getUrl (): Promise<string> {
 }
 
 async function getDeployOnSave (): Promise<boolean> {
-  const res = await vscode.window.showQuickPick([
-    {
-      label: 'true'
-    }, {
-      label: 'false'
-    }
-  ], { ignoreFocusOut: true, placeHolder: 'Deploy on save?' })
+  const res = await vscode.window.showQuickPick(
+    [{ label: 'true' }, { label: 'false' }],
+    { ignoreFocusOut: true, placeHolder: 'Deploy on save?' }
+  )
   return (res && res.label === 'true') || false
 }
 
@@ -74,14 +71,15 @@ export default async function enterCredentials (addMode = false) {
     }
   }
 
-  try {
-    StatusBar.startLoading()
-    await connector.connect(config)
-    toolingService.resetMetadataContainer()
-    StatusBar.stopLoading()
-    vscode.window.showInformationMessage('Credentials ok!')
-  } catch (error) {
-    StatusBar.stopLoading()
-    vscode.window.showErrorMessage('Wrong credentials. Fix them to retry')
-  }
+  StatusBar.startLongJob(async done => {
+    try {
+      await connector.connect(config)
+      await toolingService.resetMetadataContainer()
+      vscode.window.showInformationMessage('Credentials ok!')
+      done('👍🏻')
+    } catch (error) {
+      vscode.window.showErrorMessage('Wrong credentials. Fix them to retry')
+      done('👎🏻')
+    }
+  })
 }

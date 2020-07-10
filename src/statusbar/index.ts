@@ -1,18 +1,16 @@
 import * as vscode from 'vscode'
-import * as elegantSpinner from 'elegant-spinner'
 import { DoneCallback } from '../fast-sfdc'
 import configService from '../services/config-service'
 
 const sbItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 5)
+sbItem.command = 'FastSfdc.changeCredentials'
 const MENU_PREFIX = () => {
   const cfg = configService.getConfigSync()
-  return cfg.stored ? `FastSfdc - ${cfg.credentials[cfg.currentCredential].username}` : 'FastSfdc - not logged in'
+  return `fast-sfdc - ${cfg.stored ? cfg.credentials[cfg.currentCredential].username : 'not logged in'}`
 }
 
-const spinner = elegantSpinner()
-
-let loadingTimer: NodeJS.Timer
 let loadingCounter = 0
+let doneTimeout: NodeJS.Timer
 
 const queue: Function[] = []
 let running = false
@@ -49,15 +47,19 @@ export default {
   },
 
   startLoading () {
-    if (!loadingCounter++) loadingTimer = setInterval(() => (sbItem.text = `${MENU_PREFIX()}: ${spinner()}${loadingCounter > 1 ? ' (' + loadingCounter + ')' : ''}`), 50)
+    clearTimeout(doneTimeout)
+    loadingCounter++
+    this.setText()
   },
 
   stopLoading () {
-    if (loadingCounter === 1) {
-      sbItem.text = MENU_PREFIX()
-      clearInterval(loadingTimer)
-    }
     loadingCounter = Math.max(loadingCounter - 1, 0)
+    if (loadingCounter === 0) {
+      sbItem.text = MENU_PREFIX()
+      doneTimeout = setTimeout(() => (sbItem.text = MENU_PREFIX()), 10000)
+    } else {
+      this.setText()
+    }
   },
 
   startLongJob (doLongJob: (done: DoneCallback) => void) {
@@ -66,7 +68,8 @@ export default {
     if (!running) runNextJob()
   },
 
-  setText (newTxt: string) {
-    sbItem.text = `${MENU_PREFIX()}${(newTxt && ': ' + newTxt) || ''}`
+  setText (newTxt: string | undefined = undefined) {
+    if (!newTxt) sbItem.text = `${MENU_PREFIX()} $(sync~spin)${loadingCounter > 1 ? ' (' + loadingCounter + ')' : ''}`
+    else sbItem.text = `${MENU_PREFIX()} ${newTxt || ''}`
   }
 }
