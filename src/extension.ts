@@ -3,7 +3,7 @@ import * as vscode from 'vscode'
 import cmds from './commands'
 import statusBar from './statusbar'
 import configService from './services/config-service'
-import logger from './logger'
+import logger, { reporter } from './logger'
 import CodeLensRunTest from './codelens-provider/codelens-run-test'
 
 const activateExtension = () => {
@@ -19,6 +19,7 @@ const activateExtension = () => {
     vscode.commands.executeCommand('setContext', 'fast-sfdc-configured', cfg.stored)
     vscode.commands.executeCommand('setContext', 'fast-sfdc-more-credentials', cfg.credentials.length > 1)
     logger.appendLine('Extension "fast-sfdc" is now active!')
+    reporter.sendEvent('extensionActivated')
   }
 }
 
