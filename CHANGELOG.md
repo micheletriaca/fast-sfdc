@@ -1,4 +1,7 @@
 # Change Log
+## 1.4.4
+* Telemetry: Add super simple anonymous telemetry to monitor usage/bugs
+
 ## 1.4.3
 * Bugfixing: Fixed broken `Deploy metadata` command
 
