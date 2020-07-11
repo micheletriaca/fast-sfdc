@@ -13,8 +13,9 @@ import retrieve from './retrieve'
 import retrieveSelected from './retrieve-selected'
 import configureStaticResourceBundles from './static-resource-bundles'
 import runTest from './run-test'
+import { reporter } from '../logger'
 
-export default {
+export default new Proxy({
   changeCredentials,
   removeCredentials,
   compile,
@@ -30,4 +31,11 @@ export default {
   retrieveSelected,
   runTest,
   configureStaticResourceBundles
-}
+}, {
+  get: (...args) => new Proxy(Reflect.get(...args), {
+    apply: (t2, ...args2) => {
+      Reflect.apply(t2, ...args2)
+      reporter.sendEvent(t2.name)
+    }
+  })
+})
