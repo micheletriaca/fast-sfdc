@@ -13,7 +13,7 @@ async function showCredsMenu (credentials: ConfigCredential[], currentCredential
   const res = await vscode.window.showQuickPick(
     credentials
       .filter((x: any, y: number) => y !== currentCredential)
-      .map((x: ConfigCredential) => ({ label: '$(person) ' + x.username }) as vscode.QuickPickItem)
+      .map(x => ({ label: '$(person) ' + x.username }))
       .concat([
         { label: '$(add) Add credential...' },
         { label: '$(remove) Remove credential...', hidden: credentials.length < 2 },

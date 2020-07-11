@@ -67,8 +67,8 @@
         "title": "Fast-Sfdc: Add other credentials..."
       },
       {
-        "command": "FastSfdc.changeCredentials",
-        "title": "Fast-Sfdc: Switch credentials..."
+        "command": "FastSfdc.manageCredentials",
+        "title": "Fast-Sfdc: Manage credentials..."
       },
       {
         "command": "FastSfdc.removeCredentials",
@@ -143,10 +143,6 @@
         },
         {
           "command": "FastSfdc.replaceCredentials",
-          "when": "false"
-        },
-        {
-          "command": "FastSfdc.changeCredentials",
           "when": "false"
         },
         {

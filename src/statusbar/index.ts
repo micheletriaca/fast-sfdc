@@ -3,7 +3,7 @@ import { DoneCallback } from '../fast-sfdc'
 import configService from '../services/config-service'
 
 const sbItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 5)
-sbItem.command = 'FastSfdc.changeCredentials'
+sbItem.command = 'FastSfdc.manageCredentials'
 const MENU_PREFIX = () => {
   const cfg = configService.getConfigSync()
   return `fast-sfdc - ${cfg.stored ? cfg.credentials[cfg.currentCredential].username : 'not logged in'}`
