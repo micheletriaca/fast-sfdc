@@ -87,7 +87,7 @@ async function createRemoteLwcBundle (docBody: string, docBodyHtml: string, docM
       FilePath: `lwc/${docName}/${docName}.html`,
       Source: docBodyHtml,
       LightningComponentBundleId: lwcBundleId,
-      Format: 'js'
+      Format: 'html'
     })
   }
   await sfdcConnector.upsertLwcObj({
