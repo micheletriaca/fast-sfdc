@@ -2,6 +2,7 @@ export interface Config {
   readonly stored: boolean;
   credentials: ConfigCredential[];
   currentCredential: number;
+  showOutputWindow: boolean;
 }
 
 export interface ConfigCredential {

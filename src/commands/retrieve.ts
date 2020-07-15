@@ -15,7 +15,9 @@ export default function retrieve (files: string[] = [], filesAreMeta = false) {
 
     try {
       logger.clear()
-      logger.show()
+      if (config.showOutputWindow) {
+        logger.show()
+      }
       await sfdyRetrieve({
         logger: (msg: string) => logger.appendLine(msg),
         basePath: rootFolder,
@@ -31,7 +33,9 @@ export default function retrieve (files: string[] = [], filesAreMeta = false) {
     } catch (e) {
       logger.appendLine('Something went wrong')
       logger.appendLine(e.message)
-      logger.show()
+      if (config.showOutputWindow) {
+        logger.show()
+      }
       done('👎🏻')
     }
   })

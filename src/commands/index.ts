@@ -11,6 +11,7 @@ import executeAnonymous from './execute-anonymous'
 import initSfdy from './init-sfdy'
 import retrieve from './retrieve'
 import retrieveSelected from './retrieve-selected'
+import toggleOutputWindowVisibility from './output-window-visibility'
 import configureStaticResourceBundles from './static-resource-bundles'
 import runTest from './run-test'
 
@@ -28,6 +29,7 @@ export default {
   initSfdy,
   retrieve,
   retrieveSelected,
+  toggleOutputWindowVisibility,
   runTest,
   configureStaticResourceBundles
 }
