@@ -47,5 +47,10 @@ export function activate (ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.runTest', cmds.runTest))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.initSfdy', cmds.initSfdy))
   ctx.subscriptions.push(vscode.languages.registerCodeLensProvider({ language: 'apex', scheme: 'file' }, new CodeLensRunTest()))
+  reporter.subscribe(ctx)
   activateExtension()
+}
+
+export function deactivate () {
+  reporter.dispose()
 }

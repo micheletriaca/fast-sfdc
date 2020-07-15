@@ -1,4 +1,7 @@
 # Change Log
+## 1.4.5
+* Bugfixing: Flush telemetry logs
+
 ## 1.4.4
 * Telemetry: Add super simple anonymous telemetry to monitor usage/bugs
 

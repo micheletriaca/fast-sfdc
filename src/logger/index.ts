@@ -20,6 +20,14 @@ class Reporter {
   sendEvent (cmd: string, props = {}, measurements = {}) {
     this.reporter.sendTelemetryEvent(cmd, props, measurements)
   }
+
+  subscribe (ctx: vscode.ExtensionContext) {
+    ctx.subscriptions.push(this.reporter)
+  }
+
+  dispose () {
+    this.reporter.dispose()
+  }
 }
 
 const reporter = new Reporter()
