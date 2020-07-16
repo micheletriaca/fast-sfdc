@@ -1,4 +1,7 @@
 # Change Log
+## 1.4.6
+* Bugfixing
+
 ## 1.4.5
 * Bugfixing: Flush telemetry logs
 
