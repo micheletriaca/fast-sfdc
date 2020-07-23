@@ -1,4 +1,15 @@
 # Change Log
+## 1.5.0
+* New Unified `Manage Credentials` menu. From here you can fully manage your credentials:
+  * Add credentials
+  * Remove credentials
+  * Replace current credentials
+  * Switch credentials
+* Click `fast-sfdc` status bar to open the `Manage Credentials` menu
+* `vscode` builtin spinner icon
+* LWC filename validation
+* Create HTML file along with the LWC (thanks [makostas1996](https://github.com/makostas1996))
+
 ## 1.4.6
 * Bugfixing
 
