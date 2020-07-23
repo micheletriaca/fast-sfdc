@@ -87,7 +87,7 @@ async function createRemoteLwcBundle (docBody: string, docBodyHtml: string, docM
       FilePath: `lwc/${docName}/${docName}.html`,
       Source: docBodyHtml,
       LightningComponentBundleId: lwcBundleId,
-      Format: 'js'
+      Format: 'html'
     })
   }
   await sfdcConnector.upsertLwcObj({
@@ -146,11 +146,10 @@ async function storeOnFileSystem (docBody: string, docBodyHtml: string, docMeta:
 }
 
 async function showWithHtmlMenu (): Promise<boolean> {
-  const res = await vscode.window.showQuickPick(
+  return !!(await vscode.window.showQuickPick(
     [{ label: 'Yes', value: true }, { label: 'No', value: false }],
     { ignoreFocusOut: true, placeHolder: 'Do you want to create .html file along with the LWC?' }
-  )
-  return !!res && res.value
+  ))?.value
 }
 
 export default async function createMeta () {
