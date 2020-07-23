@@ -156,7 +156,21 @@ export default async function createMeta () {
   const docType = await chooseType()
   if (!docType) return
 
-  const docName = await utils.inputText(`enter ${docType.label.toLowerCase()} name`)
+  const docName = await utils.inputText(`enter ${docType.label.toLowerCase()} name`, '', {
+    validateInput: v => {
+      if (docType.toolingType === 'LightningComponentBundle' && (!/^[a-z]([a-zA-Z0-9_]*[a-zA-Z0-9])?$/.test(v) || v.indexOf('__') !== -1)) {
+        return `wrong lwc name format:
+        must begin with a lowercase letter /
+        must contain only alphanumeric or underscore characters /
+        must be unique in the namespace /
+        can’t include whitespace /
+        can’t end with an underscore /
+        can’t contain two consecutive underscores /
+        can’t contain a hyphen (dash)`
+      }
+      return null
+    }
+  })
   if (!docName) return
 
   const isTrigger = docType.toolingType === 'ApexTriggerMember'
