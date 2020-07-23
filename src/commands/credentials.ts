@@ -32,13 +32,16 @@ async function getDeployOnSave (): Promise<boolean> {
 export default async function enterCredentials (addMode = false) {
   const config = await configService.getConfig()
 
-  const creds: ConfigCredential = {}
+  const creds: ConfigCredential = addMode ? {} : config.credentials[config.currentCredential]
 
   creds.url = await getUrl()
   if (!creds.url) return
 
   creds.username = await utils.inputText('Please enter your SFDC username', creds.username)
   if (!creds.username) return
+  if (config.credentials.find((x, idx) => x.username === creds.username && (addMode || idx !== config.currentCredential))) {
+    return vscode.window.showErrorMessage('Username already configured')
+  }
 
   creds.password = await utils.inputText('Please enter your SFDC password and token', creds.password, { password: true })
   if (!creds.password) return
@@ -51,8 +54,6 @@ export default async function enterCredentials (addMode = false) {
   if (addMode) {
     config.credentials.push(creds)
     config.currentCredential = config.credentials.length - 1
-  } else {
-    config.credentials[config.currentCredential] = creds
   }
 
   await configService.storeConfig(config)
