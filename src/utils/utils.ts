@@ -28,7 +28,7 @@ export default {
   }).parseString)(str),
   buildXml: (str: object, headless = false) => new xml2js.Builder({ headless }).buildObject(str),
   toArray: (x: any, path: string) => x === undefined || x == null ? { [path]: [] } : (Array.isArray(x[path]) ? { [path]: x[path] } : { [path]: [x[path]] }),
-  inputText: async (placeHolder: string, defValue = '', opts?: any) => {
+  inputText: async (placeHolder: string, defValue = '', opts?: vscode.InputBoxOptions) => {
     return await vscode.window.showInputBox({
       ignoreFocusOut: true,
       placeHolder,

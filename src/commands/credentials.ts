@@ -37,11 +37,15 @@ export default async function enterCredentials (addMode = false) {
   creds.url = await getUrl()
   if (!creds.url) return
 
-  creds.username = await utils.inputText('Please enter your SFDC username', creds.username)
+  creds.username = await utils.inputText('Please enter your SFDC username', creds.username, {
+    validateInput: v => {
+      if (config.credentials.find((x, idx) => x.username === v && (addMode || idx !== config.currentCredential))) {
+        return 'Username already configured'
+      }
+      return null
+    }
+  })
   if (!creds.username) return
-  if (config.credentials.find((x, idx) => x.username === creds.username && (addMode || idx !== config.currentCredential))) {
-    return vscode.window.showErrorMessage('Username already configured')
-  }
 
   creds.password = await utils.inputText('Please enter your SFDC password and token', creds.password, { password: true })
   if (!creds.password) return
