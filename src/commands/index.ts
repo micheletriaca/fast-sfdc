@@ -1,4 +1,4 @@
-import changeCredentials from './change-credentials'
+import manageCredentials from './manage-credentials'
 import removeCredentials from './remove-credentials'
 import compile from './compile'
 import createAuraDefinition from './create-aura-definition'
@@ -18,9 +18,9 @@ import { TextDocument, Uri } from 'vscode'
 import * as vscode from 'vscode'
 
 export default {
-  changeCredentials: () => {
-    reporter.sendEvent('changeCredentials')
-    changeCredentials()
+  manageCredentials: () => {
+    reporter.sendEvent('manageCredentials')
+    manageCredentials()
   },
   removeCredentials: () => {
     reporter.sendEvent('removeCredentials')

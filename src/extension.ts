@@ -12,12 +12,10 @@ const activateExtension = () => {
   if (!isOneWorkspaceOpened) {
     statusBar.hideStatusBar()
     vscode.commands.executeCommand('setContext', 'fast-sfdc-configured', false)
-    vscode.commands.executeCommand('setContext', 'fast-sfdc-more-credentials', false)
   } else {
     statusBar.initStatusBar()
     const cfg = configService.getConfigSync()
     vscode.commands.executeCommand('setContext', 'fast-sfdc-configured', cfg.stored)
-    vscode.commands.executeCommand('setContext', 'fast-sfdc-more-credentials', cfg.credentials.length > 1)
     logger.appendLine('Extension "fast-sfdc" is now active!')
     reporter.sendEvent('extensionActivated')
   }
@@ -29,7 +27,7 @@ export function activate (ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.enterCredentials', cmds.credentials))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.replaceCredentials', cmds.credentials))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.addCredentials', () => cmds.credentials(true)))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.changeCredentials', cmds.changeCredentials))
+  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.manageCredentials', cmds.manageCredentials))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.removeCredentials', cmds.removeCredentials))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.createMeta', cmds.createMeta))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.executeAnonymous', cmds.executeAnonymous))

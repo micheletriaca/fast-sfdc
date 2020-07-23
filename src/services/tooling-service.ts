@@ -1,10 +1,10 @@
 import sfdcConnector from '../sfdc-connector'
 import { MetaObj } from '../fast-sfdc'
 import logger from '../logger'
-import { machineIdSync } from 'node-machine-id'
 import * as crypto from 'crypto'
+import * as vscode from 'vscode'
 
-const metaContainerName = crypto.createHash('md5').update('FastSfdc-' + machineIdSync()).digest('hex')
+const metaContainerName = crypto.createHash('md5').update('FastSfdc-' + vscode.env.machineId).digest('hex')
 let metaContainerId: string
 const objsInContainer = new Map()
 
