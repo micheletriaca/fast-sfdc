@@ -14,6 +14,11 @@ Compile on save for apex classes, visualforce pages, triggers, visualforce compo
 ### Metadata Creation
 Straightforward metadata creation and deployment for apex classes, visualforce pages & components, triggers, aura bundles, LWC.
 
+#### NEW!!! 🔥 Offline Field Creation 🔥
+You can create most of the supported fields and set the Profile FLS directly from the `Create new...` command. No more endless metadata retrieval and insane hunk versioning of profiles! This functionality is highly inspired by the excellent [swift-sfdc](https://marketplace.visualstudio.com/items?itemName=tr4uma.swift-sfdc) extension of [tr4uma](https://github.com/tr4uma). Thanks tr4uma for helping me to integrate this useful functionality
+
+![Create New Field](./images/create-new-field.gif "Create new field")
+
 ### Destructive changesets
 Deleting metadata from your org is just easy as right-clicking on the metadata in the file explorer
 
