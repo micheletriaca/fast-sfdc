@@ -1,4 +1,7 @@
 # Change Log
+## 1.6.0
+* `Create new... field`. From here you can create most of the supported field types for an object (Picklist and Multipicklist are on the road). The field creation wizard also handle FLS in profiles. Idea & Credits go to [tr4uma](https://github.com/tr4uma)
+
 ## 1.5.0
 * New Unified `Manage Credentials` menu. From here you can fully manage your credentials:
   * Add credentials
