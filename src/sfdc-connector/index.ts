@@ -21,16 +21,16 @@ const connect = async function (cfg?: Config) {
   })
 }
 
-const getBasePath = () => `/services/data/v${apiVersion}/tooling`
-const rest = async function (endpoint: string, ...args: any[]) {
+const getBasePath = (useRest: boolean) => `/services/data/v${apiVersion}${useRest ? '' : '/tooling'}`
+const rest = async function (endpoint: string, useRest: boolean, ...args: any[]) {
   try {
     if (!conn.sessionId) await connect()
-    return await conn.rest(getBasePath() + endpoint, ...args)
+    return await conn.rest(getBasePath(useRest) + endpoint, ...args)
   } catch (e) {
     if (e.code === 'ENOTFOUND') throw Error('Unreachable host. Check connection')
     else if (e.response && (e.response.statusCode === 401 || e.response.statusCode === 403)) {
       await connect()
-      return conn.rest(getBasePath() + endpoint, ...args)
+      return conn.rest(getBasePath(useRest) + endpoint, ...args)
     } else {
       throw e
     }
@@ -54,17 +54,24 @@ const metadata = async function (method: string, args: any, wsdl = 'Metadata', h
   }
 }
 
-const post = async (endpoint: string, body: any) => rest(endpoint, { method: 'POST', body })
-const patch = async (endpoint: string, body: any) => rest(endpoint, { method: 'PATCH', body })
-const del = async (endpoint: string) => rest(endpoint, { method: 'DELETE' })
-const get = async (endpoint: string) => rest(endpoint)
-const query = (q: string) => get(`/query?q=${encodeURIComponent(q.replace(/ +/g, ' '))}`)
+const post = async (endpoint: string, body: any, useRest = false) => rest(endpoint, useRest, { method: 'POST', body })
+const patch = async (endpoint: string, body: any, useRest = false) => rest(endpoint, useRest, { method: 'PATCH', body })
+const del = async (endpoint: string, useRest = false) => rest(endpoint, useRest, { method: 'DELETE' })
+const get = async (endpoint: string, useRest = false) => rest(endpoint, useRest)
+const query = (q: string, useRest = false) => get(`/query?q=${encodeURIComponent(q.replace(/ +/g, ' '))}`, useRest)
 
 export default {
   connect,
   query,
   metadata,
-
+  async getSession (): Promise<{sessionId: string; instanceHostname: string; apiVersion: string}> {
+    if (!conn.sessionId) await connect()
+    return {
+      sessionId: conn.sessionId,
+      instanceHostname: conn.instanceHostname,
+      apiVersion
+    }
+  },
   async createMetadataContainer (name: string): Promise<string> {
     const old = await query(`SELECT Id FROM MetadataContainer WHERE Name = '${name}'`)
     if (old.records.length) await this.deleteObj('MetadataContainer', old.records[0].Id)

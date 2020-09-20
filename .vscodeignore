@@ -9,3 +9,7 @@ src/
 .editorconfig
 webpack.config.js
 dist/extension.js.map
+images/commands.png
+images/tests.png
+images/static-resources.png
+images/create-new-field.gif
