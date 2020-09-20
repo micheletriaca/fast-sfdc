@@ -14,6 +14,8 @@ declare module 'sfdy/src/utils/sfdc-utils' {
 
 type GenericObject = { [key: string]: any };
 
+declare module 'sfdy/src/transformer'
+
 declare module 'sfdy/src/utils/xml-utils' {
   export function buildXml(obj: GenericObject): string
 }

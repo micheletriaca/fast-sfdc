@@ -8,8 +8,9 @@ import * as path from 'upath'
 import sfdcConnector from '../sfdc-connector'
 import packageService from '../services/package-service'
 import { buildXml } from 'sfdy/src/utils/xml-utils'
+import createField from './create-field'
 
-interface DocType { label: string; toolingType: string; folder: string; extension: string }
+interface DocType { label: string; toolingType: string; folder?: string; extension?: string }
 
 async function chooseType (): Promise<DocType | undefined> {
   const res: DocType | undefined = await vscode.window.showQuickPick([
@@ -18,7 +19,8 @@ async function chooseType (): Promise<DocType | undefined> {
     { label: 'Visualforce component', toolingType: 'ApexComponentMember', folder: 'components', extension: '.component' },
     { label: 'Apex trigger', toolingType: 'ApexTriggerMember', folder: 'triggers', extension: '.trigger' },
     { label: 'Lightning component', toolingType: 'AuraDefinitionBundle', folder: 'aura', extension: '.cmp' },
-    { label: 'Lightning web component', toolingType: 'LightningComponentBundle', folder: 'lwc', extension: '.js' }
+    { label: 'Lightning web component', toolingType: 'LightningComponentBundle', folder: 'lwc', extension: '.js' },
+    { label: 'Field', toolingType: 'CustomField' }
   ], { ignoreFocusOut: true })
   return res
 }
@@ -155,6 +157,8 @@ async function showWithHtmlMenu (): Promise<boolean> {
 export default async function createMeta () {
   const docType = await chooseType()
   if (!docType) return
+
+  if (docType.toolingType === 'CustomField') return createField()
 
   const docName = await utils.inputText(`enter ${docType.label.toLowerCase()} name`, '', {
     validateInput: v => {
