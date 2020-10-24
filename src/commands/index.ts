@@ -46,9 +46,9 @@ export default {
     reporter.sendEvent('deploy')
     deploy(checkOnly, destructive, files)
   },
-  deploySelected: (uri: vscode.Uri, allUris: vscode.Uri[], destructive = false) => {
+  deploySelected: (uri: vscode.Uri, allUris: vscode.Uri[]) => {
     reporter.sendEvent('deploySelected')
-    deploySelected(uri, allUris, destructive = false)
+    deploySelected(uri, allUris)
   },
   destroySelected: (uri: vscode.Uri, allUris: vscode.Uri[]) => {
     reporter.sendEvent('destroySelected')
