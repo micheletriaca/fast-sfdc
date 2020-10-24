@@ -107,3 +107,4 @@ export interface TestResult {
 }
 
 export type DoneCallback = (s: string) => void
+export type AnyObj = { [key: string]: any }
