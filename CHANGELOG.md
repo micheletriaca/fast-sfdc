@@ -1,4 +1,8 @@
 # Change Log
+## 1.7.0
+* You can configure `Compile on save` from the `Manage Credentials` menu
+* Added `Compile current file` command
+* If you save a file multiple times and that file is currently compiling, only the last version of the file will be compiled on Salesforce instead of bloating the save queue
 
 ## 1.6.0
 * `Create new... field`. From here you can create most of the supported field types for an object (Picklist and Multipicklist are on the road). The field creation wizard also handle FLS in profiles. Idea & Credits go to [tr4uma](https://github.com/tr4uma)

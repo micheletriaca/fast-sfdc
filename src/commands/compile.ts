@@ -123,20 +123,27 @@ const compileMetadataContainerObject = async (doc: vscode.TextDocument, done: Do
   }
 }
 
-export default async function compile (doc: vscode.TextDocument) {
-  const type = parsers.getToolingType(doc)
-  if (!type) return
+export default async function compile (doc?: vscode.TextDocument) {
   const cfg = await configService.getConfig()
   if (!cfg.stored) return
 
   const creds = cfg.credentials[cfg.currentCredential]
-  if (!creds.deployOnSave) return
+  if (doc && !creds.deployOnSave) return
+
+  if (!doc && vscode.window.activeTextEditor && vscode.window.activeTextEditor.document) {
+    doc = vscode.window.activeTextEditor.document
+  }
+
+  if (!doc) return
+
+  const type = parsers.getToolingType(doc)
+  if (!type) return
 
   StatusBar.startLongJob(done => {
     switch (type) {
-      case 'AuraDefinition': return compileAuraDefinition(doc, done)
-      case 'LightningComponentResource': return compileLightninWebComponent(doc, done)
-      default: return compileMetadataContainerObject(doc, done)
+      case 'AuraDefinition': return compileAuraDefinition(doc!, done)
+      case 'LightningComponentResource': return compileLightninWebComponent(doc!, done)
+      default: return compileMetadataContainerObject(doc!, done)
     }
-  })
+  }, doc.uri.toString(), true)
 }

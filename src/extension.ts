@@ -27,6 +27,8 @@ export function activate (ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.enterCredentials', cmds.credentials))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.replaceCredentials', cmds.credentials))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.addCredentials', () => cmds.credentials(true)))
+  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.compile', cmds.compile))
+  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.statusBarClick', cmds.statusBarClick))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.manageCredentials', cmds.manageCredentials))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.removeCredentials', cmds.removeCredentials))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.createMeta', cmds.createMeta))
