@@ -1,9 +1,9 @@
 import * as vscode from 'vscode'
-import { DoneCallback } from '../fast-sfdc'
+import { AnyObj, DoneCallback } from '../fast-sfdc'
 import configService from '../services/config-service'
 
 const sbItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 5)
-sbItem.command = 'FastSfdc.manageCredentials'
+sbItem.command = 'FastSfdc.statusBarClick'
 const MENU_PREFIX = () => {
   const cfg = configService.getConfigSync()
   return `fast-sfdc - ${cfg.stored ? cfg.credentials[cfg.currentCredential].username : 'not logged in'}`
@@ -12,7 +12,7 @@ const MENU_PREFIX = () => {
 let loadingCounter = 0
 let doneTimeout: NodeJS.Timer
 
-const queue: Function[] = []
+let queue: Function[] = []
 let running = false
 
 const runNextJob = () => {
@@ -62,9 +62,17 @@ export default {
     }
   },
 
-  startLongJob (doLongJob: (done: DoneCallback) => void) {
+  startLongJob (doLongJob: (done: DoneCallback) => void, key?: string, abortPreviousJobs = false) {
+    const _doLongJob = (done: DoneCallback) => doLongJob(done)
+    _doLongJob.key = key
+    if (abortPreviousJobs && key) {
+      const size = queue.length
+      queue = queue.filter((x: AnyObj) => x.key !== key)
+      const abortedJobs = size - queue.length
+      for (let i = 0; i < abortedJobs; i++) exports.default.stopLoading()
+    }
     exports.default.startLoading()
-    queue.push(doLongJob)
+    queue.push(_doLongJob)
     if (!running) runNextJob()
   },
 

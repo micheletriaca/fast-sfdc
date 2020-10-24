@@ -74,6 +74,9 @@ export default {
     reporter.sendEvent('runTest')
     runTest(document, className, methodName)
   },
+  statusBarClick: () => {
+    vscode.commands.executeCommand('FastSfdc.manageCredentials')
+  },
   configureStaticResourceBundles: () => {
     reporter.sendEvent('configureStaticResourceBundles')
     configureStaticResourceBundles()

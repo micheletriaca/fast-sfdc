@@ -138,5 +138,5 @@ export default async function compile (doc: vscode.TextDocument) {
       case 'LightningComponentResource': return compileLightninWebComponent(doc, done)
       default: return compileMetadataContainerObject(doc, done)
     }
-  })
+  }, doc.uri.toString(), true)
 }
