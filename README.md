@@ -43,6 +43,8 @@ Store different credentials for fast org-switch and deploy when needed or in a h
 ### Execute Anonymous
 Run your code snippets directly from vscode. Buggy developer console is now a distant memory.
 
+![Execute Anonymous](./images/execute-anonymous.gif "Execute Anonymous")
+
 ### Run tests
 Just open a test class and click on the codelen
 ![Tests](./images/tests.png "Tests")
