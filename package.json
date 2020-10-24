@@ -51,6 +51,12 @@
         "key": "ctrl+i r",
         "mac": "cmd+i r",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "FastSfdc.compile",
+        "key": "ctrl+i c",
+        "mac": "cmd+i c",
+        "when": "editorTextFocus"
       }
     ],
     "commands": [
@@ -109,6 +115,10 @@
       {
         "command": "FastSfdc.deploySingle",
         "title": "Fast-Sfdc: Deploy current file"
+      },
+      {
+        "command": "FastSfdc.compile",
+        "title": "Fast-Sfdc: Compile current file (using tooling api)"
       },
       {
         "command": "FastSfdc.retrieveSelected",
@@ -190,6 +200,10 @@
           "when": "fast-sfdc-active && fast-sfdc-configured"
         },
         {
+          "command": "FastSfdc.compile",
+          "when": "fast-sfdc-active && fast-sfdc-configured"
+        },
+        {
           "command": "FastSfdc.retrieveSelected",
           "when": "false"
         },
@@ -219,6 +233,11 @@
         },
         {
           "command": "FastSfdc.deploySingle",
+          "when": "fast-sfdc-active && fast-sfdc-configured",
+          "group": "z_commands"
+        },
+        {
+          "command": "FastSfdc.compile",
           "when": "fast-sfdc-active && fast-sfdc-configured",
           "group": "z_commands"
         }

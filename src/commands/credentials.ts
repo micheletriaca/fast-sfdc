@@ -24,7 +24,7 @@ async function getUrl (): Promise<string> {
 async function getDeployOnSave (): Promise<boolean> {
   const res = await vscode.window.showQuickPick(
     [{ label: 'true' }, { label: 'false' }],
-    { ignoreFocusOut: true, placeHolder: 'Deploy on save?' }
+    { ignoreFocusOut: true, placeHolder: 'Compile on save?' }
   )
   return (res && res.label === 'true') || false
 }
