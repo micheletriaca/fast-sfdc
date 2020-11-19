@@ -78,7 +78,7 @@ export default async function createField () {
 
   const selectedXml = await utils.parseXml(files[selected].data)
   selectedXml.CustomObject.fields = selectedXml.CustomObject.fields || []
-  const trackHistory = selectedXml.CustomObject?.enableHistory[0] === 'true'
+  const trackHistory = !!selectedXml.CustomObject.enableHistory && selectedXml.CustomObject.enableHistory[0] === 'true'
   const allFields = selectedXml.CustomObject.fields.map((x: {fullName: string}) => x.fullName[0])
 
   const fieldType = await prompt('Select a Field Type', undefined, [
@@ -130,11 +130,13 @@ export default async function createField () {
       .parallel(100)
       .map(x => {
         const fieldName = selected.replace(/objects\/(.*).object/, '$1') + '.' + fieldDefinition.fullName
-        sortedPush(x.xml!.Profile.fieldPermissions, xmlArrayWrap({
+        const fieldPermissions = x.xml!.Profile.fieldPermissions || []
+        sortedPush(fieldPermissions, xmlArrayWrap({
           editable: rwProfiles.has(x.profileName),
           field: fieldName,
           readable: rwProfiles.has(x.profileName) || readProfiles.has(x.profileName)
         }), (newEl, el) => el.field[0] > newEl.field)
+        x.xml!.Profile.fieldPermissions = fieldPermissions
         return x
       })
       .map(x => ({ fileName: x.fileName, data: Buffer.from(buildXml(x.xml!) + '\n', 'utf8') }))

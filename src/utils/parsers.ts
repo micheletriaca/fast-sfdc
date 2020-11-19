@@ -4,13 +4,14 @@ import { AuraDefType } from '../fast-sfdc'
 
 export default {
   getToolingType (document: vscode.TextDocument): string {
-    const isAuraBundle = document.uri.fsPath.indexOf(`${path.sep}aura${path.sep}`) !== -1
-    const isLwcBundle = document.uri.fsPath.indexOf(`${path.sep}lwc${path.sep}`) !== -1
+    const p = path.toUnix(document.fileName)
+    const isAuraBundle = p.indexOf('/aura/') !== -1
+    const isLwcBundle = p.indexOf('/lwc/') !== -1
 
     if (isAuraBundle) return 'AuraDefinition'
     if (isLwcBundle) return 'LightningComponentResource'
 
-    const extension = document.fileName.substring(document.fileName.lastIndexOf('.'))
+    const extension = p.substring(p.lastIndexOf('.'))
     switch (extension) {
       case '.cls': return 'ApexClassMember'
       case '.trigger': return 'ApexTriggerMember'
@@ -63,8 +64,8 @@ export default {
   },
 
   getFilename (fullPath: string) {
-    const fp = path.normalize(fullPath)
-    return fp.substring(fp.lastIndexOf(path.sep) + 1, fp.lastIndexOf('.'))
+    const fp = path.toUnix(path.normalize(fullPath))
+    return fp.substring(fp.lastIndexOf('/') + 1, fp.lastIndexOf('.'))
   },
 
   getMethodName (methodSign: string) {
@@ -74,17 +75,17 @@ export default {
 
   getAuraBundleName (docUri: vscode.Uri) {
     const p = path.toUnix(docUri.fsPath)
-    return p.substring(p.indexOf(`aura${path.sep}`) + 5, p.lastIndexOf(path.sep))
+    return p.substring(p.indexOf('aura/') + 5, p.lastIndexOf('/'))
   },
 
   getLwcBundleName (docUri: vscode.Uri) {
     const p = path.toUnix(docUri.fsPath)
-    const firstIndex = p.indexOf(`lwc${path.sep}`) + 4
-    return p.substring(firstIndex, p.indexOf(path.sep, firstIndex))
+    const firstIndex = p.indexOf('lwc/') + 4
+    return p.substring(firstIndex, p.indexOf('/', firstIndex))
   },
 
   getLastFolder (docUri: vscode.Uri) {
     const p = path.toUnix(docUri.fsPath)
-    return p.substring(0, p.lastIndexOf(path.sep))
+    return p.substring(0, p.lastIndexOf('/'))
   }
 }

@@ -1,4 +1,10 @@
 # Change Log
+
+## 1.7.1
+* Bugfix create field when custom renderers are used
+* Bugfix issue deploying ExperienceBundle
+* Bugfix compile lwc and aura components in windows
+
 ## 1.7.0
 * You can configure `Compile on save` from the `Manage Credentials` menu
 * Added `Compile current file` command
