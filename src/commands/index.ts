@@ -7,6 +7,7 @@ import credentials from './credentials'
 import deploy from './deploy'
 import deploySelected from './deploy-selected'
 import destroySelected from './destroy-selected'
+import editFlsProfiles from './edit-fls-profiles'
 import executeAnonymous from './execute-anonymous'
 import initSfdy from './init-sfdy'
 import retrieve from './retrieve'
@@ -80,5 +81,9 @@ export default {
   configureStaticResourceBundles: () => {
     reporter.sendEvent('configureStaticResourceBundles')
     configureStaticResourceBundles()
+  },
+  editFlsProfiles: (document: vscode.TextDocument) => {
+    reporter.sendEvent('editFlsProfiles')
+    editFlsProfiles(document)
   }
 }
