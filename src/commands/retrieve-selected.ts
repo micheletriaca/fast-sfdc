@@ -4,7 +4,7 @@ import * as path from 'upath'
 import * as fs from 'fs'
 import utils from '../utils/utils'
 
-const basePath = path.join(utils.getWorkspaceFolder(), 'src') + path.sep
+const basePath = path.join(utils.getWorkspaceFolder(), 'src') + '/'
 const isInContext = (p: string) => p.startsWith(basePath)
 const isFolder = (p: string) => fs.statSync(path.resolve(utils.getWorkspaceFolder(), 'src', p)).isDirectory()
 
