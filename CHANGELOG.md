@@ -1,4 +1,8 @@
 # Change Log
+
+## 1.8.0
+* Added `Edit field level security` codelen when you open a `Profile` or a `PermissionSet`
+
 ## 1.7.0
 * You can configure `Compile on save` from the `Manage Credentials` menu
 * Added `Compile current file` command
