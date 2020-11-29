@@ -1,61 +1,8 @@
-import * as transformer from 'sfdy/src/transformer'
-import configService from '../services/config-service'
-import logger from '../logger'
 import utils from '../utils/utils'
 import * as _ from 'highland'
 import fieldBuilders, { prompt, promptMany } from '../utils/field-builders'
 import { buildXml } from 'sfdy/src/utils/xml-utils'
 import sfdcConnector from '../sfdc-connector'
-
-async function untransformAndfetchFiles (fileGlob: string) {
-  const rootFolder = utils.getWorkspaceFolder()
-  const config = configService.getConfigSync()
-  const creds = config.credentials[config.currentCredential]
-  process.env.environment = creds.environment
-  const sfdyConfig = configService.getSfdyConfigSync()
-
-  return Object.fromEntries(await _(Object.entries(await transformer.untransform({
-    loginOpts: {
-      ...await sfdcConnector.getSession()
-    },
-    renderers: sfdyConfig.renderers,
-    basePath: rootFolder,
-    logger: (msg: string) => logger.appendLine(msg),
-    files: fileGlob,
-    config: sfdyConfig
-  })))
-    .collect()
-    .toPromise(Promise)) as {[fileName: string]: {fileName: string; data: Uint8Array}}
-}
-
-async function transformAndStoreFiles (files: {fileName: string; data: Uint8Array}[]) {
-  const rootFolder = utils.getWorkspaceFolder()
-  const config = configService.getConfigSync()
-  const creds = config.credentials[config.currentCredential]
-  process.env.environment = creds.environment
-  const sfdyConfig = configService.getSfdyConfigSync()
-
-  await transformer.transform({
-    loginOpts: {
-      ...await sfdcConnector.getSession()
-    },
-    renderers: sfdyConfig.renderers,
-    basePath: rootFolder,
-    logger: (msg: string) => logger.appendLine(msg),
-    files,
-    config: sfdyConfig
-  })
-}
-
-function sortedPush (
-  arr: GenericObject[],
-  el: GenericObject,
-  compareFn: (newEl: GenericObject, el: GenericObject) => boolean
-) {
-  const idx = arr.findIndex(x => compareFn(el, x))
-  if (idx !== -1) return arr.splice(idx, 0, el)
-  arr.push(el)
-}
 
 function xmlArrayWrap (obj: GenericObject) {
   return Object.fromEntries(Object.entries(obj)
@@ -65,7 +12,7 @@ function xmlArrayWrap (obj: GenericObject) {
 }
 
 export default async function createField () {
-  const files = await untransformAndfetchFiles('profiles/**/*,objects/**/*,permissionsset/**/*')
+  const files = await utils.untransformAndfetchFiles('profiles/**/*,objects/**/*,permissionsset/**/*', sfdcConnector)
 
   const objects = Object.keys(files)
     .filter(x => !x.endsWith('__mdt.object'))
@@ -105,7 +52,7 @@ export default async function createField () {
   const fieldDefinition = await fieldBuilders(fieldType, allFields, trackHistory, objects.map(x => ({ label: x.label, value: x.label })))
   if (!fieldDefinition) return
 
-  sortedPush(selectedXml.CustomObject.fields, xmlArrayWrap(fieldDefinition), (newEl, el) => el.fullName[0] > newEl.fullName[0])
+  utils.sortedPush(selectedXml.CustomObject.fields, xmlArrayWrap(fieldDefinition), (newEl, el) => el.fullName[0] > newEl.fullName[0])
   files[selected].data = Buffer.from(buildXml(selectedXml) + '\n', 'utf8')
 
   const filesToStore = [files[selected]]
@@ -130,7 +77,7 @@ export default async function createField () {
       .parallel(100)
       .map(x => {
         const fieldName = selected.replace(/objects\/(.*).object/, '$1') + '.' + fieldDefinition.fullName
-        sortedPush(x.xml!.Profile.fieldPermissions, xmlArrayWrap({
+        utils.sortedPush(x.xml!.Profile.fieldPermissions, xmlArrayWrap({
           editable: rwProfiles.has(x.profileName),
           field: fieldName,
           readable: rwProfiles.has(x.profileName) || readProfiles.has(x.profileName)
@@ -142,5 +89,5 @@ export default async function createField () {
       .toPromise(Promise))
   }
 
-  await transformAndStoreFiles(filesToStore)
+  await utils.transformAndStoreFiles(filesToStore, sfdcConnector)
 }

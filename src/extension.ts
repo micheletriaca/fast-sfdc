@@ -5,6 +5,7 @@ import statusBar from './statusbar'
 import configService from './services/config-service'
 import logger, { reporter } from './logger'
 import CodeLensRunTest from './codelens-provider/codelens-run-test'
+import CodeLensFls from './codelens-provider/codelens-fls'
 
 const activateExtension = () => {
   const isOneWorkspaceOpened = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length === 1
@@ -46,7 +47,9 @@ export function activate (ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.destroySelected', cmds.destroySelected))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.runTest', cmds.runTest))
   ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.initSfdy', cmds.initSfdy))
+  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.editFlsProfiles', cmds.editFlsProfiles))
   ctx.subscriptions.push(vscode.languages.registerCodeLensProvider({ language: 'apex', scheme: 'file' }, new CodeLensRunTest()))
+  ctx.subscriptions.push(vscode.languages.registerCodeLensProvider([{ pattern: '**/profiles/*.profile' }, { pattern: '**/permissionsets/*.permissionset' }], new CodeLensFls()))
   reporter.subscribe(ctx)
   activateExtension()
 }
