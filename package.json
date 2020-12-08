@@ -353,7 +353,7 @@
     "highland": "^2.13.5",
     "multimatch": "^4.0.0",
     "node-salesforce-connection": "^2.3.1",
-    "sfdy": "^1.4.2",
+    "sfdy": "^1.4.3",
     "upath": "^1.2.0",
     "vscode-extension-telemetry": "^0.1.6",
     "xml2js": "^0.4.23"
