@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.8.1
+* `Edit field level security` codelen does not add disabled permissions to a `PermissionSet` if `permissionsSets.stripUselessFls` is `true` in `.sfdy.json`
+* `Edit field level security` codelen does not add permissions to a `Profile` if `profiles.addDisabledVersionedObjects` is `true` in `.sfdy.json` and the selected object is disabled in the `Profile`
+
 ## 1.8.0
 * Added `Edit field level security` codelen when you open a `Profile` or a `PermissionSet`
 
