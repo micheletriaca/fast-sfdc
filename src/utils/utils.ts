@@ -79,7 +79,7 @@ export default {
   readdir: fs.readdir,
   getWorkspaceFolder,
   parseXml: (str: xml2js.convertableToString) => util.promisify<xml2js.convertableToString, any>(new xml2js.Parser().parseString)(str), // https://www.npmjs.com/package/xml2js#parsing-multiple-files
-  parseXmlStrict: (str: xml2js.convertableToString, explicitRoot = false) => util.promisify<xml2js.convertableToString, any>(new xml2js.Parser({
+  parseXmlStrict: <T>(str: xml2js.convertableToString, explicitRoot = false) => util.promisify<xml2js.convertableToString, T>(new xml2js.Parser({
     explicitArray: false,
     explicitRoot,
     valueProcessors: [xml2js.processors.parseBooleans]
