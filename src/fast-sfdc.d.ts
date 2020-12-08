@@ -108,3 +108,41 @@ export interface TestResult {
 
 export type DoneCallback = (s: string) => void
 export type AnyObj = { [key: string]: any }
+
+export interface XmlFls {
+  editable: boolean;
+  field: string;
+  readable: boolean;
+}
+
+export interface XmlObjPermission {
+  allowCreate: boolean;
+  allowDelete: boolean;
+  allowEdit: boolean;
+  allowRead: boolean;
+  modifyAllRecords: boolean;
+  'object': string;
+  viewAllRecords: boolean;
+}
+
+export interface XmlProfile {
+  [key: string]: {
+    fieldPermissions: XmlFls[];
+    objectPermissions: XmlObjPermission[];
+  };
+}
+
+export interface XmlField {
+  fullName: string;
+  label?: string;
+  required: boolean;
+  formula: string;
+  type: 'AutoNumber' | 'Summary';
+}
+
+export interface XmlCustomObject {
+  CustomObject: {
+    customSettingsType: string[];
+    fields: XmlField[];
+  };
+}

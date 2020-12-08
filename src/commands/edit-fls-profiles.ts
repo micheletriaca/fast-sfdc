@@ -5,19 +5,8 @@ import { prompt, promptMany } from '../utils/field-builders'
 import * as path from 'upath'
 import * as fs from 'fs'
 import sfdcConnector from '../sfdc-connector'
-
-interface XmlField {fullName: string; label?: string; required: boolean; formula: string; type: 'AutoNumber' | 'Summary'}
-interface XmlFls {editable: boolean; field: string; readable: boolean}
-interface XmlProfile {
-  [key: string]: {
-    fieldPermissions: XmlFls[];
-  };
-}
-interface XmlCustomObject {
-  CustomObject: {
-    fields: XmlField[];
-  };
-}
+import configService from '../services/config-service'
+import { XmlProfile, XmlField, XmlCustomObject } from '../fast-sfdc'
 
 const standardWeirdFields = new Set([
   'OwnerId',
@@ -52,23 +41,39 @@ const standardWeirdFields = new Set([
 
 export default async function editFlsProfile (document: vscode.TextDocument) {
   const rootFolder = utils.getWorkspaceFolder()
-  const fPath = document.fileName.replace(rootFolder, '')
+  const profilePath = document.fileName.replace(rootFolder, '')
+  const sfdyCfg = configService.getSfdyConfigSync()
 
   const objects = fs.readdirSync(path.join(rootFolder, 'src', 'objects'))
-    .filter(x => !x.endsWith('__mdt.object'))
-    .filter(x => !x.endsWith('__e.object'))
-    .filter(x => x.endsWith('.object') && ['objects/PersonAccount.object', 'objects/Event.object', 'objects/Task.object'].indexOf(x) === -1)
+    .filter(x => x.endsWith('.object'))
+    .filter(x => !x.endsWith('__mdt.object') && !x.endsWith('__e.object'))
+    .filter(x => !['objects/PersonAccount.object', 'objects/Event.object', 'objects/Task.object'].includes(x))
     .map(x => ({ label: x.replace(/(.*).object/, '$1') }))
 
-  const selectedObjectName = await prompt('Select the object', undefined, objects)()
+  const selectedObjectName = await prompt('Select the object', undefined, objects)() as string
   if (!selectedObjectName) return
 
-  const files = await utils.untransformAndfetchFiles(`${fPath},objects/${selectedObjectName}.object`, sfdcConnector)
-  const selectedObjectXml = await utils.parseXmlStrict(files[`objects/${selectedObjectName}.object`].data, true) as XmlCustomObject
+  const selObjPath = `objects/${selectedObjectName}.object`
+  const files = await utils.untransformAndfetchFiles(`${profilePath},${selObjPath}`, sfdcConnector)
+  const selectedObjectXml = await utils.parseXmlStrict<XmlCustomObject>(files[selObjPath].data, true)
+  if (selectedObjectXml.CustomObject.customSettingsType) {
+    return vscode.window.showErrorMessage('The selected object is a custom setting. FLS not available')
+  }
+
   selectedObjectXml.CustomObject.fields = utils.wrapArray(selectedObjectXml.CustomObject.fields)
 
-  const profileXml = await utils.parseXmlStrict(files[fPath.replace('/src/', '')].data, true) as XmlProfile
+  const profileXml = await utils.parseXmlStrict<XmlProfile>(files[profilePath.replace('/src/', '')].data, true)
   const flsList = utils.wrapArray(Object.values(profileXml)[0].fieldPermissions)
+
+  if (sfdyCfg.profiles?.addDisabledVersionedObjects && profileXml.Profile) {
+    const objInProfile = utils.wrapArray(profileXml.Profile.objectPermissions).find(x => x.object === selectedObjectName)
+    if (objInProfile && !Object.entries(objInProfile)
+      .filter(([k]) => k !== 'object')
+      .reduce((res, [, v]) => v || res, false)
+    ) {
+      return vscode.window.showErrorMessage('The selected object has been disabled for this profile. FLS not available')
+    }
+  }
 
   // Existing FLS config from selected profile
   const profileFlsMap = Object.fromEntries(flsList
@@ -134,9 +139,18 @@ export default async function editFlsProfile (document: vscode.TextDocument) {
     }, (newEl, el) => el.field > newEl.field)
   })
 
-  // Saving
   Object.values(profileXml)[0].fieldPermissions = flsList
-  await utils.transformAndStoreFiles([{ fileName: fPath.replace('/src/', ''), data: Buffer.from(buildXml(profileXml) + '\n', 'utf8') }], sfdcConnector)
+
+  // Reapplying standard patches
+  if (sfdyCfg.permissionSets?.stripUselessFls && profileXml.PermissionSet) {
+    Object.values(profileXml)[0].fieldPermissions = flsList.filter(x => x.editable || x.readable)
+  }
+
+  // Saving
+  await utils.transformAndStoreFiles([{
+    fileName: profilePath.replace('/src/', ''),
+    data: Buffer.from(buildXml(profileXml) + '\n', 'utf8')
+  }], sfdcConnector)
 
   const res = await prompt('Deploy?', undefined, [{ label: 'Yes', value: true }, { label: 'No', value: false }])()
   if (res) vscode.commands.executeCommand('FastSfdc.deploySelected', document.uri)

@@ -52,7 +52,7 @@ export default {
 
   async getPackageXmlVersion (): Promise<string> {
     const p = path.join(utils.getWorkspaceFolder(), 'src', 'package.xml')
-    const pJson = await utils.parseXmlStrict(await utils.readFile(p))
+    const pJson = await utils.parseXmlStrict<{version: string}>(await utils.readFile(p))
     return pJson.version
   }
 }
