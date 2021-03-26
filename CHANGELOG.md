@@ -1,5 +1,8 @@
 # Change Log
 
+## 1.8.3
+* Bugfixing: Fixed issues managing metadata in `wave` folder
+
 ## 1.8.2
 * Bugfixing
 

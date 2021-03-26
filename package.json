@@ -8,7 +8,7 @@
   },
   "icon": "images/icon.png",
   "homepage": "https://github.com/micheletriaca/fast-sfdc#readme",
-  "version": "1.8.2",
+  "version": "1.8.3",
   "license": "SEE LICENSE IN LICENSE.md",
   "publisher": "m1ck83",
   "engines": {
@@ -357,7 +357,7 @@
     "highland": "^2.13.5",
     "multimatch": "^4.0.0",
     "node-salesforce-connection": "^2.3.1",
-    "sfdy": "^1.4.4",
+    "sfdy": "^1.4.5",
     "upath": "^1.2.0",
     "vscode-extension-telemetry": "^0.1.6",
     "xml2js": "^0.4.23"
