@@ -5,7 +5,7 @@ Built from scratch, no jsforce/salesforceDX dependencies, <b>LIGHTNING FAST!</b>
 
 ## Features
 
-![Command Palette](./images/commands.png "Command Palette")
+![Command Palette](images/commands.png "Command Palette")
 
 ### Deploy, Retrieve, Validate & Compile
 Canonical deployment and retrieval of metadata based on your package.xml configuration is fully featured, but you can also deploy or retrieve single files/folders!
@@ -17,11 +17,11 @@ Straightforward metadata creation and deployment for apex classes, visualforce p
 #### Offline Field Creation
 You can create most of the supported fields and set the Profile FLS directly from the `Create new...` command. No more endless metadata retrieval and insane hunk versioning of profiles! This functionality is highly inspired by the excellent [swift-sfdc](https://marketplace.visualstudio.com/items?itemName=tr4uma.swift-sfdc) extension of [tr4uma](https://github.com/tr4uma). Thanks tr4uma for helping me to integrate this useful functionality
 
-![Create New Field](./images/create-new-field.gif "Create new field")
+![Create New Field](images/create-new-field.gif "Create new field")
 
 ### NEW!!! 🔥 Edit FLS directly from Profile or PermissionSet 🔥
 Just open the Profile or PermissionSet and click on the codelen
-![Edit FLS](./images/edit-fls.png "Edit FLS")
+![Edit FLS](images/edit-fls.png "Edit FLS")
 
 
 ### Destructive changesets
@@ -35,7 +35,7 @@ To setup a `.sfdy.json` config in your project, just open the command palette an
 ### Static resource bundles
 Handle your static resources as uncompressed folders. Just select the static resource you want to handle as folders:
 
-![Command Palette](./images/static-resources.png "Static Resource Configuration")
+![Command Palette](images/static-resources.png "Static Resource Configuration")
 
 `fast-sfdc` will do the rest!
 
@@ -48,11 +48,11 @@ Store different credentials for fast org-switch and deploy when needed or in a h
 ### Execute Anonymous
 Run your code snippets directly from vscode. Buggy developer console is now a distant memory.
 
-![Execute Anonymous](./images/execute-anonymous.gif "Execute Anonymous")
+![Execute Anonymous](images/execute-anonymous.gif "Execute Anonymous")
 
 ### Run tests
 Just open a test class and click on the codelen
-![Tests](./images/tests.png "Tests")
+![Tests](images/tests.png "Tests")
 
 ## Release Notes
 

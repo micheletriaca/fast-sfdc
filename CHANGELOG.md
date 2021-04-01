@@ -1,5 +1,8 @@
 # Change Log
 
+## 1.8.4
+* Bugfixing: Fixed broken image links in `README.md`
+
 ## 1.8.3
 * Bugfixing: Fixed issues managing metadata in `wave` folder
 
