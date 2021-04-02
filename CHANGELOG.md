@@ -1,4 +1,6 @@
 # Change Log
+## 1.8.5
+* Bugfixing
 
 ## 1.8.4
 * Bugfixing: Fixed broken image links in `README.md`
