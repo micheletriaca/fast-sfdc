@@ -62,5 +62,5 @@ type SfdyConfig = {
     stripPartnerRoles?: boolean;
   };
   stripManagedPackageFields?: string[];
-
+  excludeFiles?: string[];
 }

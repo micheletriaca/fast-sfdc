@@ -31,7 +31,8 @@ export default async function initSfdy () {
       staticResources: {
         useBundleRenderer: []
       },
-      stripManagedPackageFields: []
+      stripManagedPackageFields: [],
+      excludeFiles: ['lwc/**/__tests__/**/*']
     })
   }
   const uri = vscode.Uri.file(configService.getSfdyConfigPath())

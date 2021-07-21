@@ -7,6 +7,8 @@ import { DoneCallback } from '../fast-sfdc'
 import toolingService from '../services/tooling-service'
 import utils from '../utils/utils'
 import logger, { diagnosticCollection } from '../logger'
+import * as path from 'upath'
+import * as minimatch from 'minimatch'
 
 function updateProblemsPanel (errors: any[], doc: vscode.TextDocument) {
   diagnosticCollection.set(doc.uri, errors
@@ -125,6 +127,7 @@ const compileMetadataContainerObject = async (doc: vscode.TextDocument, done: Do
 
 export default async function compile (doc?: vscode.TextDocument) {
   const cfg = await configService.getConfig()
+  const sfdyConfig = configService.getSfdyConfigSync()
   if (!cfg.stored) return
 
   const creds = cfg.credentials[cfg.currentCredential]
@@ -138,6 +141,11 @@ export default async function compile (doc?: vscode.TextDocument) {
 
   const type = parsers.getToolingType(doc)
   if (!type) return
+
+  const basePath = path.join(utils.getWorkspaceFolder(), 'src') + '/'
+  const fileName = path.toUnix(doc.fileName).replace(basePath, '')
+
+  if ((sfdyConfig.excludeFiles || []).some(gl => minimatch(fileName, gl))) return
 
   StatusBar.startLongJob(done => {
     switch (type) {

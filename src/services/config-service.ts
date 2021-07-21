@@ -16,7 +16,7 @@ export default {
   getSfdyConfigSync (): SfdyConfig {
     const cfgPath = getSfdyCfgPath()
     if (!fs.existsSync(cfgPath)) {
-      return { stored: false, staticResources: { useBundleRenderer: [] } }
+      return { stored: false, staticResources: { useBundleRenderer: [] }, excludeFiles: ['lwc/**/__tests__/**/*'] }
     } else {
       const storedCfg = fs.readFileSync(cfgPath, 'utf8')
       return { ...JSON.parse(storedCfg), stored: true }
