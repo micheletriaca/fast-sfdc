@@ -7,26 +7,26 @@ export default async function initSfdy () {
     configService.storeSfdyConfig({
       stored: true,
       permissionSets: {
-        stripUselessFls: true
+        stripUselessFls: false
       },
       objectTranslations: {
-        stripUntranslatedFields: true,
-        stripNotVersionedFields: true
+        stripUntranslatedFields: false,
+        stripNotVersionedFields: false
       },
       preDeployPlugins: [],
       postRetrievePlugins: [],
       renderers: [],
       profiles: {
         addAllUserPermissions: false,
-        addDisabledVersionedObjects: true,
-        addExtraObjects: ['*', '!*__?'],
-        addExtraTabVisibility: ['*', '!*__?'],
-        addExtraApplications: ['standard__*'],
-        stripUserPermissionsFromStandardProfiles: true,
-        stripUnversionedStuff: true
+        addDisabledVersionedObjects: false,
+        addExtraObjects: [],
+        addExtraTabVisibility: [],
+        addExtraApplications: [],
+        stripUserPermissionsFromStandardProfiles: false,
+        stripUnversionedStuff: false
       },
       roles: {
-        stripPartnerRoles: true
+        stripPartnerRoles: false
       },
       staticResources: {
         useBundleRenderer: []
