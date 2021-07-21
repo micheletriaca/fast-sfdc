@@ -1,4 +1,7 @@
 # Change Log
+## 1.9.0
+* Added the possibility to skip some files from deploying and compiling. To do that, add for example `"excludeFiles": ["lwc/**/__tests__/**/*"]` to `.sfdy.json`
+
 ## 1.8.5
 * Bugfixing
 
