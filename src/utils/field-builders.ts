@@ -121,7 +121,7 @@ async function buildField (fieldConfig: any, existingFields: string[], allObject
   return {
     fullName,
     caseSensitive: externalId.caseSensitive,
-    defaultValue: defaultValue || undefined,
+    defaultValue: defaultValue !== null && defaultValue !== '' ? defaultValue : undefined,
     deleteConstraint,
     displayFormat,
     externalId: externalId.externalId,
