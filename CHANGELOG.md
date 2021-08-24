@@ -1,5 +1,9 @@
 # Change Log
 ## 1.9.1
+* Bugfixing: fixed create new checkbox field (defaultValue tag was missing when false)
+* Updated `sfdy` to 1.5.2
+
+## 1.9.1
 * Bugfixing: fixed deploy of static resource bundle
 
 ## 1.9.0
