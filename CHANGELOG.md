@@ -1,5 +1,9 @@
 # Change Log
-## 1.9.1
+
+## 1.9.3
+* Minor bugfixing
+
+## 1.9.2
 * Bugfixing: fixed create new checkbox field (defaultValue tag was missing when false)
 * Updated `sfdy` to 1.5.2
 
