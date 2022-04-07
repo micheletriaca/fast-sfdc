@@ -1,5 +1,8 @@
 # Change Log
 
+## 1.9.4
+* Minor bugfixing & dependencies update
+
 ## 1.9.3
 * Minor bugfixing
 
