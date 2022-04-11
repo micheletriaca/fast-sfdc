@@ -90,7 +90,7 @@
       },
       {
         "command": "FastSfdc.retrieve",
-        "title": "Fast-Sfdc: Retrieve metadata"
+        "title": "Fast-Sfdc: Retrieve metadata..."
       },
       {
         "command": "FastSfdc.retrieveProfiles",
