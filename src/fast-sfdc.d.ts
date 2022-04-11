@@ -1,15 +1,15 @@
-export interface Config {
-  readonly stored: boolean;
-  credentials: ConfigCredential[];
-  currentCredential: number;
-}
-
 export interface ConfigCredential {
   username?: string;
   password?: string;
   environment?: string;
   url?: string;
   deployOnSave?: boolean;
+}
+
+export interface Config {
+  readonly stored: boolean;
+  credentials: ConfigCredential[];
+  currentCredential: number;
 }
 
 export interface Metadata {
@@ -43,6 +43,8 @@ export interface LwcMetadata extends Metadata {
   };
 }
 
+type AnyMetadata = ApexClassMetadata | ApexPageMetadata | ApexComponentMetadata | LwcMetadata | Metadata
+
 export interface MetaObj {
   Id?: string;
   FullName: string;
@@ -50,8 +52,6 @@ export interface MetaObj {
   MetadataContainerId?: string;
   Metadata?: AnyMetadata;
 }
-
-type AnyMetadata = ApexClassMetadata | ApexPageMetadata | ApexComponentMetadata | LwcMetadata | Metadata
 
 type AuraDefType = 'APPLICATION'
   | 'CONTROLLER'
@@ -94,16 +94,16 @@ export interface AuraBundle {
   MasterLabel: string;
 }
 
-export interface TestExecutionResult {
-  successes: TestResult[];
-  failures: TestResult[];
-}
-
 export interface TestResult {
   name: string;
   methodName: string;
   message: string;
   stackTrace: string;
+}
+
+export interface TestExecutionResult {
+  successes: TestResult[];
+  failures: TestResult[];
 }
 
 export type DoneCallback = (s: string) => void

@@ -88,7 +88,7 @@ export default async function createField () {
       })
       .map(x => ({ fileName: x.fileName, data: Buffer.from(buildXml(x.xml!) + '\n', 'utf8') }))
       .collect()
-      .toPromise(Promise))
+      .toPromise(Promise as PConstructor<{ fileName: string; data: Buffer; }[], PromiseLike<{ fileName: string; data: Buffer; }[]>>))
   }
 
   await utils.transformAndStoreFiles(filesToStore, sfdcConnector)

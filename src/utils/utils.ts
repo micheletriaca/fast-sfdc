@@ -28,7 +28,7 @@ const untransformAndfetchFiles = async (fileGlob: string, sfdcConnector: SfdcCon
     config: sfdyConfig
   })))
     .collect()
-    .toPromise(Promise)) as {[fileName: string]: {fileName: string; data: Uint8Array}}
+    .toPromise(Promise as PConstructor<[string, unknown][], PromiseLike<[string, unknown][]>>)) as {[fileName: string]: {fileName: string; data: Uint8Array}}
 }
 
 const transformAndStoreFiles = async (files: {fileName: string; data: Uint8Array}[], sfdcConnector: SfdcConnector) => {

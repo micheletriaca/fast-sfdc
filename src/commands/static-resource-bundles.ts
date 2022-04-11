@@ -21,7 +21,7 @@ export default async function configureBundles () {
     .filter(x => x.contentType === 'application/zip')
     .map(x => x.fileName.replace('-meta.xml', ''))
     .collect()
-    .toPromise(Promise)
+    .toPromise(Promise as PConstructor<string[], PromiseLike<string[]>>)
 
   const savedSr = new Set(multimatch(files, sfdyConfig?.staticResources?.useBundleRenderer || []))
   const selectedSr = await vscode.window.showQuickPick(files.sort().map(x => ({

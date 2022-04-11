@@ -12,6 +12,7 @@ const MENU_PREFIX = () => {
 let loadingCounter = 0
 let doneTimeout: NodeJS.Timer
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 let queue: Function[] = []
 let running = false
 
