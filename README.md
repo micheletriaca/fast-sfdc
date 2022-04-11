@@ -7,6 +7,9 @@ Built from scratch, no jsforce/salesforceDX dependencies, <b>LIGHTNING FAST!</b>
 
 ![Command Palette](images/commands.png "Command Palette")
 
+### NEW!!! 🔥 Authorize an org via OAuth2 flow 🔥
+You can now authorize your org both using the canonical user+pass+token method or using an OAuth2 flow. The oauth flow is useful if you have enforced MFA using the high assurance requirement on the profile. In this case, in fact, the user+pass+token flow will not work anymore
+
 ### Deploy, Retrieve, Validate & Compile
 Canonical deployment and retrieval of metadata based on your package.xml configuration is fully featured, but you can also deploy or retrieve single files/folders!
 Compile on save for apex classes, visualforce pages, triggers, visualforce components, aura bundles and <b>lightning web components</b> is supported!
@@ -19,7 +22,7 @@ You can create most of the supported fields and set the Profile FLS directly fro
 
 ![Create New Field](images/create-new-field.gif "Create new field")
 
-### NEW!!! 🔥 Edit FLS directly from Profile or PermissionSet 🔥
+### Edit FLS directly from Profile or PermissionSet
 Just open the Profile or PermissionSet and click on the codelen
 ![Edit FLS](images/edit-fls.png "Edit FLS")
 
@@ -42,7 +45,7 @@ Handle your static resources as uncompressed folders. Just select the static res
 ### Multi-org support
 Store different credentials for fast org-switch and deploy when needed or in a hurry!
 
-### 🔥 Lightning Web Components 🔥
+### Lightning Web Components
 <b>Full support for lightning web components</b>: from their creation to their deployment!
 
 ### Execute Anonymous

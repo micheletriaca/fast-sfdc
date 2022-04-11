@@ -1,6 +1,8 @@
 export interface ConfigCredential {
+  type?: string;
   username?: string;
   password?: string;
+  instanceUrl?: string;
   environment?: string;
   url?: string;
   deployOnSave?: boolean;

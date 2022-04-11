@@ -22,7 +22,9 @@ export default function retrieve (files: string[] = [], filesAreMeta = false) {
         loginOpts: {
           serverUrl: creds.url,
           username: creds.username,
-          password: creds.password
+          password: creds.password,
+          instanceUrl: creds.type === 'oauth2' ? creds.instanceUrl : undefined,
+          refreshToken: creds.type === 'oauth2' ? creds.password : undefined
         },
         [filesAreMeta ? 'meta' : 'files']: sanitizedFiles,
         config: sfdyConfig

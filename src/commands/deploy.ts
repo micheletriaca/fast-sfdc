@@ -30,7 +30,9 @@ export default function deploy (checkOnly = false, destructive = false, files: s
         loginOpts: {
           serverUrl: creds.url,
           username: creds.username,
-          password: creds.password
+          password: creds.password,
+          instanceUrl: creds.type === 'oauth2' ? creds.instanceUrl : undefined,
+          refreshToken: creds.type === 'oauth2' ? creds.password : undefined
         },
         checkOnly,
         config: sfdyConfig,

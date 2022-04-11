@@ -2,6 +2,8 @@ declare module 'node-salesforce-connection'
 declare module 'node-salesforce-connection/xml'
 declare module 'sfdy/src/deploy'
 declare module 'sfdy/src/retrieve'
+declare module 'sfdy/src/auth'
+declare module 'sfdy/src/utils/constants'
 
 type GenericObject = { [key: string]: any };
 type SfdcConnector = GenericObject
@@ -13,6 +15,11 @@ declare module 'sfdy/src/utils/sfdc-utils' {
     serverUrl?: string;
     isSandbox?: boolean;
     apiVersion: string;
+    oauth2?: {
+      instanceUrl?: string;
+      refreshToken?: string;
+      clientId?: string;
+    };
   }): SfdcConnector
 }
 

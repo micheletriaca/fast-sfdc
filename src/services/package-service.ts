@@ -5,6 +5,7 @@ import configService from './config-service'
 import * as SfdcConn from 'sfdy/src/utils/sfdc-utils'
 import * as path from 'upath'
 import * as fs from 'fs'
+import * as constants from 'sfdy/src/utils/constants'
 import utils from '../utils/utils'
 
 const getStoredAndDeltaPackage = async (files: string[], sfdcConnector: SfdcConnector) => {
@@ -25,6 +26,11 @@ export default {
       username: loginOpts.username || '',
       password: loginOpts.password || '',
       serverUrl: loginOpts.url,
+      oauth2: loginOpts.type === 'oauth2' ? {
+        instanceUrl: loginOpts.instanceUrl,
+        refreshToken: loginOpts.password,
+        clientId: constants.DEFAULT_CLIENT_ID
+      } : undefined,
       apiVersion: storedPackage.version[0]
     })
     return sfdcConnector

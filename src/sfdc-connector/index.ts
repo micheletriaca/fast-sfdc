@@ -1,5 +1,6 @@
 import { Config, MetaObj, AuraObj, LwcObj, AuraBundle } from '../fast-sfdc'
 import * as SfdcConn from 'node-salesforce-connection'
+import * as constants from 'sfdy/src/utils/constants'
 import configService from '../services/config-service'
 import utils from '../utils/utils'
 import soapWithDebug from './soap-with-debug'
@@ -13,12 +14,20 @@ const connect = async function (cfg?: Config) {
   if (cfg) config = cfg
   const creds = config.credentials[config.currentCredential]
   apiVersion = await configService.getPackageXmlVersion()
-  await conn.soapLogin({
-    hostname: creds.url,
-    apiVersion,
-    username: creds.username,
-    password: creds.password
-  })
+  if (creds.type === 'oauth2') {
+    await conn.oauthToken(creds.instanceUrl?.replace('https://', ''), {
+      grant_type: 'refresh_token',
+      client_id: constants.DEFAULT_CLIENT_ID,
+      refresh_token: creds.password
+    })
+  } else {
+    await conn.soapLogin({
+      hostname: creds.url,
+      apiVersion,
+      username: creds.username,
+      password: creds.password
+    })
+  }
 }
 
 const getBasePath = (useRest: boolean) => `/services/data/v${apiVersion}${useRest ? '' : '/tooling'}`

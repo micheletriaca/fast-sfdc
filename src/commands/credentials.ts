@@ -5,6 +5,8 @@ import StatusBar from '../statusbar'
 import utils from '../utils/utils'
 import { ConfigCredential } from '../fast-sfdc'
 import toolingService from '../services/tooling-service'
+import * as auth from 'sfdy/src/auth'
+import * as constants from 'sfdy/src/utils/constants'
 import * as fs from 'fs'
 import * as path from 'upath'
 
@@ -16,6 +18,19 @@ async function getUrl (): Promise<string> {
     }, {
       label: 'Sandbox / Test',
       description: 'test.salesforce.com'
+    }
+  ], { ignoreFocusOut: true })
+  return (res && res.description) || ''
+}
+
+async function getAuthType (): Promise<string> {
+  const res = await vscode.window.showQuickPick([
+    {
+      label: 'Username + password and token',
+      description: 'userpwd'
+    }, {
+      label: 'OAuth2 flow',
+      description: 'oauth2'
     }
   ], { ignoreFocusOut: true })
   return (res && res.description) || ''
@@ -34,26 +49,42 @@ export default async function enterCredentials (addMode = false) {
 
   const creds: ConfigCredential = addMode ? {} : config.credentials[config.currentCredential]
 
+  creds.type = await getAuthType()
+  if (!creds.type) return
+
   creds.url = await getUrl()
   if (!creds.url) return
 
-  creds.username = await utils.inputText('Please enter your SFDC username', creds.username, {
-    validateInput: v => {
-      if (config.credentials.find((x, idx) => x.username === v && (addMode || idx !== config.currentCredential))) {
-        return 'Username already configured'
+  if (creds.type === 'userpwd') {
+    creds.username = await utils.inputText('Please enter your SFDC username', creds.username, {
+      validateInput: v => {
+        if (config.credentials.find((x, idx) => x.username === v && (addMode || idx !== config.currentCredential))) {
+          return 'Username already configured'
+        }
+        return null
       }
-      return null
-    }
-  })
-  if (!creds.username) return
+    })
+    if (!creds.username) return
 
-  creds.password = await utils.inputText('Please enter your SFDC password and token', creds.password, { password: true })
-  if (!creds.password) return
+    creds.password = await utils.inputText('Please enter your SFDC password and token', creds.password, { password: true })
+    if (!creds.password) return
+  }
 
   creds.environment = await utils.inputText('Give this environment a name (it will be used in sfdy patches)', creds.environment)
   if (!creds.password) return
 
   creds.deployOnSave = await getDeployOnSave()
+
+  if (creds.type === 'oauth2') {
+    const infos = await auth(creds.url, constants.DEFAULT_CLIENT_ID, undefined, 3000)
+    creds.username = infos.userInfo.username
+    creds.password = infos.oauth2.refresh_token
+    creds.instanceUrl = infos.oauth2.instance_url
+    if (config.credentials.find((x, idx) => x.username === creds.username && (addMode || idx !== config.currentCredential))) {
+      vscode.window.showErrorMessage('Username already configured')
+      return
+    }
+  }
 
   if (addMode) {
     config.credentials.push(creds)
