@@ -1,5 +1,8 @@
 # Change Log
 
+## 1.10.1
+* Fixed bug in soapLogin
+
 ## 1.10.0
 * Minor bugfixing & dependencies update
 * OAuth2 login flow
