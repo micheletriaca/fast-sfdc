@@ -71,8 +71,6 @@ export default async function enterCredentials (addMode = false) {
   }
 
   creds.environment = await utils.inputText('Give this environment a name (it will be used in sfdy patches)', creds.environment)
-  if (!creds.password) return
-
   creds.deployOnSave = await getDeployOnSave()
 
   if (creds.type === 'oauth2') {
