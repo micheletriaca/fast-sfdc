@@ -10,6 +10,7 @@ export interface ConfigCredential {
 
 export interface Config {
   readonly stored: boolean;
+  lastVersion?: string;
   credentials: ConfigCredential[];
   currentCredential: number;
 }
