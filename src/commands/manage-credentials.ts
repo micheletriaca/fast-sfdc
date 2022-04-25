@@ -56,6 +56,7 @@ export default async function changeCredentials () {
       await configService.storeConfig(newCfg)
       await connector.connect(newCfg)
       await toolingService.resetMetadataContainer()
+      vscode.commands.executeCommand('FastSfdc.refreshPackageTreeview')
       vscode.window.showInformationMessage('Credentials ok!')
       done('👍🏻')
     } catch (error) {

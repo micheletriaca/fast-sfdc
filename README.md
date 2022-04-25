@@ -7,6 +7,11 @@ Built from scratch, no jsforce/salesforceDX dependencies, <b>LIGHTNING FAST!</b>
 
 ![Command Palette](images/commands.png "Command Palette")
 
+### NEW!!! 🔥 Metadata explorer 🔥
+![Metadata Explorer](images/metadata-explorer.png "Metadata Explorer")
+
+Explore Metadata in your org and download from Salesforce everything you need. The retrieved metadata will be automatically added to package.xml
+
 ### NEW!!! 🔥 Authorize an org via OAuth2 flow 🔥
 You can now authorize your org both using the canonical user+pass+token method or using an OAuth2 flow. The oauth flow is useful if you have enforced MFA using the high assurance requirement on the profile. In this case, in fact, the user+pass+token flow will not work anymore
 

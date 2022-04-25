@@ -16,7 +16,7 @@
 				"${workspaceFolder}/dist/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}",
-      "runtimeExecutable": "${env:HOME}/.nvm/versions/node/v12.13.1/bin/node"
+      "runtimeExecutable": "${env:HOME}/.nvm/versions/node/v16.13.0/bin/node"
 		},
 		{
 			"name": "Extension Tests",
@@ -31,7 +31,7 @@
 				"${workspaceFolder}/dist/**/*.js"
 			],
 			"preLaunchTask": "tasks: watch-tests",
-      "runtimeExecutable": "${env:HOME}/.nvm/versions/node/v12.13.1/bin/node"
+      "runtimeExecutable": "${env:HOME}/.nvm/versions/node/v12.13.0/bin/node"
 		}
 	]
 }

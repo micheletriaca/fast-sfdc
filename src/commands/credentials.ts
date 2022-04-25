@@ -114,6 +114,7 @@ export default async function enterCredentials (addMode = false) {
     try {
       await connector.connect(config)
       await toolingService.resetMetadataContainer()
+      vscode.commands.executeCommand('FastSfdc.refreshPackageTreeview')
       vscode.window.showInformationMessage('Credentials ok!')
       done('👍🏻')
     } catch (error) {

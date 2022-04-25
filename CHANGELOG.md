@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.11.0
+* Metadata explorer view: explore the metadata in your org, retrieve multiple components and add them to `package.xml`!
+By default you will see only the Metadata that are present in your org but that you haven't versioned yet, but playing with the available filters you can see everything you want
+
+* Fixed bug in Oauth2 authentication
+
 ## 1.10.1
 * Fixed bug in soapLogin
 

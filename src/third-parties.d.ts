@@ -4,6 +4,7 @@ declare module 'sfdy/src/deploy'
 declare module 'sfdy/src/retrieve'
 declare module 'sfdy/src/auth'
 declare module 'sfdy/src/utils/constants'
+declare module 'exstream.js'
 
 type GenericObject = { [key: string]: any };
 type SfdcConnector = GenericObject
@@ -34,7 +35,7 @@ type PackageType = { members: string[]; name: string[] }
 type Package = { types: PackageType[]; version: string[] };
 
 declare module 'sfdy/src/utils/package-utils' {
-  export function getPackageXml(opts?: {specificFiles: string[]; sfdcConnector: SfdcConnector}): Promise<Package>
+  export function getPackageXml(opts?: {specificFiles?: string[]; specificMeta?: string[]; sfdcConnector: SfdcConnector}): Promise<Package>
   export function getPackageMapping(sfdcConnector: SfdcConnector): Promise<PackageMapping>
   export function getListOfSrcFiles(packageMapping: PackageMapping, pattern: string[]): Promise<string[]>
 }

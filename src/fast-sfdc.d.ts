@@ -10,8 +10,36 @@ export interface ConfigCredential {
 
 export interface Config {
   readonly stored: boolean;
+  lastVersion?: string;
   credentials: ConfigCredential[];
   currentCredential: number;
+}
+
+export interface DescribeMetadataItem {
+  directoryName: string;
+  inFolder: string;
+  metaFile: string;
+  suffix: string;
+  xmlName: string;
+}
+
+export interface DescribeMetadataResult {
+  metadataObjects: DescribeMetadataItem[];
+  organizationNamespace: string;
+  partialSaveAllowed: string;
+  testRequired: string;
+}
+
+export interface ListMetadataResult {
+  createdById: string;
+  createdByName: string;
+  createdDate: string;
+  fileName: string;
+  fullName: string;
+  id: string;
+  lastModifiedById: string;
+  lastModifiedByName: string;
+  type: string;
 }
 
 export interface Metadata {

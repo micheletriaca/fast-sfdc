@@ -1,59 +1,86 @@
 'use strict'
-import * as vscode from 'vscode'
+import { commands, workspace, languages, window, ExtensionContext } from 'vscode'
 import cmds from './commands'
 import statusBar from './statusbar'
 import configService from './services/config-service'
 import logger, { reporter } from './logger'
 import CodeLensRunTest from './codelens-provider/codelens-run-test'
 import CodeLensFls from './codelens-provider/codelens-fls'
+import packageTreeView from './treeviews-prodiver/package-explorer'
+import * as vscode from 'vscode'
+import * as open from 'open'
 
-const activateExtension = () => {
-  const isOneWorkspaceOpened = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length === 1
-  vscode.commands.executeCommand('setContext', 'fast-sfdc-active', isOneWorkspaceOpened)
-  if (!isOneWorkspaceOpened) {
-    statusBar.hideStatusBar()
-    vscode.commands.executeCommand('setContext', 'fast-sfdc-configured', false)
-  } else {
+const activateExtension = async () => {
+  const isOneWorkspaceOpened = workspace.workspaceFolders?.length === 1
+  if (isOneWorkspaceOpened) {
     statusBar.initStatusBar()
-    const cfg = configService.getConfigSync()
-    vscode.commands.executeCommand('setContext', 'fast-sfdc-configured', cfg.stored)
+    commands.executeCommand('setContext', 'fast-sfdc-configured', configService.getConfigSync().stored)
+    commands.executeCommand('setContext', 'fast-sfdc-active', true)
     logger.appendLine('Extension "fast-sfdc" is now active!')
     reporter.sendEvent('extensionActivated')
+
+    const cfg = await configService.getConfig()
+    const currentVersion = vscode.extensions.getExtension('m1ck83.fast-sfdc')?.packageJSON.version
+    if (cfg.stored && (!cfg.lastVersion || cfg.lastVersion !== currentVersion)) {
+      const res = await vscode.window.showInformationMessage(
+        `Fast-Sfdc updated to version ${currentVersion}. Checkout the CHANGELOG!`,
+        'Show me the news', 'Maybe later', 'Don\'t show again'
+      )
+      if (res && res !== 'Maybe later') {
+        reporter.sendEvent('newVersion', { clicked: res })
+        cfg.lastVersion = currentVersion
+        await configService.storeConfig(cfg)
+        if (res === 'Show me the news') {
+          open(`https://github.com/micheletriaca/fast-sfdc/blob/v${currentVersion}/CHANGELOG.md`)
+        }
+      }
+    }
+  } else {
+    statusBar.hideStatusBar()
+    commands.executeCommand('setContext', 'fast-sfdc-active', false)
+    commands.executeCommand('setContext', 'fast-sfdc-configured', false)
   }
 }
 
-export function activate (ctx: vscode.ExtensionContext) {
-  ctx.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => activateExtension()))
-  ctx.subscriptions.push(vscode.workspace.onDidSaveTextDocument(textDocument => cmds.compile(textDocument)))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.enterCredentials', cmds.credentials))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.replaceCredentials', cmds.credentials))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.addCredentials', () => cmds.credentials(true)))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.compile', cmds.compile))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.statusBarClick', cmds.statusBarClick))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.manageCredentials', cmds.manageCredentials))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.removeCredentials', cmds.removeCredentials))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.createMeta', cmds.createMeta))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.executeAnonymous', cmds.executeAnonymous))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.createAuraDefinition', cmds.createAuraDefinition))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.retrieve', cmds.retrieve))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.retrieveProfiles', () => cmds.retrieve(['profiles/**/*'])))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.retrieveSelected', cmds.retrieveSelected))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.deploy', cmds.deploy))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.validate', () => cmds.deploy(true)))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.retrieveSingle', cmds.retrieveSelected))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.configureStaticResourceBundles', cmds.configureStaticResourceBundles))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.deploySingle', cmds.deploySelected))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.deploySelected', cmds.deploySelected))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.destroySelected', cmds.destroySelected))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.runTest', cmds.runTest))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.initSfdy', cmds.initSfdy))
-  ctx.subscriptions.push(vscode.commands.registerCommand('FastSfdc.editFlsProfiles', cmds.editFlsProfiles))
-  ctx.subscriptions.push(vscode.languages.registerCodeLensProvider({ language: 'apex', scheme: 'file' }, new CodeLensRunTest()))
-  ctx.subscriptions.push(vscode.languages.registerCodeLensProvider([{ pattern: '**/profiles/*.profile' }, { pattern: '**/permissionsets/*.permissionset' }], new CodeLensFls()))
-  reporter.subscribe(ctx)
+export function activate (ctx: ExtensionContext) {
+  ctx.subscriptions.push(...[
+    workspace.onDidChangeWorkspaceFolders(() => activateExtension()),
+    workspace.onDidSaveTextDocument(textDocument => cmds.compile(textDocument)),
+    commands.registerCommand('FastSfdc.compile', cmds.compile),
+    commands.registerCommand('FastSfdc.statusBarClick', cmds.statusBarClick),
+    commands.registerCommand('FastSfdc.enterCredentials', cmds.credentials),
+    commands.registerCommand('FastSfdc.replaceCredentials', cmds.credentials),
+    commands.registerCommand('FastSfdc.addCredentials', () => cmds.credentials(true)),
+    commands.registerCommand('FastSfdc.manageCredentials', cmds.manageCredentials),
+    commands.registerCommand('FastSfdc.removeCredentials', cmds.removeCredentials),
+    commands.registerCommand('FastSfdc.createMeta', cmds.createMeta),
+    commands.registerCommand('FastSfdc.executeAnonymous', cmds.executeAnonymous),
+    commands.registerCommand('FastSfdc.createAuraDefinition', cmds.createAuraDefinition),
+    commands.registerCommand('FastSfdc.retrieve', cmds.retrieve),
+    commands.registerCommand('FastSfdc.retrieveProfiles', () => cmds.retrieve(['profiles/**/*'])),
+    commands.registerCommand('FastSfdc.retrieveSelected', cmds.retrieveSelected),
+    commands.registerCommand('FastSfdc.retrieveSelectedMeta', cmds.retrieveSelectedMeta),
+    commands.registerCommand('FastSfdc.deploy', cmds.deploy),
+    commands.registerCommand('FastSfdc.validate', () => cmds.deploy(true)),
+    commands.registerCommand('FastSfdc.retrieveSingle', cmds.retrieveSelected),
+    commands.registerCommand('FastSfdc.configureStaticResourceBundles', cmds.configureStaticResourceBundles),
+    commands.registerCommand('FastSfdc.deploySingle', cmds.deploySelected),
+    commands.registerCommand('FastSfdc.deploySelected', cmds.deploySelected),
+    commands.registerCommand('FastSfdc.destroySelected', cmds.destroySelected),
+    commands.registerCommand('FastSfdc.runTest', cmds.runTest),
+    commands.registerCommand('FastSfdc.initSfdy', cmds.initSfdy),
+    commands.registerCommand('FastSfdc.editFlsProfiles', cmds.editFlsProfiles),
+    languages.registerCodeLensProvider({ language: 'apex', scheme: 'file' }, new CodeLensRunTest()),
+    languages.registerCodeLensProvider([{ pattern: '**/profiles/*.profile' }, { pattern: '**/permissionsets/*.permissionset' }], new CodeLensFls()),
+    commands.registerCommand('FastSfdc.refreshPackageTreeview', packageTreeView.refresh),
+    commands.registerCommand('FastSfdc.filterPackageTreeview', packageTreeView.filter),
+    commands.registerCommand('FastSfdc.filterPackageOnlyInOrg', packageTreeView.filterOnlyInOrg),
+    window.createTreeView('packageEditor', {
+      treeDataProvider: packageTreeView,
+      showCollapseAll: true,
+      canSelectMany: true
+    }),
+    reporter
+  ])
   activateExtension()
-}
-
-export function deactivate () {
-  reporter.dispose()
 }

@@ -12,11 +12,13 @@ import executeAnonymous from './execute-anonymous'
 import initSfdy from './init-sfdy'
 import retrieve from './retrieve'
 import retrieveSelected from './retrieve-selected'
+import retrieveSelectedMeta from './retrieve-selected-meta'
 import configureStaticResourceBundles from './static-resource-bundles'
 import runTest from './run-test'
 import { reporter } from '../logger'
 import { TextDocument, Uri } from 'vscode'
 import * as vscode from 'vscode'
+import { Dependency } from '../treeviews-prodiver/package-explorer'
 
 export default {
   manageCredentials: () => {
@@ -70,6 +72,10 @@ export default {
   retrieveSelected: (uri: vscode.Uri, allUris: vscode.Uri[]) => {
     reporter.sendEvent('retrieveSelected')
     retrieveSelected(uri, allUris)
+  },
+  retrieveSelectedMeta: (item: Dependency | null, items: Dependency[]) => {
+    reporter.sendEvent('retrieveSelectedMeta')
+    retrieveSelectedMeta(item, items)
   },
   runTest: (document: vscode.TextDocument, className: string, methodName: string) => {
     reporter.sendEvent('runTest')
