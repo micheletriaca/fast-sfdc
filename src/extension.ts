@@ -7,8 +7,10 @@ import logger, { reporter } from './logger'
 import CodeLensRunTest from './codelens-provider/codelens-run-test'
 import CodeLensFls from './codelens-provider/codelens-fls'
 import packageTreeView from './treeviews-prodiver/package-explorer'
+import * as vscode from 'vscode'
+import * as open from 'open'
 
-const activateExtension = () => {
+const activateExtension = async () => {
   const isOneWorkspaceOpened = workspace.workspaceFolders?.length === 1
   if (isOneWorkspaceOpened) {
     statusBar.initStatusBar()
@@ -16,6 +18,23 @@ const activateExtension = () => {
     commands.executeCommand('setContext', 'fast-sfdc-active', true)
     logger.appendLine('Extension "fast-sfdc" is now active!')
     reporter.sendEvent('extensionActivated')
+
+    const cfg = await configService.getConfig()
+    const currentVersion = vscode.extensions.getExtension('m1ck83.fast-sfdc')?.packageJSON.version
+    if (cfg.stored && (!cfg.lastVersion || cfg.lastVersion !== currentVersion)) {
+      const res = await vscode.window.showInformationMessage(
+        `Fast-Sfdc updated to version ${currentVersion}. Checkout the CHANGELOG!`,
+        'Show me the news', 'Maybe later', 'Don\'t show again'
+      )
+      if (res && res !== 'Maybe later') {
+        reporter.sendEvent('newVersion', { clicked: res })
+        cfg.lastVersion = currentVersion
+        await configService.storeConfig(cfg)
+        if (res === 'Show me the news') {
+          open(`https://github.com/micheletriaca/fast-sfdc/blob/v${currentVersion}/CHANGELOG.md`)
+        }
+      }
+    }
   } else {
     statusBar.hideStatusBar()
     commands.executeCommand('setContext', 'fast-sfdc-active', false)
