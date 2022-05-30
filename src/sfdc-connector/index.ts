@@ -73,8 +73,8 @@ export default {
   connect,
   query,
   metadata,
-  async getSession (): Promise<{sessionId: string; instanceHostname: string; apiVersion: string}> {
-    if (!conn.sessionId) await connect()
+  async getSession (forceRefresh?: boolean): Promise<{sessionId: string; instanceHostname: string; apiVersion: string}> {
+    if (!conn.sessionId || forceRefresh) await connect()
     return {
       sessionId: conn.sessionId,
       instanceHostname: conn.instanceHostname,
