@@ -429,7 +429,7 @@
     "multimatch": "^4.0.0",
     "node-salesforce-connection": "^2.3.1",
     "open": "^8.4.0",
-    "sfdy": "^1.6.2",
+    "sfdy": "^1.6.4",
     "upath": "^1.2.0",
     "vscode-extension-telemetry": "^0.1.6",
     "xml2js": "^0.4.23"
