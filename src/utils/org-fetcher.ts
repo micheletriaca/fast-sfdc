@@ -1,7 +1,8 @@
 import * as _ from 'exstream.js'
-import { reporter } from '../logger'
+import logger, { reporter } from '../logger'
 
 export default async function fetch (sfdc: SfdcConnector) {
+  logger.appendLine('Fetching org metadata...')
   reporter.sendEvent('sfdcExplorer')
   const FOLDERED_METAS = ['Report', 'Dashboard', 'EmailTemplate', 'Document']
 
@@ -45,6 +46,7 @@ export default async function fetch (sfdc: SfdcConnector) {
   const s1 = _(allFolders.records)
     .filter((x: {Type: string}) => FOLDERED_METAS.includes(x.Type))
     .map((x: {Type: any; DeveloperName: any}) => ({ type: x.Type, folder: x.DeveloperName }))
+    .tap((x: {type: string; folder: string}) => logger.appendLine(`Fetching folder ${x.folder}...`))
     .batch(3)
     .map((metas: any) => sfdc.listMetadata(metas))
     .resolve(10, false)
@@ -61,6 +63,7 @@ export default async function fetch (sfdc: SfdcConnector) {
     .reject((x: {inFolder: string}) => x.inFolder === 'true')
     .pluck('xmlName')
     .map((x: string) => ({ type: x }))
+    .tap((x: {type: string}) => logger.appendLine(`Fetching metadata ${x.type}...`))
     .batch(3)
     .map((x: any) => sfdc.listMetadata(x))
     .resolve(10, false)
