@@ -83,6 +83,14 @@ export interface MetaObj {
   Metadata?: AnyMetadata;
 }
 
+export interface StaticResourceObj {
+  Id?: string;
+  Body: string;
+  CacheControl: 'Public' | 'Private';
+  Name?: string;
+  ContentType?: string;
+}
+
 type AuraDefType = 'APPLICATION'
   | 'CONTROLLER'
   | 'COMPONENT'

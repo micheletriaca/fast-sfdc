@@ -17,6 +17,7 @@ export default {
       case '.trigger': return 'ApexTriggerMember'
       case '.component': return 'ApexComponentMember'
       case '.page': return 'ApexPageMember'
+      case '.resource': return 'StaticResource'
       default: return ''
     }
   },

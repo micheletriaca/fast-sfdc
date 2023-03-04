@@ -125,6 +125,23 @@ const compileMetadataContainerObject = async (doc: vscode.TextDocument, done: Do
   }
 }
 
+const compileStaticResource = async (doc: vscode.TextDocument, done: DoneCallback) => {
+  try {
+    const fileName = parsers.getFilename(doc.fileName)
+    const staticRes = await sfdcConnector.query(`SELECT Id FROM StaticResource WHERE Name = '${fileName}'`)
+    if (!staticRes.records.length) return done('')
+    logger.appendLine(`Updating ${doc.fileName}`)
+    await sfdcConnector.upsertObj('StaticResource', {
+      Id: staticRes.records[0].Id,
+      Body: Buffer.from(doc.getText()).toString('base64')
+    })
+    done('👍🏻')
+  } catch (e) {
+    vscode.window.showErrorMessage(e.message)
+    done('👎🏻')
+  }
+}
+
 export default async function compile (doc?: vscode.TextDocument) {
   const cfg = await configService.getConfig()
   const sfdyConfig = configService.getSfdyConfigSync()
@@ -151,6 +168,7 @@ export default async function compile (doc?: vscode.TextDocument) {
     switch (type) {
       case 'AuraDefinition': return compileAuraDefinition(doc!, done)
       case 'LightningComponentResource': return compileLightninWebComponent(doc!, done)
+      case 'StaticResource': return compileStaticResource(doc!, done)
       default: return compileMetadataContainerObject(doc!, done)
     }
   }, doc.uri.toString(), true)

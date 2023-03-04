@@ -1,4 +1,4 @@
-import { Config, MetaObj, AuraObj, LwcObj, AuraBundle, DescribeMetadataResult, ListMetadataResult } from '../fast-sfdc'
+import { Config, MetaObj, StaticResourceObj, AuraObj, LwcObj, AuraBundle, DescribeMetadataResult, ListMetadataResult } from '../fast-sfdc'
 import * as SfdcConn from 'node-salesforce-connection'
 import * as constants from 'sfdy/src/utils/constants'
 import configService from '../services/config-service'
@@ -105,11 +105,11 @@ export default {
     return (post('/runTestsSynchronous', { tests }))
   },
 
-  async upsertObj (toolingType: string, record: MetaObj | AuraObj | LwcObj | AuraBundle) {
+  async upsertObj (toolingType: string, record: MetaObj | AuraObj | LwcObj | AuraBundle | StaticResourceObj) {
     return (record.Id ? this.editObj : this.createObj)(toolingType, record)
   },
 
-  async createObj (toolingType: string, record: MetaObj | AuraObj | LwcObj | AuraBundle) {
+  async createObj (toolingType: string, record: MetaObj | AuraObj | LwcObj | AuraBundle | StaticResourceObj) {
     return (await post(`/sobjects/${toolingType}`, record)).id
   },
 
@@ -117,7 +117,7 @@ export default {
     return del(`/sobjects/${toolingType}/${recordId}`)
   },
 
-  async editObj (toolingType: string, record: MetaObj | AuraObj | LwcObj | AuraBundle) {
+  async editObj (toolingType: string, record: MetaObj | AuraObj | LwcObj | AuraBundle | StaticResourceObj) {
     await patch(`/sobjects/${toolingType}/${record.Id}`, {
       ...record,
       Id: undefined,

@@ -78,7 +78,7 @@ export default {
   },
 
   setText (newTxt: string | undefined = undefined) {
-    if (!newTxt) sbItem.text = `${MENU_PREFIX()} $(sync~spin)${loadingCounter > 1 ? ' (' + loadingCounter + ')' : ''}`
+    if (newTxt === undefined) sbItem.text = `${MENU_PREFIX()} $(sync~spin)${loadingCounter > 1 ? ' (' + loadingCounter + ')' : ''}`
     else sbItem.text = `${MENU_PREFIX()} ${newTxt || ''}`
   }
 }
