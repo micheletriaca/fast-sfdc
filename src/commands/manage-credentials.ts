@@ -67,8 +67,14 @@ export default async function changeCredentials () {
   StatusBar.startLongJob(async done => {
     try {
       const newCfg = { ...config, currentCredential: credIdx }
+      const currentCred = newCfg.credentials[credIdx]
       await configService.storeConfig(newCfg)
       await connector.connect(newCfg)
+      const sessionInfos = await connector.getSession()
+      if (currentCred.type === 'oauth2' && currentCred.instanceUrl !== 'https://' + sessionInfos.instanceHostname) {
+        currentCred.instanceUrl = 'https://' + sessionInfos.instanceHostname
+        await configService.storeConfig(newCfg)
+      }
       await toolingService.resetMetadataContainer()
       vscode.commands.executeCommand('FastSfdc.refreshPackageTreeview')
       vscode.window.showInformationMessage('Credentials ok!')
