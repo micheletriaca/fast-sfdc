@@ -18,6 +18,9 @@ async function getUrl (): Promise<string> {
     }, {
       label: 'Sandbox / Test',
       description: 'test.salesforce.com'
+    }, {
+      label: 'Custom domain',
+      description: 'custom'
     }
   ], { ignoreFocusOut: true })
   return (res && res.description) || ''
@@ -53,6 +56,10 @@ export default async function enterCredentials (addMode = false) {
   if (!creds.type) return
 
   creds.url = await getUrl()
+  if (creds.url === 'custom') {
+    creds.url = await utils.inputText('Please enter the domain', 'DOMAIN[.sandbox].my.salesforce.com')
+    if (creds.url) creds.url = creds.url.replace(/https?:\/\//i, '').replace(/\/$/, '')
+  }
   if (!creds.url) return
 
   if (creds.type === 'userpwd') {

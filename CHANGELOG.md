@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.13.2
+
+* Updated `sfdy` to 1.7.3 to handle `Territory2*` metadata
+* Added the possibility to specify a custom domain in User/Pwd authentication
+* Updated vulnerable dependencies
+
 ## 1.13.1
 
 * Bugfixing: [Credential selection modifies 'instanceUrl' parameter, causing subsequent commands to fail with 'Only absolute URLs are supported' error](issues/45)
