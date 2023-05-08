@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.13.3
+
+* Bugfixing: fixed a regression in metadata explorer
+
 ## 1.13.2
 
 * Updated `sfdy` to 1.7.3 to handle `Territory2*` metadata
