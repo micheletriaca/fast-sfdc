@@ -9,6 +9,7 @@ import sfdcConnector from '../sfdc-connector'
 import packageService from '../services/package-service'
 import { buildXml } from 'sfdy/src/utils/xml-utils'
 import createField from './create-field'
+import createLabel from './create-label'
 
 interface DocType { label: string; toolingType: string; folder?: string; extension?: string }
 
@@ -20,7 +21,8 @@ async function chooseType (): Promise<DocType | undefined> {
     { label: 'Apex trigger', toolingType: 'ApexTriggerMember', folder: 'triggers', extension: '.trigger' },
     { label: 'Lightning component', toolingType: 'AuraDefinitionBundle', folder: 'aura', extension: '.cmp' },
     { label: 'Lightning web component', toolingType: 'LightningComponentBundle', folder: 'lwc', extension: '.js' },
-    { label: 'Field', toolingType: 'CustomField' }
+    { label: 'Field', toolingType: 'CustomField' },
+    { label: 'Label', toolingType: 'CustomLabel' }
   ], { ignoreFocusOut: true })
   return res
 }
@@ -159,6 +161,7 @@ export default async function createMeta () {
   if (!docType) return
 
   if (docType.toolingType === 'CustomField') return createField()
+  if (docType.toolingType === 'CustomLabel') return createLabel()
 
   const docName = await utils.inputText(`enter ${docType.label.toLowerCase()} name`, '', {
     validateInput: v => {
