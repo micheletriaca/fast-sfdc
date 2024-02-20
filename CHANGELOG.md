@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.13.4
+
+* Bugfixing: fixed an error when retrieving profiles that contain `'`
+
 ## 1.13.3
 
 * Bugfixing: fixed a regression in metadata explorer
