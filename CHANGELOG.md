@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.14.0
+
+* Added support for LWR sites
+
 ## 1.13.4
 
 * Bugfixing: fixed an error when retrieving profiles that contain `'`
