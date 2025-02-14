@@ -139,9 +139,16 @@ export interface TestResult {
   stackTrace: string;
 }
 
+export interface CodeCoverage {
+  name: string;
+  numLocations: number;
+  numLocationsNotCovered: number;
+}
+
 export interface TestExecutionResult {
   successes: TestResult[];
   failures: TestResult[];
+  codeCoverage: CodeCoverage[];
 }
 
 export type DoneCallback = (s: string) => void
