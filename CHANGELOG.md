@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.14.1
+
+* Fix minor vulnerability
+* Updated SFDY
+
 ## 1.14.0
 
 * Added support for LWR sites
