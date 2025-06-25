@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.15.0
+
+* Added coverage in run tests command. Thanks [Daedrico]!
+
 ## 1.14.1
 
 * Fix minor vulnerability
