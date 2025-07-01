@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.15.1
+
+* Create metadata respect Salesforce final newline behavior. Thanks [Daedrico]!
+
 ## 1.15.0
 
 * Added coverage in run tests command. Thanks [Daedrico]!
