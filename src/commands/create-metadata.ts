@@ -130,13 +130,19 @@ async function storeOnFileSystem (docBody: string, docBodyHtml: string, docMeta:
     await utils.writeFile(`${p.slice(0, -3)}.html`, docBodyHtml)
   }
   await utils.writeFile(p, docBody)
-  await utils.writeFile(`${p}-meta.xml`, buildXml({
+  let metaString = buildXml({
     [docType.toolingType.replace(/Member$/, '')]: {
       ...docMeta,
       apiVersion: docMeta.apiVersion + '.0',
       $: { xmlns: 'http://soap.sforce.com/2006/04/metadata' }
     }
-  }))
+  })
+
+  if (['ApexClassMember', 'ApexTriggerMember', 'ApexPageMember', 'ApexComponentMember', 'AuraDefinitionBundle'].includes(docType.toolingType)) {
+    metaString += '\n'
+  }
+
+  await utils.writeFile(`${p}-meta.xml`, metaString)
   const sfdcConnector = await packageService.getSfdcConnector()
   const metaPath = (
     isAuraBundle
