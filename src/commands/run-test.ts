@@ -38,9 +38,12 @@ const printResults = (result: TestExecutionResult, document: vscode.TextDocument
   })
 
   logger.appendLine('*** Coverage ***')
-  result.codeCoverage.filter((v: CodeCoverage) => v.numLocationsNotCovered !== v.numLocations).forEach((v: CodeCoverage) => {
-    logger.appendLine(`${v.name}: ${Math.floor((v.numLocations - v.numLocationsNotCovered) / v.numLocations * 100)}%`)
-  })
+  result.codeCoverage
+    .filter((v: CodeCoverage) => v.numLocationsNotCovered !== v.numLocations)
+    .sort((a: CodeCoverage, b: CodeCoverage) => a.name.localeCompare(b.name))
+    .forEach((v: CodeCoverage) => {
+      logger.appendLine(`${v.name}: ${Math.floor((v.numLocations - v.numLocationsNotCovered) / v.numLocations * 100)}%`)
+    })
 
   logger.show()
 
