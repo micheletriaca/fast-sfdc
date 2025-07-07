@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.15.2
+
+* Coverage in run tests command is now sorted by class name. Thanks [marius-dyrkaj]!
+
 ## 1.15.1
 
 * Create metadata respect Salesforce final newline behavior. Thanks [Daedrico]!
