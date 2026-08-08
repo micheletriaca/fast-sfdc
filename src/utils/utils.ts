@@ -6,7 +6,7 @@ import * as path from 'upath'
 import * as transformer from 'sfdy/src/transformer'
 import configService from '../services/config-service'
 import logger from '../logger'
-import * as _ from 'highland'
+import _ = require('highland')
 
 const getWorkspaceFolder = () => path.toUnix((vscode.workspace.workspaceFolders as vscode.WorkspaceFolder[])[0].uri.fsPath)
 

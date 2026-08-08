@@ -1,11 +1,11 @@
 import * as vscode from 'vscode'
 import configService from '../services/config-service'
 import * as path from 'upath'
-import * as multimatch from 'multimatch'
-import * as _ from 'highland'
 import { readdirSync, readFileSync } from 'fs'
 import utils from '../utils/utils'
 import retrieve from './retrieve'
+import multimatch = require('multimatch')
+import _ = require('highland')
 
 export default async function configureBundles () {
   const sfdyConfig = configService.getSfdyConfigSync()

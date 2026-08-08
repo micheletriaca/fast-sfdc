@@ -22,14 +22,14 @@ const runNextJob = () => {
     running = true
     try {
       f((newTxt: string) => {
-        exports.default.stopLoading()
-        if (!loadingCounter) exports.default.setText(newTxt)
+        statusBar.stopLoading()
+        if (!loadingCounter) statusBar.setText(newTxt)
         runNextJob()
       })
     } catch (e) {
       vscode.window.showErrorMessage(e.message || JSON.stringify(e))
-      exports.default.stopLoading()
-      if (!loadingCounter) exports.default.setText('👎🏻')
+      statusBar.stopLoading()
+      if (!loadingCounter) statusBar.setText('👎🏻')
       runNextJob()
     }
   } else {
@@ -37,7 +37,7 @@ const runNextJob = () => {
   }
 }
 
-export default {
+const statusBar = {
   initStatusBar () {
     sbItem.text = MENU_PREFIX()
     sbItem.show()
@@ -70,9 +70,9 @@ export default {
       const size = queue.length
       queue = queue.filter((x: AnyObj) => x.key !== key)
       const abortedJobs = size - queue.length
-      for (let i = 0; i < abortedJobs; i++) exports.default.stopLoading()
+      for (let i = 0; i < abortedJobs; i++) statusBar.stopLoading()
     }
-    exports.default.startLoading()
+    statusBar.startLoading()
     queue.push(_doLongJob)
     if (!running) runNextJob()
   },
@@ -82,3 +82,5 @@ export default {
     else sbItem.text = `${MENU_PREFIX()} ${newTxt || ''}`
   }
 }
+
+export default statusBar

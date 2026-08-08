@@ -1,8 +1,8 @@
 import utils from '../utils/utils'
-import * as _ from 'highland'
 import fieldBuilders, { prompt, promptMany } from '../utils/field-builders'
 import { buildXml } from 'sfdy/src/utils/xml-utils'
 import sfdcConnector from '../sfdc-connector'
+import _ = require('highland')
 
 function xmlArrayWrap (obj: GenericObject) {
   return Object.fromEntries(Object.entries(obj)

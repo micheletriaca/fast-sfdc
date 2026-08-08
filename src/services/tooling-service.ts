@@ -17,9 +17,9 @@ const clearMetadataContainer = async function (toolingType: string, currentMembe
   }
 }
 
-export default {
+const toolingService = {
   requestCompile: async (): Promise<CompileFn> => {
-    if (!metaContainerId) await exports.default.resetMetadataContainer()
+    if (!metaContainerId) await toolingService.resetMetadataContainer()
     let counter = 0
 
     const compile: CompileFn = async (objType, obj) => {
@@ -39,7 +39,7 @@ export default {
         return results
       } catch (e) {
         if (++counter < 2) {
-          await exports.default.resetMetadataContainer()
+          await toolingService.resetMetadataContainer()
           return compile(objType, obj)
         }
       }
@@ -52,3 +52,5 @@ export default {
     metaContainerId = await sfdcConnector.createMetadataContainer(metaContainerName)
   }
 }
+
+export default toolingService

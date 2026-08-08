@@ -2,7 +2,7 @@ import * as vscode from 'vscode'
 import * as path from 'upath'
 import { AuraDefType } from '../fast-sfdc'
 
-export default {
+const parsers = {
   getToolingType (document: vscode.TextDocument): string {
     const p = path.toUnix(document.fileName)
     const isAuraBundle = p.indexOf('/aura/') !== -1
@@ -28,7 +28,7 @@ export default {
 
   getAuraDefType (fullPath: string): AuraDefType | '' {
     const extension = fullPath.substring(fullPath.lastIndexOf('.')).toLowerCase()
-    const filename = exports.default.getFilename(fullPath).toLowerCase()
+    const filename = parsers.getFilename(fullPath).toLowerCase()
     switch (extension) {
       case '.app': return 'APPLICATION'
       case '.cmp': return 'COMPONENT'
@@ -90,3 +90,5 @@ export default {
     return p.substring(0, p.lastIndexOf('/'))
   }
 }
+
+export default parsers

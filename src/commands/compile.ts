@@ -8,7 +8,7 @@ import toolingService from '../services/tooling-service'
 import utils from '../utils/utils'
 import logger, { diagnosticCollection } from '../logger'
 import * as path from 'upath'
-import * as minimatch from 'minimatch'
+import minimatch = require('minimatch')
 
 function updateProblemsPanel (errors: any[], doc: vscode.TextDocument) {
   diagnosticCollection.set(doc.uri, errors

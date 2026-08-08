@@ -387,9 +387,10 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
-    "compile": "webpack",
-    "watch": "webpack --watch",
-    "package": "webpack --mode production --devtool hidden-source-map",
+    "check-types": "tsc --noEmit",
+    "compile": "npm run check-types && node esbuild.js",
+    "watch": "npm run check-types && node esbuild.js --watch",
+    "package": "npm run check-types && node esbuild.js --production",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
@@ -406,6 +407,7 @@
     "@types/xml2js": "^0.4.5",
     "@typescript-eslint/eslint-plugin": "^5.16.0",
     "@typescript-eslint/parser": "^5.16.0",
+    "esbuild": "^0.28.1",
     "eslint": "^7.1.0",
     "eslint-config-standard": "^14.1.1",
     "eslint-plugin-import": "^2.20.1",
@@ -413,13 +415,10 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
     "original-fs": "^1.1.0",
-    "ts-loader": "^9.5.2",
     "tslint": "^5.20.1",
     "tslint-config-standard": "^8.0.1",
     "typescript": "^4.5.5",
-    "vscode-test": "^1.3.0",
-    "webpack": "^5.72.0",
-    "webpack-cli": "^4.9.2"
+    "vscode-test": "^1.3.0"
   },
   "dependencies": {
     "delete-empty": "^3.0.0",
@@ -436,5 +435,8 @@
   },
   "eslintIgnore": [
     "dist/**/*"
-  ]
+  ],
+  "allowScripts": {
+    "esbuild@0.28.1": true
+  }
 }

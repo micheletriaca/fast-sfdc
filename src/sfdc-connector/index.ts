@@ -1,10 +1,10 @@
 import { Config, MetaObj, StaticResourceObj, AuraObj, LwcObj, AuraBundle, DescribeMetadataResult, ListMetadataResult } from '../fast-sfdc'
-import * as SfdcConn from 'node-salesforce-connection'
 import * as constants from 'sfdy/src/utils/constants'
 import configService from '../services/config-service'
 import utils from '../utils/utils'
 import soapWithDebug from './soap-with-debug'
 import logger from '../logger'
+import SfdcConn = require('node-salesforce-connection')
 
 let config: Config | undefined
 let apiVersion: string
@@ -69,7 +69,7 @@ const del = async (endpoint: string, useRest = false) => rest(endpoint, useRest,
 const get = async (endpoint: string, useRest = false) => rest(endpoint, useRest)
 const query = (q: string, useRest = false) => get(`/query?q=${encodeURIComponent(q.replace(/ +/g, ' '))}`, useRest)
 
-export default {
+const connector = {
   connect,
   query,
   metadata,
@@ -127,9 +127,9 @@ export default {
     return record.Id
   },
 
-  upsertAuraObj: async (record: AuraObj) => exports.default.upsertObj('AuraDefinition', record),
+  upsertAuraObj: async (record: AuraObj) => connector.upsertObj('AuraDefinition', record),
 
-  upsertLwcObj: async (record: any) => exports.default.upsertObj('LightningComponentResource', record),
+  upsertLwcObj: async (record: any) => connector.upsertObj('LightningComponentResource', record),
 
   async createContainerAsyncRequest (metaContainerId: string): Promise<string> {
     return (await post('/sobjects/ContainerAsyncRequest/', {
@@ -202,3 +202,5 @@ export default {
     }
   })
 }
+
+export default connector

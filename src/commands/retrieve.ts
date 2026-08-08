@@ -1,8 +1,8 @@
 import statusbar from '../statusbar'
 import configService from '../services/config-service'
-import * as sfdyRetrieve from 'sfdy/src/retrieve'
 import logger from '../logger'
 import utils from '../utils/utils'
+import sfdyRetrieve = require('sfdy/src/retrieve')
 
 export default async function retrieve (files: string[] = [], filesAreMeta = false) {
   return new Promise<void>((resolve, reject) => {
