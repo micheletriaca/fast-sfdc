@@ -226,6 +226,37 @@ suite('Extension Tests', function () {
     ])), 'all')
   })
 
+  test('Keeps a selected container partial when only some descendants are selected', function () {
+    const object = {
+      key: 'CustomObject/ForecastingAsset__c',
+      label: 'ForecastingAsset__c',
+      component: { type: 'CustomObject', fullName: 'ForecastingAsset__c' },
+      children: [{
+        key: 'group/fields',
+        label: 'fields',
+        children: [
+          {
+            key: 'CustomField/ForecastingAsset__c.Period__c',
+            label: 'Period__c',
+            component: { type: 'CustomField', fullName: 'ForecastingAsset__c.Period__c' },
+            children: []
+          },
+          {
+            key: 'CustomField/ForecastingAsset__c.Notes__c',
+            label: 'Notes__c',
+            component: { type: 'CustomField', fullName: 'ForecastingAsset__c.Notes__c' },
+            children: []
+          }
+        ]
+      }]
+    }
+
+    assert.equal(getSelectionState(object, new Set([
+      'CustomObject/ForecastingAsset__c',
+      'CustomField/ForecastingAsset__c.Period__c'
+    ])), 'some')
+  })
+
   test('Normalizes person account record type aliases returned by Metadata API', function () {
     const aliases = getMetadataComponentAliases([
       {

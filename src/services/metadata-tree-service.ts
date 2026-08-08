@@ -46,11 +46,12 @@ export const getSelectionState = (
 ): SelectionState => {
   if (!selected) return 'none'
   if (node.metadataType && selected.has(`${node.metadataType}/*`)) return 'all'
-  if (node.component && selected.has(componentKey(node.component))) return 'all'
-  if (!node.children.length) return 'none'
-  const childStates = node.children.map(child => getSelectionState(child, selected))
-  if (childStates.every(state => state === 'all')) return 'all'
-  return childStates.some(state => state !== 'none') ? 'some' : 'none'
+  const ownState: SelectionState = node.component && selected.has(componentKey(node.component)) ? 'all' : 'none'
+  if (!node.children.length) return ownState
+  const states = node.children.map(child => getSelectionState(child, selected))
+  if (node.component) states.push(ownState)
+  if (states.every(state => state === 'all')) return 'all'
+  return states.some(state => state !== 'none') ? 'some' : 'none'
 }
 
 const sortNodes = (nodes: MetadataTreeNode[]): MetadataTreeNode[] => nodes
