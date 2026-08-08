@@ -4,10 +4,13 @@ import statusbar from '../statusbar'
 import configService from '../services/config-service'
 import logger from '../logger'
 import packageService from '../services/package-service'
-import { getListOfSrcFiles, getPackageMapping } from 'sfdy/src/utils/package-utils'
+import { expandDirectoryPatterns, getListOfSrcFiles, getPackageMapping } from 'sfdy/package-utils'
+import { getAdapter } from 'sfdy/format-adapters'
 import utils from '../utils/utils'
-import sfdyDeploy = require('sfdy/src/deploy')
+import { resolveSourceLayout } from '../services/source-layout-service'
+import sfdyDeploy = require('sfdy/deploy')
 import deleteEmpty = require('delete-empty')
+import globby = require('globby')
 
 export default function deploy (checkOnly = false, destructive = false, files: string[] = []) {
   statusbar.startLongJob(async done => {
@@ -16,7 +19,9 @@ export default function deploy (checkOnly = false, destructive = false, files: s
     const creds = config.credentials[config.currentCredential]
     process.env.environment = creds.environment
     const sfdyConfig = configService.getSfdyConfigSync()
-    const sanitizedFiles = files.map(x => x.replace(rootFolder, '')).join(',')
+    const layout = resolveSourceLayout(rootFolder, sfdyConfig)
+    const sourceFiles = files.map(layout.toRelativePath)
+    const sanitizedFiles = sourceFiles.join(',')
 
     try {
       logger.clear()
@@ -41,13 +46,27 @@ export default function deploy (checkOnly = false, destructive = false, files: s
       const isDeployOk = deployResult.status === 'Succeeded'
       if (isDeployOk && !checkOnly && destructive) {
         const sfdcConnector = await packageService.getSfdcConnector()
-        await packageService.removeFromPackage(files, sfdcConnector)
         const packageMapping = await getPackageMapping(sfdcConnector)
-        const listOfSrcFilesToDelete = await getListOfSrcFiles(packageMapping, files)
+        let listOfSrcFilesToDelete: string[]
+        if (layout.isSourceFormat) {
+          const adapter = getAdapter(sfdyConfig, undefined, packageMapping)
+          if (!adapter) throw Error('Unable to initialize the source-format adapter')
+          const selectedFiles = await globby(expandDirectoryPatterns(sourceFiles, layout.root), { cwd: layout.root })
+          const availableFiles = await globby(['**/*'], { cwd: layout.root })
+          listOfSrcFilesToDelete = adapter.getDestructivePaths(selectedFiles, availableFiles)
+        } else {
+          await packageService.removeFromPackage(sourceFiles, sfdcConnector)
+          listOfSrcFilesToDelete = await getListOfSrcFiles(packageMapping, sourceFiles)
+        }
         listOfSrcFilesToDelete.forEach(f => {
-          fs.unlinkSync(path.resolve(utils.getWorkspaceFolder(), 'src', f))
+          const target = path.resolve(layout.root, f)
+          const relativeTarget = path.relative(layout.root, target)
+          if (relativeTarget.startsWith('..') || path.isAbsolute(relativeTarget)) {
+            throw Error(`Refusing to delete a path outside the source folder: ${f}`)
+          }
+          fs.rmSync(target, { recursive: true, force: true })
         })
-        await deleteEmpty(path.resolve(utils.getWorkspaceFolder(), 'src'))
+        await deleteEmpty(layout.root)
       }
       done(isDeployOk ? '👍🏻' : '👎🏻')
     } catch (e) {

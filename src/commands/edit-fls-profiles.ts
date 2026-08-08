@@ -1,10 +1,11 @@
 import utils from '../utils/utils'
 import * as vscode from 'vscode'
-import { buildXml } from 'sfdy/src/utils/xml-utils'
+import { buildXml } from 'sfdy/xml-utils'
 import { prompt, promptMany } from '../utils/field-builders'
 import * as path from 'upath'
 import * as fs from 'fs'
 import sfdcConnector from '../sfdc-connector'
+import { resolveSourceLayout } from '../services/source-layout-service'
 import configService from '../services/config-service'
 import { XmlProfile, XmlField, XmlCustomObject } from '../fast-sfdc'
 
@@ -41,20 +42,26 @@ const standardWeirdFields = new Set([
 
 export default async function editFlsProfile (document: vscode.TextDocument) {
   const rootFolder = utils.getWorkspaceFolder()
-  const profilePath = document.fileName.replace(rootFolder, '')
   const sfdyCfg = configService.getSfdyConfigSync()
+  const layout = resolveSourceLayout(rootFolder, sfdyCfg)
+  const profileSourcePath = layout.toRelativePath(document.fileName)
+  const profileMetadataPath = layout.isSourceFormat
+    ? profileSourcePath.replace(/-meta\.xml$/, '')
+    : profileSourcePath
 
-  const objects = fs.readdirSync(path.join(rootFolder, 'src', 'objects'))
-    .filter(x => x.endsWith('.object'))
-    .filter(x => !x.endsWith('__mdt.object') && !x.endsWith('__e.object'))
-    .filter(x => !['objects/PersonAccount.object', 'objects/Event.object', 'objects/Task.object'].includes(x))
-    .map(x => ({ label: x.replace(/(.*).object/, '$1') }))
+  const objects = fs.readdirSync(path.join(layout.root, 'objects'))
+    .filter(x => layout.isSourceFormat || x.endsWith('.object'))
+    .map(x => x.replace(/(.*).object/, '$1'))
+    .filter(x => !x.endsWith('__mdt') && !x.endsWith('__e'))
+    .filter(x => !['PersonAccount', 'Event', 'Task'].includes(x))
+    .map(x => ({ label: x }))
 
   const selectedObjectName = await prompt('Select the object', undefined, objects)() as string
   if (!selectedObjectName) return
 
   const selObjPath = `objects/${selectedObjectName}.object`
-  const files = await utils.untransformAndfetchFiles(`${profilePath},${selObjPath}`, sfdcConnector)
+  const objectSourcePath = layout.isSourceFormat ? `objects/${selectedObjectName}/**/*` : selObjPath
+  const files = await utils.untransformAndfetchFiles(`${profileSourcePath},${objectSourcePath}`, sfdcConnector)
   const selectedObjectXml = await utils.parseXmlStrict<XmlCustomObject>(files[selObjPath].data, true)
   if (selectedObjectXml.CustomObject.customSettingsType) {
     return vscode.window.showErrorMessage('The selected object is a custom setting. FLS not available')
@@ -62,7 +69,7 @@ export default async function editFlsProfile (document: vscode.TextDocument) {
 
   selectedObjectXml.CustomObject.fields = utils.wrapArray(selectedObjectXml.CustomObject.fields)
 
-  const profileXml = await utils.parseXmlStrict<XmlProfile>(files[profilePath.replace('/src/', '')].data, true)
+  const profileXml = await utils.parseXmlStrict<XmlProfile>(files[profileMetadataPath].data, true)
   const flsList = utils.wrapArray(Object.values(profileXml)[0].fieldPermissions)
 
   if (sfdyCfg.profiles?.addDisabledVersionedObjects && profileXml.Profile) {
@@ -148,7 +155,7 @@ export default async function editFlsProfile (document: vscode.TextDocument) {
 
   // Saving
   await utils.transformAndStoreFiles([{
-    fileName: profilePath.replace('/src/', ''),
+    fileName: profileMetadataPath,
     data: Buffer.from(buildXml(profileXml) + '\n', 'utf8')
   }], sfdcConnector)
 

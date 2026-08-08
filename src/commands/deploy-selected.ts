@@ -3,22 +3,22 @@ import * as vscode from 'vscode'
 import * as path from 'upath'
 import * as fs from 'fs'
 import utils from '../utils/utils'
-
-const basePath = path.join(utils.getWorkspaceFolder(), 'src') + '/'
-const isInContext = (p: string) => p.startsWith(basePath)
-const isFolder = (p: string) => fs.statSync(path.resolve(utils.getWorkspaceFolder(), 'src', p)).isDirectory()
+import configService from '../services/config-service'
+import { resolveSourceLayout } from '../services/source-layout-service'
 
 export default function deploySelected (uri: vscode.Uri, allUris: vscode.Uri[]) {
+  const layout = resolveSourceLayout(utils.getWorkspaceFolder(), configService.getSfdyConfigSync())
+  const isFolder = (p: string) => fs.statSync(path.resolve(layout.root, p)).isDirectory()
   if (allUris && allUris.length) {
     deploy(false, false, allUris
       .map(x => path.toUnix(x.fsPath))
-      .filter(x => isInContext(x))
-      .map(x => x.substring(basePath.length))
+      .filter(layout.contains)
+      .map(layout.toRelativePath)
       .map(x => isFolder(x) ? x + '/**/*' : x))
   } else if (vscode.window.activeTextEditor && vscode.window.activeTextEditor.document) {
     const fileName = path.toUnix(vscode.window.activeTextEditor.document.fileName)
-    if (isInContext(fileName)) {
-      deploy(false, false, [fileName.substring(basePath.length)])
+    if (layout.contains(fileName)) {
+      deploy(false, false, [layout.toRelativePath(fileName)])
     }
   }
 }

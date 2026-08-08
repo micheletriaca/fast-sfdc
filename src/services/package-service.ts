@@ -1,12 +1,13 @@
-import { getPackageXml } from 'sfdy/src/utils/package-utils'
-import { buildXml } from 'sfdy/src/utils/xml-utils'
-import { setBasePath } from 'sfdy/src/services/path-service'
+import { getPackageXml } from 'sfdy/package-utils'
+import { buildXml } from 'sfdy/xml-utils'
+import { setBasePath } from 'sfdy/path-service'
 import configService from './config-service'
-import * as SfdcConn from 'sfdy/src/utils/sfdc-utils'
+import * as SfdcConn from 'sfdy/sfdc-utils'
 import * as path from 'upath'
 import * as fs from 'fs'
-import * as constants from 'sfdy/src/utils/constants'
+import * as constants from 'sfdy/constants'
 import utils from '../utils/utils'
+import { resolveSourceLayout } from './source-layout-service'
 
 const getStoredAndDeltaPackage = async (files: string[], sfdcConnector: SfdcConnector, isMeta = false) => {
   const storedPackage = await getPackageXml()
@@ -16,10 +17,13 @@ const getStoredAndDeltaPackage = async (files: string[], sfdcConnector: SfdcConn
 
 export default {
   async getSfdcConnector (): Promise<SfdcConnector> {
-    setBasePath(utils.getWorkspaceFolder())
+    const workspaceRoot = utils.getWorkspaceFolder()
+    setBasePath(workspaceRoot)
+    const sfdyConfig = configService.getSfdyConfigSync()
+    const layout = resolveSourceLayout(workspaceRoot, sfdyConfig)
     const cfg = configService.getConfigSync()
     const loginOpts = cfg.credentials[cfg.currentCredential]
-    const storedPackage = await getPackageXml()
+    const apiVersion = layout.apiVersion || (await getPackageXml()).version[0]
     const sfdcConnector = await SfdcConn.newInstance({
       username: loginOpts.username || '',
       password: loginOpts.password || '',
@@ -29,12 +33,13 @@ export default {
         refreshToken: loginOpts.password,
         clientId: constants.DEFAULT_CLIENT_ID
       } : undefined,
-      apiVersion: storedPackage.version[0]
+      apiVersion
     })
     return sfdcConnector
   },
   async addToPackage (files: string[], sfdcConnector: SfdcConnector, isMeta = false) {
     if (files.length === 0) return
+    if (resolveSourceLayout(utils.getWorkspaceFolder(), configService.getSfdyConfigSync()).isSourceFormat) return
     const { storedPackage, deltaPackage } = await getStoredAndDeltaPackage(files, sfdcConnector, isMeta)
     const stTypeMap = new Map((storedPackage.types || []).map(x => [x.name[0], x.members]))
     for (const t of (deltaPackage.types || [])) {
@@ -53,6 +58,7 @@ export default {
   },
   async removeFromPackage (files: string[], sfdcConnector: SfdcConnector, isMeta = false) {
     if (files.length === 0) return
+    if (resolveSourceLayout(utils.getWorkspaceFolder(), configService.getSfdyConfigSync()).isSourceFormat) return
     const { storedPackage, deltaPackage } = await getStoredAndDeltaPackage(files, sfdcConnector, isMeta)
     const itemsToRemove = new Set(deltaPackage.types.flatMap(t => t.members.map(m => `${t.name[0]}/${m}`)))
     this.storePackage({
@@ -67,7 +73,9 @@ export default {
     this.removeFromPackage(meta, await this.getSfdcConnector(), true)
   },
   storePackage (pkg: Package) {
-    const packagePath = path.resolve(utils.getWorkspaceFolder(), 'src', 'package.xml')
+    const layout = resolveSourceLayout(utils.getWorkspaceFolder(), configService.getSfdyConfigSync())
+    if (layout.isSourceFormat) return
+    const packagePath = path.resolve(layout.root, 'package.xml')
     fs.writeFileSync(packagePath, buildXml({ Package: pkg }) + '\n')
   }
 }

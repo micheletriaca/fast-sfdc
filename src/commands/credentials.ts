@@ -5,10 +5,10 @@ import StatusBar from '../statusbar'
 import utils from '../utils/utils'
 import { ConfigCredential } from '../fast-sfdc'
 import toolingService from '../services/tooling-service'
-import * as constants from 'sfdy/src/utils/constants'
+import * as constants from 'sfdy/constants'
 import * as fs from 'fs'
 import * as path from 'upath'
-import auth = require('sfdy/src/auth')
+import auth = require('sfdy/auth')
 
 const CONFIG_GITIGNORE_ENTRY = `**/${configService.getConfigFileName()}`
 

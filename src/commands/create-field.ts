@@ -1,6 +1,6 @@
 import utils from '../utils/utils'
 import fieldBuilders, { prompt, promptMany } from '../utils/field-builders'
-import { buildXml } from 'sfdy/src/utils/xml-utils'
+import { buildXml } from 'sfdy/xml-utils'
 import sfdcConnector from '../sfdc-connector'
 import _ = require('highland')
 

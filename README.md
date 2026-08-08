@@ -47,6 +47,18 @@ Deleting metadata from your org is just easy as right-clicking on the metadata i
 
 To set up a `.sfdy.json` config in your project, just open the command palette and type `Fast-Sfdc: Init metadata patching`
 
+For Salesforce DX source-format projects, add:
+
+```json
+{
+  "sourceFormat": "sfdx"
+}
+```
+
+The default package directory is read from `sfdx-project.json` (for example,
+`force-app/main/default`) and `package.xml` is not required. Use `sourceFolder` in
+`.sfdy.json` only when the source root is non-standard.
+
 ### Static resource bundles
 
 Handle your static resources as uncompressed folders. Just select the static resource you want to handle as folders:

@@ -4,12 +4,14 @@ import * as path from 'upath'
 import { readdirSync, readFileSync } from 'fs'
 import utils from '../utils/utils'
 import retrieve from './retrieve'
+import { resolveSourceLayout } from '../services/source-layout-service'
 import multimatch = require('multimatch')
 import _ = require('highland')
 
 export default async function configureBundles () {
   const sfdyConfig = configService.getSfdyConfigSync()
-  const srPath = path.resolve(utils.getWorkspaceFolder(), 'src', 'staticresources')
+  const layout = resolveSourceLayout(utils.getWorkspaceFolder(), sfdyConfig)
+  const srPath = path.resolve(layout.root, 'staticresources')
   const files = await _(readdirSync(srPath))
     .filter(x => x.endsWith('.resource-meta.xml'))
     .map(async x => ({

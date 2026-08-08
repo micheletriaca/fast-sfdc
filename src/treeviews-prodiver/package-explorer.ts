@@ -1,12 +1,16 @@
 import * as vscode from 'vscode'
 import connector from '../sfdc-connector'
 import statusbar from '../statusbar'
-import { getPackageXml } from 'sfdy/src/utils/package-utils'
+import { getPackageMapping, getPackageXml } from 'sfdy/package-utils'
 import pkgService from '../services/package-service'
-import { setBasePath } from 'sfdy/src/services/path-service'
+import { setBasePath } from 'sfdy/path-service'
 import * as path from 'upath'
 import utils from '../utils/utils'
 import fetch from '../utils/org-fetcher'
+import configService from '../services/config-service'
+import { resolveSourceLayout } from '../services/source-layout-service'
+import { getAdapter } from 'sfdy/format-adapters'
+import globby = require('globby')
 
 export class Dependency extends vscode.TreeItem {
   public parent: Dependency | null = null;
@@ -122,8 +126,21 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
           try {
             setBasePath(utils.getWorkspaceFolder())
             const sfdcConnector = await pkgService.getSfdcConnector()
-            this.pkgMap = new Set(((await getPackageXml({ specificFiles: ['**/*'], sfdcConnector })).types || [])
-              .flatMap(t => t.members.map(x => t.name[0] + '/' + x).concat([t.name[0]])))
+            const sfdyConfig = configService.getSfdyConfigSync()
+            const layout = resolveSourceLayout(utils.getWorkspaceFolder(), sfdyConfig)
+            if (layout.isSourceFormat) {
+              const adapter = getAdapter(sfdyConfig, undefined, await getPackageMapping(sfdcConnector))
+              if (!adapter) throw Error('Unable to initialize the source-format adapter')
+              const sourceFiles = await globby(['**/*'], { cwd: layout.root })
+              const components = adapter.resolve(sourceFiles.filter(adapter.isMetadataPath))
+              this.pkgMap = new Set(components.flatMap(component => [
+                component.type,
+                `${component.type}/${component.fullName}`
+              ]))
+            } else {
+              this.pkgMap = new Set(((await getPackageXml({ specificFiles: ['**/*'], sfdcConnector })).types || [])
+                .flatMap(t => t.members.map(x => t.name[0] + '/' + x).concat([t.name[0]])))
+            }
 
             this.dependencyTree = await fetch(connector)
             resolve(this.calcItems())

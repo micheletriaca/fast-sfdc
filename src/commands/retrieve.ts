@@ -2,7 +2,8 @@ import statusbar from '../statusbar'
 import configService from '../services/config-service'
 import logger from '../logger'
 import utils from '../utils/utils'
-import sfdyRetrieve = require('sfdy/src/retrieve')
+import { resolveSourceLayout } from '../services/source-layout-service'
+import sfdyRetrieve = require('sfdy/retrieve')
 
 export default async function retrieve (files: string[] = [], filesAreMeta = false) {
   return new Promise<void>((resolve, reject) => {
@@ -12,7 +13,8 @@ export default async function retrieve (files: string[] = [], filesAreMeta = fal
       const creds = config.credentials[config.currentCredential]
       process.env.environment = creds.environment
       const sfdyConfig = configService.getSfdyConfigSync()
-      const sanitizedFiles = files.map(x => x.replace(rootFolder, '')).join(',')
+      const layout = resolveSourceLayout(rootFolder, sfdyConfig)
+      const sanitizedFiles = files.map(layout.toRelativePath).join(',')
 
       try {
         logger.clear()

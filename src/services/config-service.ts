@@ -4,6 +4,7 @@ import * as fs from 'fs'
 import * as crypto from 'crypto'
 import { SecretStorage } from 'vscode'
 import utils from '../utils/utils'
+import { resolveSourceLayout } from './source-layout-service'
 
 const CONFIG_NAME = 'fastsfdc.json'
 const SFDY_CONFIG_NAME = '.sfdy.json'
@@ -149,7 +150,11 @@ export default {
   },
 
   async getPackageXmlVersion (): Promise<string> {
-    const p = path.join(utils.getWorkspaceFolder(), 'src', 'package.xml')
+    const workspaceRoot = utils.getWorkspaceFolder()
+    const sfdyConfig = this.getSfdyConfigSync()
+    const layout = resolveSourceLayout(workspaceRoot, sfdyConfig)
+    if (layout.apiVersion) return layout.apiVersion
+    const p = path.join(layout.root, 'package.xml')
     const pJson = await utils.parseXmlStrict<{version: string}>(await utils.readFile(p))
     return pJson.version
   }

@@ -1,5 +1,5 @@
 import { Config, MetaObj, StaticResourceObj, AuraObj, LwcObj, AuraBundle, DescribeMetadataResult, ListMetadataResult, ApexClassRecord, ApexClassMemberObj, LightningComponentResourceRecord } from '../fast-sfdc'
-import * as constants from 'sfdy/src/utils/constants'
+import * as constants from 'sfdy/constants'
 import configService from '../services/config-service'
 import utils from '../utils/utils'
 import soapWithDebug from './soap-with-debug'

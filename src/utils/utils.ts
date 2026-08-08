@@ -3,7 +3,7 @@ import * as fs from 'fs-extra'
 import * as xml2js from 'xml2js'
 import * as util from 'util'
 import * as path from 'upath'
-import * as transformer from 'sfdy/src/transformer'
+import * as transformer from 'sfdy/transformer'
 import configService from '../services/config-service'
 import logger from '../logger'
 import _ = require('highland')

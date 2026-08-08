@@ -29,6 +29,7 @@
   ],
   "activationEvents": [
     "workspaceContains:**/package.xml",
+    "workspaceContains:sfdx-project.json",
     "workspaceContains:**/fastsfdc.json"
   ],
   "main": "./dist/extension",
@@ -395,7 +396,7 @@
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "node --test ./out/test/extension.test.js"
   },
   "devDependencies": {
     "@types/delete-empty": "^2.0.0",

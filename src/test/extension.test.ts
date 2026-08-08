@@ -5,7 +5,15 @@
 
 // The module 'assert' provides assertion methods from node
 import * as assert from 'assert'
+import { createRequire } from 'module'
+import { suite, test } from 'node:test'
 import { extractApexClassImports, extractInvalidApexClassNames, extractInvalidSObjectFields, extractMissingApexVariables, extractMissingFields, extractMissingRelationships } from '../utils/apex-errors'
+import { resolveSourceLayout } from '../services/source-layout-service'
+import * as fs from 'fs'
+import * as os from 'os'
+import * as path from 'path'
+
+const requireModule = createRequire(__filename)
 
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
@@ -86,5 +94,34 @@ suite('Extension Tests', function () {
   test('Extracts variables missing from the Apex compiler context', function () {
     const error = new Error('FIELD_INTEGRITY_EXCEPTION: Variable does not exist: Profile: Source [Source]')
     assert.deepEqual(extractMissingApexVariables(error), ['Profile'])
+  })
+
+  test('Loads sfdy through its public entry points', function () {
+    for (const entryPoint of [
+      'auth', 'constants', 'deploy', 'format-adapters', 'package-utils', 'path-service',
+      'retrieve', 'sfdc-utils', 'transformer', 'xml-utils'
+    ]) {
+      assert.doesNotThrow(() => requireModule(`sfdy/${entryPoint}`))
+    }
+  })
+
+  test('Resolves a standard source-format project without package.xml', function () {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fast-sfdc-layout-'))
+    try {
+      fs.mkdirSync(path.join(root, 'force-app', 'main', 'default'), { recursive: true })
+      fs.writeFileSync(path.join(root, 'sfdx-project.json'), JSON.stringify({
+        packageDirectories: [{ path: 'force-app', default: true }],
+        sourceApiVersion: '65.0'
+      }))
+      const layout = resolveSourceLayout(root, { stored: true, sourceFormat: 'sfdx' })
+      assert.equal(layout.relativeRoot, 'force-app/main/default')
+      assert.equal(layout.apiVersion, '65.0')
+      assert.equal(
+        layout.toRelativePath(path.join(root, 'force-app', 'main', 'default', 'classes', 'Example.cls')),
+        'classes/Example.cls'
+      )
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true })
+    }
   })
 })

@@ -7,9 +7,9 @@ import { DoneCallback } from '../fast-sfdc'
 import toolingService from '../services/tooling-service'
 import utils from '../utils/utils'
 import logger, { diagnosticCollection } from '../logger'
-import * as path from 'upath'
 import { extractApexClassImports, extractInvalidSObjectFields } from '../utils/apex-errors'
 import lwcMetadataFallbackService from '../services/lwc-metadata-fallback-service'
+import { resolveSourceLayout } from '../services/source-layout-service'
 import minimatch = require('minimatch')
 
 function updateProblemsPanel (errors: any[], doc: vscode.TextDocument) {
@@ -194,8 +194,9 @@ export default async function compile (doc?: vscode.TextDocument) {
   const type = parsers.getToolingType(doc)
   if (!type) return
 
-  const basePath = path.join(utils.getWorkspaceFolder(), 'src') + '/'
-  const fileName = path.toUnix(doc.fileName).replace(basePath, '')
+  const layout = resolveSourceLayout(utils.getWorkspaceFolder(), sfdyConfig)
+  if (!layout.contains(doc.fileName)) return
+  const fileName = layout.toRelativePath(doc.fileName)
 
   if ((sfdyConfig.excludeFiles || []).some(gl => minimatch(fileName, gl))) return
 
