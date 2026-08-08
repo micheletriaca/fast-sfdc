@@ -3,9 +3,14 @@ import configService from '../services/config-service'
 import logger from '../logger'
 import utils from '../utils/utils'
 import { resolveSourceLayout } from '../services/source-layout-service'
+import { MetadataComponent } from '../services/metadata-tree-service'
 import sfdyRetrieve = require('sfdy/retrieve')
 
-export default async function retrieve (files: string[] = [], filesAreMeta = false) {
+export default async function retrieve (
+  files: string[] = [],
+  filesAreMeta = false,
+  components?: MetadataComponent[]
+) {
   return new Promise<void>((resolve, reject) => {
     statusbar.startLongJob(async done => {
       const rootFolder = utils.getWorkspaceFolder()
@@ -30,6 +35,7 @@ export default async function retrieve (files: string[] = [], filesAreMeta = fal
             refreshToken: creds.type === 'oauth2' ? creds.password : undefined
           },
           [filesAreMeta ? 'meta' : 'files']: sanitizedFiles,
+          components,
           config: sfdyConfig
         })
         done('👍🏻')

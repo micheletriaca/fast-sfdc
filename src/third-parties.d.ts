@@ -37,7 +37,7 @@ declare module 'sfdy/xml-utils' {
 type PackageMapping = GenericObject
 type PackageType = { members: string[]; name: string[] }
 type Package = { types: PackageType[]; version: string[] };
-type MetadataComponent = {type: string; fullName: string}
+type MetadataComponent = {type: string; fullName: string; scope?: 'root'}
 type ComponentModel = {
   getAddressableChildTypes(): string[];
   getComponentLocation(component: MetadataComponent): {
@@ -45,6 +45,10 @@ type ComponentModel = {
     group: string;
     label: string;
     addressable: boolean;
+  } | undefined;
+  getContainerRoot(component: MetadataComponent): {
+    label: string;
+    component: MetadataComponent;
   } | undefined;
   getMetadataContainers(components: MetadataComponent[]): MetadataComponent[];
   getPackageComponents(components: MetadataComponent[]): MetadataComponent[];

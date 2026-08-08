@@ -160,15 +160,25 @@ suite('Extension Tests', function () {
     const object = tree[1].children[0]
     assert.equal(object.label, 'Invoice__c')
     assert.equal(object.operationComponent?.type, 'CustomObject')
-    assert.deepEqual(object.children.map(node => node.label), ['fields', 'validationRules'])
-    assert.deepEqual(object.children[0].children[0], {
+    assert.deepEqual(object.children.map(node => node.label), ['fields', 'object metadata', 'validationRules'])
+    const fields = object.children.find(node => node.label === 'fields')
+    assert.deepEqual(fields?.children[0], {
       key: 'CustomField/Invoice__c.Status__c',
       label: 'Status__c',
       component: { type: 'CustomField', fullName: 'Invoice__c.Status__c' },
       operationComponent: { type: 'CustomField', fullName: 'Invoice__c.Status__c' },
       children: []
     })
-    assert.deepEqual(tree[2].children[0].children[0].children[0].operationComponent, {
+    assert.deepEqual(object.children.find(node => node.label === 'object metadata'), {
+      key: 'CustomObject/Invoice__c#root',
+      label: 'object metadata',
+      component: { type: 'CustomObject', fullName: 'Invoice__c' },
+      operationComponent: { type: 'CustomObject', fullName: 'Invoice__c', scope: 'root' },
+      children: []
+    })
+    const translations = tree[2].children[0]
+    const translatedFields = translations.children.find(node => node.label === 'fields')
+    assert.deepEqual(translatedFields?.children[0].operationComponent, {
       type: 'CustomObjectTranslation',
       fullName: 'Invoice__c-it'
     })

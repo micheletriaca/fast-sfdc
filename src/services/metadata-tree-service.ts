@@ -1,6 +1,7 @@
 export type MetadataComponent = {
   type: string;
   fullName: string;
+  scope?: 'root';
 }
 
 export type ComponentModel = {
@@ -9,6 +10,10 @@ export type ComponentModel = {
     group: string;
     label: string;
     addressable: boolean;
+  } | undefined;
+  getContainerRoot: (component: MetadataComponent) => {
+    label: string;
+    component: MetadataComponent;
   } | undefined;
   getPackageComponents: (components: MetadataComponent[]) => MetadataComponent[];
 }
@@ -63,6 +68,18 @@ export const buildMetadataTree = (
       }
       nodes.set(key, node)
       getRoot(component.type).children.push(node)
+      const containerRoot = model.getContainerRoot(component)
+      if (containerRoot) {
+        const rootNode = {
+          key: `${key}#root`,
+          label: containerRoot.label,
+          component,
+          operationComponent: containerRoot.component,
+          children: []
+        }
+        nodes.set(rootNode.key, rootNode)
+        node.children.push(rootNode)
+      }
     }
     return node
   }
