@@ -199,7 +199,7 @@ suite('Extension Tests', function () {
     assert.equal(sales.label, 'Sales')
     assert.equal(sales.component, undefined)
     assert.equal(sales.operationComponent, undefined)
-    assert.deepEqual(sales.children.map(node => node.label), ['folder metadata', 'Pipeline', 'Quarterly'])
+    assert.deepEqual(sales.children.map(node => node.label), ['[FOLDER METADATA]', 'Pipeline', 'Quarterly'])
 
     const salesMetadata = sales.children[0]
     assert.deepEqual(salesMetadata.component, { type: 'ReportFolder', fullName: 'Sales' })
@@ -215,7 +215,7 @@ suite('Extension Tests', function () {
       type: 'Report',
       fullName: 'Sales/Quarterly/'
     })
-    assert.deepEqual(quarterly.children.map(node => node.label), ['folder metadata', 'Forecast'])
+    assert.deepEqual(quarterly.children.map(node => node.label), ['[FOLDER METADATA]', 'Forecast'])
 
     assert.equal(getSelectionState(sales, new Set(['ReportFolder/Sales'])), 'some')
     assert.equal(getSelectionState(sales, new Set([

@@ -31,6 +31,7 @@ export type MetadataTreeNode = {
   metadataType?: string;
   component?: MetadataComponent;
   operationComponent?: MetadataComponent;
+  sortOrder?: number;
   children: MetadataTreeNode[];
 }
 
@@ -53,7 +54,8 @@ export const getSelectionState = (
 }
 
 const sortNodes = (nodes: MetadataTreeNode[]): MetadataTreeNode[] => nodes
-  .sort((left, right) => left.label.localeCompare(right.label))
+  .sort((left, right) =>
+    (left.sortOrder || 0) - (right.sortOrder || 0) || left.label.localeCompare(right.label))
   .map(node => ({ ...node, children: sortNodes(node.children) }))
 
 export const buildMetadataTree = (
@@ -133,9 +135,10 @@ export const buildMetadataTree = (
         if (!nodes.has(metadataKey)) {
           const metadataNode = {
             key: metadataKey,
-            label: 'folder metadata',
+            label: '[FOLDER METADATA]',
             component,
             operationComponent: model.getPackageComponents([component])[0],
+            sortOrder: -1,
             children: []
           }
           nodes.set(metadataKey, metadataNode)
