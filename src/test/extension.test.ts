@@ -10,6 +10,7 @@ import { suite, test } from 'node:test'
 import { extractApexClassImports, extractInvalidApexClassNames, extractInvalidSObjectFields, extractMissingApexVariables, extractMissingFields, extractMissingRelationships } from '../utils/apex-errors'
 import { resolveSourceLayout } from '../services/source-layout-service'
 import { buildMetadataTree } from '../services/metadata-tree-service'
+import { getMetadataComponentAliases } from '../services/metadata-component-aliases'
 import { getComponentModel } from 'sfdy/format-adapters'
 import * as fs from 'fs'
 import * as os from 'os'
@@ -171,5 +172,23 @@ suite('Extension Tests', function () {
       type: 'CustomObjectTranslation',
       fullName: 'Invoice__c-it'
     })
+  })
+
+  test('Normalizes person account record type aliases returned by Metadata API', function () {
+    const aliases = getMetadataComponentAliases([
+      {
+        DeveloperName: 'Individual',
+        IsPersonType: true,
+        SobjectType: 'Account'
+      },
+      {
+        DeveloperName: 'Business',
+        IsPersonType: false,
+        SobjectType: 'Account'
+      }
+    ])
+
+    assert.equal(aliases.get('RecordType/Account.Individual'), 'PersonAccount.Individual')
+    assert.equal(aliases.has('RecordType/Account.Business'), false)
   })
 })

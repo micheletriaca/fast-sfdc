@@ -1,4 +1,5 @@
 import logger, { reporter } from '../logger'
+import { getMetadataComponentAliases } from '../services/metadata-component-aliases'
 import _ = require('exstream.js')
 
 const asArray = <T>(value: T | T[] | undefined): T[] =>
@@ -9,10 +10,17 @@ export default async function fetch (sfdc: SfdcConnector, supportedChildTypes: s
   reporter.sendEvent('sfdcExplorer')
   const FOLDERED_METAS = ['Report', 'Dashboard', 'EmailTemplate', 'Document']
 
-  const [allFolders, metadataDescription] = await Promise.all([
+  const personRecordTypesRequest = supportedChildTypes.includes('RecordType')
+    ? sfdc.query(`SELECT DeveloperName, NamespacePrefix, SobjectType, IsPersonType
+      FROM RecordType
+      WHERE IsPersonType = true`, true)
+    : Promise.resolve({ records: [] })
+  const [allFolders, metadataDescription, personRecordTypes] = await Promise.all([
     sfdc.query('SELECT Id, ParentId, NamespacePrefix, DeveloperName, Type FROM Folder WHERE DeveloperName != null', true),
-    sfdc.describeMetadata()
+    sfdc.describeMetadata(),
+    personRecordTypesRequest
   ])
+  const componentAliases = getMetadataComponentAliases(personRecordTypes.records || [])
   allFolders.records.forEach((x: any) => { if (x.NamespacePrefix) x.DeveloperName = x.NamespacePrefix + '__' + x.DeveloperName })
   allFolders.records.forEach((x: any) => (x.Type = x.Type === 'Email' ? 'EmailTemplate' : x.Type))
   allFolders.records.push({ DeveloperName: 'unfiled$public', Type: 'EmailTemplate', Id: 'publicEmail', ParentId: '' })
@@ -83,7 +91,9 @@ export default async function fetch (sfdc: SfdcConnector, supportedChildTypes: s
     .map((x: {fileName: string; type: string; fullName: string}) => {
       if (x.fileName.startsWith('standardValueSetTranslations')) x.type = 'StandardValueSetTranslation'
       if (x.fileName.startsWith('globalValueSetTranslations')) x.type = 'GlobalValueSetTranslation'
-      return { parent: x.type, name: x.fullName, key: x.type + '/' + x.fullName }
+      const key = x.type + '/' + x.fullName
+      const fullName = componentAliases.get(key) || x.fullName
+      return { parent: x.type, name: fullName, key: x.type + '/' + fullName }
     })
 
   return await _([s1, s2, s3])
