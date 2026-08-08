@@ -57,7 +57,7 @@ Handle your static resources as uncompressed folders. Just select the static res
 
 ### Multi-org support
 
-Store different credentials for fast org-switch and deploy when needed or in a hurry!
+Store different credentials for fast org-switch and deploy when needed or in a hurry. Passwords, security tokens, OAuth refresh tokens, usernames, and instance URLs are stored in VS Code SecretStorage, backed by the operating system keychain. `fastsfdc.json` only contains non-secret project settings and opaque credential IDs. Existing plaintext configurations are migrated automatically the first time this version starts successfully.
 
 ### Lightning Web Components
 

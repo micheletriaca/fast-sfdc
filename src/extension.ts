@@ -13,13 +13,16 @@ import * as open from 'open'
 const activateExtension = async () => {
   const isOneWorkspaceOpened = workspace.workspaceFolders?.length === 1
   if (isOneWorkspaceOpened) {
-    statusBar.initStatusBar()
-    commands.executeCommand('setContext', 'fast-sfdc-configured', configService.getConfigSync().stored)
     commands.executeCommand('setContext', 'fast-sfdc-active', true)
     logger.appendLine('Extension "fast-sfdc" is now active!')
     reporter.sendEvent('extensionActivated')
 
     const cfg = await configService.getConfig()
+    statusBar.initStatusBar()
+    commands.executeCommand('setContext', 'fast-sfdc-configured', cfg.stored && cfg.credentials.length > 0)
+    if (configService.consumeCredentialMigrationNotice()) {
+      window.showInformationMessage('Fast-Sfdc credentials were moved from fastsfdc.json to your system keychain.')
+    }
     const currentVersion = vscode.extensions.getExtension('m1ck83.fast-sfdc')?.packageJSON.version
     if (cfg.stored && (!cfg.lastVersion || cfg.lastVersion !== currentVersion)) {
       const res = await vscode.window.showInformationMessage(
@@ -42,7 +45,8 @@ const activateExtension = async () => {
   }
 }
 
-export function activate (ctx: ExtensionContext) {
+export async function activate (ctx: ExtensionContext) {
+  configService.initialize(ctx.secrets)
   ctx.subscriptions.push(...[
     workspace.onDidChangeWorkspaceFolders(() => activateExtension()),
     workspace.onDidSaveTextDocument(textDocument => cmds.compile(textDocument)),
@@ -82,5 +86,5 @@ export function activate (ctx: ExtensionContext) {
     }),
     reporter
   ])
-  activateExtension()
+  await activateExtension()
 }

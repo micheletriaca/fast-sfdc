@@ -6,12 +6,12 @@ import utils from '../utils/utils'
 import soapWithDebug from './soap-with-debug'
 import logger from '../logger'
 
-let config = configService.getConfigSync()
+let config: Config | undefined
 let apiVersion: string
 const conn = new SfdcConn()
 
 const connect = async function (cfg?: Config) {
-  if (cfg) config = cfg
+  config = cfg || await configService.getConfig()
   const creds = config.credentials[config.currentCredential]
   apiVersion = await configService.getPackageXmlVersion()
   if (creds.type === 'oauth2') {

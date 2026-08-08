@@ -26,7 +26,7 @@ export class Dependency extends vscode.TreeItem {
     }
   }
 
-  get iconPath () {
+  getIconPath (): vscode.ThemeIcon | {light: string; dark: string} {
     if (this.contextValue === 'downloading') {
       return new vscode.ThemeIcon('sync~spin')
     } else if (this.hasWildcard) {
@@ -85,6 +85,7 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
   public pkgMap: Set<string> | null = null
 
   getTreeItem (element: Dependency): vscode.TreeItem {
+    element.iconPath = element.getIconPath()
     return element
   }
 

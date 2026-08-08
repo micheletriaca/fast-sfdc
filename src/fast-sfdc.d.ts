@@ -1,4 +1,5 @@
 export interface ConfigCredential {
+  id?: string;
   type?: string;
   username?: string;
   password?: string;

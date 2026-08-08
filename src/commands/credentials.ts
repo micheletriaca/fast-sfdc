@@ -10,6 +10,23 @@ import * as constants from 'sfdy/src/utils/constants'
 import * as fs from 'fs'
 import * as path from 'upath'
 
+const CONFIG_GITIGNORE_ENTRY = `**/${configService.getConfigFileName()}`
+
+function ensureConfigIsGitIgnored () {
+  const gitIgnorePath = path.join(utils.getWorkspaceFolder(), '.gitignore')
+  const gitIgnore = fs.existsSync(gitIgnorePath) ? fs.readFileSync(gitIgnorePath, 'utf8') : ''
+  const existingEntries = new Set(gitIgnore
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(line => line && !line.startsWith('#')))
+
+  const configFileName = configService.getConfigFileName()
+  if ([CONFIG_GITIGNORE_ENTRY, configFileName, `/${configFileName}`].some(entry => existingEntries.has(entry))) return
+
+  const separator = gitIgnore && !gitIgnore.endsWith('\n') ? '\n' : ''
+  fs.appendFileSync(gitIgnorePath, `${separator}${CONFIG_GITIGNORE_ENTRY}\n`)
+}
+
 async function getUrl (): Promise<string> {
   const res = await vscode.window.showQuickPick([
     {
@@ -63,6 +80,7 @@ export default async function enterCredentials (addMode = false) {
   if (!creds.url) return
 
   if (creds.type === 'userpwd') {
+    creds.instanceUrl = undefined
     creds.username = await utils.inputText('Please enter your SFDC username', creds.username, {
       validateInput: v => {
         if (config.credentials.find((x, idx) => x.username === v && (addMode || idx !== config.currentCredential))) {
@@ -96,22 +114,10 @@ export default async function enterCredentials (addMode = false) {
     config.currentCredential = config.credentials.length - 1
   }
 
-  if (!config.stored) {
-    try {
-      const editGitIgnore = await vscode.window.showQuickPick([
-        { label: 'Yes', value: true },
-        { label: 'No', value: false }
-      ], {
-        ignoreFocusOut: true,
-        placeHolder: 'Would you like to add fastsfdc config file to .gitignore?'
-      })
-      if (editGitIgnore?.value) {
-        const gitIgnorePath = path.join(utils.getWorkspaceFolder(), '.gitignore')
-        fs.appendFileSync(gitIgnorePath, `\n**/${configService.getConfigFileName()}\n`)
-      }
-    } catch (err) {
-      vscode.window.showErrorMessage('There was a problem updating the .gitignore file')
-    }
+  try {
+    ensureConfigIsGitIgnored()
+  } catch (_) {
+    vscode.window.showErrorMessage('There was a problem updating the .gitignore file')
   }
 
   await configService.storeConfig(config)
