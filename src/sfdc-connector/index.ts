@@ -1,4 +1,4 @@
-import { Config, MetaObj, StaticResourceObj, AuraObj, LwcObj, AuraBundle, DescribeMetadataResult, ListMetadataResult } from '../fast-sfdc'
+import { Config, MetaObj, StaticResourceObj, AuraObj, LwcObj, AuraBundle, DescribeMetadataResult, ListMetadataResult, ApexClassRecord, ApexClassMemberObj } from '../fast-sfdc'
 import * as SfdcConn from 'node-salesforce-connection'
 import * as constants from 'sfdy/src/utils/constants'
 import configService from '../services/config-service'
@@ -95,6 +95,8 @@ export default {
     return res
   },
 
+  describeSObject: async (objectApiName: string): Promise<any> => get(`/sobjects/${encodeURIComponent(objectApiName)}/describe`, true),
+
   async createMetadataContainer (name: string): Promise<string> {
     const old = await query(`SELECT Id FROM MetadataContainer WHERE Name = '${name}'`)
     if (old.records.length) await this.deleteObj('MetadataContainer', old.records[0].Id)
@@ -105,11 +107,11 @@ export default {
     return (post('/runTestsSynchronous', { tests }))
   },
 
-  async upsertObj (toolingType: string, record: MetaObj | AuraObj | LwcObj | AuraBundle | StaticResourceObj) {
+  async upsertObj (toolingType: string, record: MetaObj | AuraObj | LwcObj | AuraBundle | StaticResourceObj | ApexClassMemberObj) {
     return (record.Id ? this.editObj : this.createObj)(toolingType, record)
   },
 
-  async createObj (toolingType: string, record: MetaObj | AuraObj | LwcObj | AuraBundle | StaticResourceObj) {
+  async createObj (toolingType: string, record: MetaObj | AuraObj | LwcObj | AuraBundle | StaticResourceObj | ApexClassMemberObj) {
     return (await post(`/sobjects/${toolingType}`, record)).id
   },
 
@@ -117,7 +119,7 @@ export default {
     return del(`/sobjects/${toolingType}/${recordId}`)
   },
 
-  async editObj (toolingType: string, record: MetaObj | AuraObj | LwcObj | AuraBundle | StaticResourceObj) {
+  async editObj (toolingType: string, record: MetaObj | AuraObj | LwcObj | AuraBundle | StaticResourceObj | ApexClassMemberObj) {
     await patch(`/sobjects/${toolingType}/${record.Id}`, {
       ...record,
       Id: undefined,
@@ -188,17 +190,34 @@ export default {
     WHERE DeveloperName = '${bundleName}'
   `)).records[0].Id,
 
-  executeAnonymous: (scriptData: string) => metadata('executeAnonymous', {
-    String: scriptData
-  }, 'Apex', {
-    headers: {
-      DebuggingHeader: {
-        categories: {
-          category: 'Apex_code',
-          level: 'FINEST'
-        },
-        debugLevel: 'DETAIL'
+  findApexClassesByNames: async (classNames: string[]): Promise<ApexClassRecord[]> => {
+    if (!classNames.length) return []
+    const names = classNames.map(name => `'${name}'`).join(',')
+    return (await query(`SELECT
+      Id,
+      Name,
+      Body,
+      IsValid,
+      NamespacePrefix
+      FROM ApexClass
+      WHERE Name IN (${names})
+    `)).records
+  },
+
+  executeAnonymous: async (scriptData: string) => {
+    const result = await metadata('executeAnonymous', {
+      String: scriptData
+    }, 'Apex', {
+      headers: {
+        DebuggingHeader: {
+          categories: {
+            category: 'Apex_code',
+            level: 'FINEST'
+          },
+          debugLevel: 'DETAIL'
+        }
       }
-    }
-  })
+    })
+    return result?.body ? { ...result.body, debugLog: result.debugLog } : result
+  }
 }

@@ -17,7 +17,7 @@ export default async function executeAnonymous () {
   diagnosticCollection.clear()
   statusbar.startLongJob(async done => {
     const res = await sfdcConnector.executeAnonymous(text)
-    if (res.compiled === 'false') {
+    if (res.compiled === false || res.compiled === 'false') {
       const line = (selection.isEmpty ? 0 : editor.selection.start.line) + parseInt(res.line, 10) - 1
       const col = (selection.isEmpty ? 0 : editor.selection.start.character) + parseInt(res.column, 10) - 1
       diagnosticCollection.set(editor.document.uri, [new vscode.Diagnostic(
@@ -25,6 +25,9 @@ export default async function executeAnonymous () {
         res.compileProblem,
         vscode.DiagnosticSeverity.Error
       )])
+      done('👎🏻')
+    } else if (res.success === false || res.success === 'false') {
+      vscode.window.showErrorMessage(res.exceptionMessage || 'Anonymous Apex execution failed')
       done('👎🏻')
     } else {
       const newFile = vscode.Uri.parse('untitled:' + path.join(utils.getWorkspaceFolder(), 'debuglog.dbg'))

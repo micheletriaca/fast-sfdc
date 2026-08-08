@@ -84,6 +84,21 @@ export interface MetaObj {
   Metadata?: AnyMetadata;
 }
 
+export interface ApexClassRecord {
+  Id: string;
+  Name: string;
+  Body: string;
+  IsValid: boolean;
+  NamespacePrefix?: string;
+}
+
+export interface ApexClassMemberObj {
+  Id?: string;
+  Body: string;
+  ContentEntityId: string;
+  MetadataContainerId: string;
+}
+
 export interface StaticResourceObj {
   Id?: string;
   Body: string;

@@ -9,6 +9,7 @@ import utils from '../utils/utils'
 import logger, { diagnosticCollection } from '../logger'
 import * as path from 'upath'
 import * as minimatch from 'minimatch'
+import { extractApexClassImports } from '../utils/apex-errors'
 
 function updateProblemsPanel (errors: any[], doc: vscode.TextDocument) {
   diagnosticCollection.set(doc.uri, errors
@@ -80,7 +81,8 @@ const createLightningWebComponentMetadata = async (doc: vscode.TextDocument): Pr
 const compileLightninWebComponent = async (doc: vscode.TextDocument, done: DoneCallback) => {
   const bundleName = parsers.getLwcBundleName(doc.uri)
   const lwcDefType = parsers.getLWCDefType(doc.fileName)
-  try {
+
+  const save = async () => {
     const bundleId = await sfdcConnector.findLwcBundleId(bundleName)
     if (lwcDefType === 'xml') {
       await sfdcConnector.upsertObj('LightningComponentBundle', {
@@ -100,6 +102,22 @@ const compileLightninWebComponent = async (doc: vscode.TextDocument, done: DoneC
       }
     }
     await sfdcConnector.upsertLwcObj({ ...record, Source: doc.getText() })
+  }
+
+  try {
+    try {
+      await save()
+    } catch (e) {
+      let recompiled = false
+      try {
+        recompiled = await toolingService.repairApexDependencies(e, extractApexClassImports(doc.getText()))
+      } catch (recompileError) {
+        logger.appendLine(`Unable to recompile invalid Apex dependencies: ${recompileError.message}`)
+      }
+      if (!recompiled) throw e
+      logger.appendLine(`Retrying ${doc.fileName} after Apex dependency recompilation`)
+      await save()
+    }
     diagnosticCollection.set(doc.uri, [])
     done('👍🏻')
   } catch (e) {
