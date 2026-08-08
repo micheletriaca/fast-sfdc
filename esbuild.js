@@ -2,12 +2,16 @@
 'use strict'
 
 const esbuild = require('esbuild')
+const fs = require('fs')
 
 const production = process.argv.includes('--production')
 const watch = process.argv.includes('--watch')
 
 const watchPlugin = {
   name: 'watch-reporter',
+  /**
+   * @param {{ onStart: (arg0: () => void) => void; onEnd: (arg0: () => void) => void; }} build
+   */
   setup (build) {
     build.onStart(() => {
       console.log('[watch] build started')
@@ -15,6 +19,18 @@ const watchPlugin = {
     build.onEnd(() => {
       console.log('[watch] build finished')
     })
+  }
+}
+
+const sfdyLoggingPlugin = {
+  name: 'sfdy-logging',
+  setup (build) {
+    build.onLoad({ filter: /[/\\]sfdy[/\\]src[/\\](deploy|retrieve)[/\\]index\.js$/ }, async ({ path: modulePath }) => ({
+      contents: (await fs.promises.readFile(modulePath, 'utf8'))
+        .replaceAll('console.time(', 'logger.time(')
+        .replaceAll('console.timeEnd(', 'logger.timeEnd('),
+      loader: 'js'
+    }))
   }
 }
 
@@ -28,10 +44,10 @@ async function main () {
     minify: production,
     outfile: 'dist/extension.js',
     platform: 'node',
-    plugins: watch ? [watchPlugin] : [],
+    plugins: watch ? [sfdyLoggingPlugin, watchPlugin] : [sfdyLoggingPlugin],
     sourcemap: 'external',
     sourcesContent: false,
-    target: 'node14'
+    target: 'node20'
   })
 
   if (watch) {

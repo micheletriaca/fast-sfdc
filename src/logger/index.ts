@@ -1,35 +1,91 @@
 import * as vscode from 'vscode'
-import TelemetryReporter from 'vscode-extension-telemetry'
+import { TelemetryReporter } from '@vscode/extension-telemetry'
 
-const channel = vscode.window.createOutputChannel('Fast-Sfdc')
-export default channel
+let channel: vscode.OutputChannel | undefined
+let diagnostics: vscode.DiagnosticCollection | undefined
+let debugDiagnostics: vscode.DiagnosticCollection | undefined
+let extensionContext: vscode.ExtensionContext | undefined
+let disposed = false
+let telemetryEnabled = false
 
-const diagnosticCollection = vscode.languages.createDiagnosticCollection('FastSfdc')
+const getChannel = () => {
+  if (!channel && extensionContext && !disposed) {
+    channel = vscode.window.createOutputChannel('Fast-Sfdc')
+  }
+  return channel
+}
+
+const logger = {
+  appendLine (value: string) {
+    getChannel()?.appendLine(value)
+  },
+  clear () {
+    getChannel()?.clear()
+  },
+  show () {
+    getChannel()?.show()
+  }
+}
+
+export default logger
+
+const diagnosticCollection = {
+  set (uri: vscode.Uri, values: readonly vscode.Diagnostic[] | undefined) {
+    diagnostics?.set(uri, values)
+  }
+}
+
+const debugDiagnosticCollection = {
+  clear () {
+    debugDiagnostics?.clear()
+  },
+  set (uri: vscode.Uri, values: readonly vscode.Diagnostic[] | undefined) {
+    debugDiagnostics?.set(uri, values)
+  }
+}
 
 class Reporter {
-  private reporter: TelemetryReporter
+  private reporter: TelemetryReporter | undefined
 
-  constructor () {
-    const extensionId = 'm1ck83.fast-sfdc'
-    const extension = vscode.extensions.getExtension(extensionId)!
-    const extensionVersion = extension.packageJSON.version
-    const innocentKitten = Buffer.from('MWU0ZWZhZGItNWE3Mi00OTQxLWFhNmMtZWY2ZTY5MGNlYjZm', 'base64').toString()
-    this.reporter = new TelemetryReporter(extensionId, extensionVersion, innocentKitten)
+  private initialize () {
+    if (this.reporter || !telemetryEnabled) return
+    const instrumentationKey = Buffer.from('MWU0ZWZhZGItNWE3Mi00OTQxLWFhNmMtZWY2ZTY5MGNlYjZm', 'base64').toString()
+    this.reporter = new TelemetryReporter(`InstrumentationKey=${instrumentationKey}`)
   }
 
   sendEvent (cmd: string, props = {}, measurements = {}) {
-    this.reporter.sendTelemetryEvent(cmd, props, measurements)
-  }
-
-  subscribe (ctx: vscode.ExtensionContext) {
-    ctx.subscriptions.push(this.reporter)
+    this.initialize()
+    this.reporter?.sendTelemetryEvent(cmd, props, measurements)
   }
 
   dispose () {
-    this.reporter.dispose()
+    this.reporter?.dispose()
+    this.reporter = undefined
   }
 }
 
 const reporter = new Reporter()
 
-export { diagnosticCollection, reporter }
+const initializeLogger = (ctx: vscode.ExtensionContext) => {
+  extensionContext = ctx
+  disposed = false
+  telemetryEnabled = ctx.extensionMode !== vscode.ExtensionMode.Development && vscode.env.isTelemetryEnabled
+  diagnostics = vscode.languages.createDiagnosticCollection('FastSfdc')
+  debugDiagnostics = vscode.languages.createDiagnosticCollection('FastSfdc-DebugLog')
+  ctx.subscriptions.push({
+    dispose () {
+      disposed = true
+      telemetryEnabled = false
+      extensionContext = undefined
+      reporter.dispose()
+      debugDiagnostics?.dispose()
+      debugDiagnostics = undefined
+      diagnostics?.dispose()
+      diagnostics = undefined
+      channel?.dispose()
+      channel = undefined
+    }
+  })
+}
+
+export { debugDiagnosticCollection, diagnosticCollection, initializeLogger, reporter }

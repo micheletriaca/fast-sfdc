@@ -3,7 +3,7 @@ import { commands, workspace, languages, window, ExtensionContext } from 'vscode
 import cmds from './commands'
 import statusBar from './statusbar'
 import configService from './services/config-service'
-import logger, { reporter } from './logger'
+import { initializeLogger, reporter } from './logger'
 import CodeLensRunTest from './codelens-provider/codelens-run-test'
 import CodeLensFls from './codelens-provider/codelens-fls'
 import packageTreeView from './treeviews-prodiver/package-explorer'
@@ -14,8 +14,6 @@ const activateExtension = async () => {
   const isOneWorkspaceOpened = workspace.workspaceFolders?.length === 1
   if (isOneWorkspaceOpened) {
     commands.executeCommand('setContext', 'fast-sfdc-active', true)
-    logger.appendLine('Extension "fast-sfdc" is now active!')
-    reporter.sendEvent('extensionActivated')
 
     const cfg = await configService.getConfig()
     statusBar.initStatusBar()
@@ -46,6 +44,8 @@ const activateExtension = async () => {
 }
 
 export async function activate (ctx: ExtensionContext) {
+  initializeLogger(ctx)
+  statusBar.initialize(ctx)
   configService.initialize(ctx.secrets)
   ctx.subscriptions.push(...[
     workspace.onDidChangeWorkspaceFolders(() => activateExtension()),
@@ -82,8 +82,7 @@ export async function activate (ctx: ExtensionContext) {
       treeDataProvider: packageTreeView,
       showCollapseAll: true,
       canSelectMany: true
-    }),
-    reporter
+    })
   ])
   await activateExtension()
 }

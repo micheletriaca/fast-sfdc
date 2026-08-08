@@ -31,7 +31,7 @@ export class Dependency extends vscode.TreeItem {
     this.description = this._description
   }
 
-  getIconPath (): vscode.ThemeIcon | {light: string; dark: string} {
+  getIconPath (): vscode.ThemeIcon | {light: vscode.Uri; dark: vscode.Uri} {
     if (this.contextValue === 'downloading') {
       return new vscode.ThemeIcon('sync~spin')
     } else if (this.hasWildcard) {
@@ -42,8 +42,8 @@ export class Dependency extends vscode.TreeItem {
       const basePath = (vscode.extensions.getExtension('m1ck83.fast-sfdc') || {}).extensionPath || ''
       const imgPath = path.resolve(basePath, `images/dark/selected-${this.selectionState}.svg`)
       return {
-        light: imgPath,
-        dark: imgPath
+        light: vscode.Uri.file(imgPath),
+        dark: vscode.Uri.file(imgPath)
       }
     }
   }

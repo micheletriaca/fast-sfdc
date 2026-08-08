@@ -2,8 +2,7 @@ import * as vscode from 'vscode'
 import { AnyObj, DoneCallback } from '../fast-sfdc'
 import configService from '../services/config-service'
 
-const sbItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 5)
-sbItem.command = 'FastSfdc.statusBarClick'
+let sbItem: vscode.StatusBarItem | undefined
 const MENU_PREFIX = () => {
   const cfg = configService.getConfigSync()
   return `fast-sfdc - ${cfg.stored ? cfg.credentials[cfg.currentCredential].username : 'not logged in'}`
@@ -38,13 +37,30 @@ const runNextJob = () => {
 }
 
 const statusBar = {
+  initialize (ctx: vscode.ExtensionContext) {
+    if (sbItem) return
+    sbItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 5)
+    sbItem.command = 'FastSfdc.statusBarClick'
+    ctx.subscriptions.push({
+      dispose () {
+        clearTimeout(doneTimeout)
+        sbItem?.dispose()
+        sbItem = undefined
+        loadingCounter = 0
+        queue = []
+        running = false
+      }
+    })
+  },
+
   initStatusBar () {
+    if (!sbItem) return
     sbItem.text = MENU_PREFIX()
     sbItem.show()
   },
 
   hideStatusBar () {
-    sbItem.hide()
+    sbItem?.hide()
   },
 
   startLoading () {
@@ -56,8 +72,11 @@ const statusBar = {
   stopLoading () {
     loadingCounter = Math.max(loadingCounter - 1, 0)
     if (loadingCounter === 0) {
+      if (!sbItem) return
       sbItem.text = MENU_PREFIX()
-      doneTimeout = setTimeout(() => (sbItem.text = MENU_PREFIX()), 10000)
+      doneTimeout = setTimeout(() => {
+        if (sbItem) sbItem.text = MENU_PREFIX()
+      }, 10000)
     } else {
       this.setText()
     }
@@ -78,6 +97,7 @@ const statusBar = {
   },
 
   setText (newTxt: string | undefined = undefined) {
+    if (!sbItem) return
     if (newTxt === undefined) sbItem.text = `${MENU_PREFIX()} $(sync~spin)${loadingCounter > 1 ? ' (' + loadingCounter + ')' : ''}`
     else sbItem.text = `${MENU_PREFIX()} ${newTxt || ''}`
   }
