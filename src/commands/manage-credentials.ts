@@ -5,7 +5,7 @@ import StatusBar from '../statusbar'
 import { ConfigCredential } from '../fast-sfdc'
 import toolingService from '../services/tooling-service'
 import { prompt } from '../utils/field-builders'
-import * as open from 'open'
+import open = require('open')
 
 const ADD_OTHER_CREDENTIAL = -2
 const REMOVE_CREDENTIAL = -3

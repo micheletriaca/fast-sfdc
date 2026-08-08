@@ -1,5 +1,5 @@
-import * as _ from 'exstream.js'
 import logger, { reporter } from '../logger'
+import _ = require('exstream.js')
 
 export default async function fetch (sfdc: SfdcConnector) {
   logger.appendLine('Fetching org metadata...')

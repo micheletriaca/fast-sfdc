@@ -8,7 +8,7 @@ import CodeLensRunTest from './codelens-provider/codelens-run-test'
 import CodeLensFls from './codelens-provider/codelens-fls'
 import packageTreeView from './treeviews-prodiver/package-explorer'
 import * as vscode from 'vscode'
-import * as open from 'open'
+import open = require('open')
 
 const activateExtension = async () => {
   const isOneWorkspaceOpened = workspace.workspaceFolders?.length === 1

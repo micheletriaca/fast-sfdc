@@ -15,16 +15,5 @@ module.exports = {
     'standard',
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended'
-  ],
-  overrides: [
-    {
-      files: ['webpack.config.js'],
-      env: {
-        commonjs: true
-      },
-      rules: {
-        '@typescript-eslint/no-var-requires': 'off'
-      }
-    }
   ]
 }

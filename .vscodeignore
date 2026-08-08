@@ -6,8 +6,9 @@ tsconfig.json
 tslint.json
 node_modules
 src/
+out/
 .editorconfig
-webpack.config.js
+esbuild.js
 dist/extension.js.map
 images/commands.png
 images/tests.png

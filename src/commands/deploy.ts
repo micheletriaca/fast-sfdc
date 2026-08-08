@@ -1,13 +1,13 @@
-import * as sfdyDeploy from 'sfdy/src/deploy'
 import * as fs from 'fs'
 import * as path from 'upath'
-import * as deleteEmpty from 'delete-empty'
 import statusbar from '../statusbar'
 import configService from '../services/config-service'
 import logger from '../logger'
 import packageService from '../services/package-service'
 import { getListOfSrcFiles, getPackageMapping } from 'sfdy/src/utils/package-utils'
 import utils from '../utils/utils'
+import sfdyDeploy = require('sfdy/src/deploy')
+import deleteEmpty = require('delete-empty')
 
 export default function deploy (checkOnly = false, destructive = false, files: string[] = []) {
   statusbar.startLongJob(async done => {
