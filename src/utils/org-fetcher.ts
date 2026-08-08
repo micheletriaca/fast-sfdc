@@ -1,12 +1,18 @@
 import logger, { reporter } from '../logger'
 import _ = require('exstream.js')
 
-export default async function fetch (sfdc: SfdcConnector) {
+const asArray = <T>(value: T | T[] | undefined): T[] =>
+  Array.isArray(value) ? value : value ? [value] : []
+
+export default async function fetch (sfdc: SfdcConnector, supportedChildTypes: string[] = []) {
   logger.appendLine('Fetching org metadata...')
   reporter.sendEvent('sfdcExplorer')
   const FOLDERED_METAS = ['Report', 'Dashboard', 'EmailTemplate', 'Document']
 
-  const allFolders = await sfdc.query('SELECT Id, ParentId, NamespacePrefix, DeveloperName, Type FROM Folder WHERE DeveloperName != null', true)
+  const [allFolders, metadataDescription] = await Promise.all([
+    sfdc.query('SELECT Id, ParentId, NamespacePrefix, DeveloperName, Type FROM Folder WHERE DeveloperName != null', true),
+    sfdc.describeMetadata()
+  ])
   allFolders.records.forEach((x: any) => { if (x.NamespacePrefix) x.DeveloperName = x.NamespacePrefix + '__' + x.DeveloperName })
   allFolders.records.forEach((x: any) => (x.Type = x.Type === 'Email' ? 'EmailTemplate' : x.Type))
   allFolders.records.push({ DeveloperName: 'unfiled$public', Type: 'EmailTemplate', Id: 'publicEmail', ParentId: '' })
@@ -58,10 +64,15 @@ export default async function fetch (sfdc: SfdcConnector) {
     .reject((x: {DeveloperName: string}) => x.DeveloperName === 'unfiled$public')
     .map(appendAllFoldersToFolder)
 
-  const s3 = _(sfdc.describeMetadata())
-    .flatMap((x: {metadataObjects: any}) => x.metadataObjects)
-    .reject((x: {inFolder: string}) => x.inFolder === 'true')
-    .pluck('xmlName')
+  const supportedChildren = new Set(supportedChildTypes)
+  const metadataTypes = [...new Set(asArray(metadataDescription.metadataObjects)
+    .filter((metadata: {inFolder: string}) => metadata.inFolder !== 'true')
+    .flatMap((metadata: {xmlName: string; childXmlNames?: string | string[]}) => [
+      metadata.xmlName,
+      ...asArray(metadata.childXmlNames).filter(type => supportedChildren.has(type))
+    ]))]
+
+  const s3 = _(metadataTypes)
     .map((x: string) => ({ type: x }))
     .tap((x: {type: string}) => logger.appendLine(`Fetching metadata ${x.type}...`))
     .batch(3)

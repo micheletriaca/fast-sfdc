@@ -37,6 +37,20 @@ declare module 'sfdy/xml-utils' {
 type PackageMapping = GenericObject
 type PackageType = { members: string[]; name: string[] }
 type Package = { types: PackageType[]; version: string[] };
+type MetadataComponent = {type: string; fullName: string}
+type ComponentModel = {
+  getAddressableChildTypes(): string[];
+  getComponentLocation(component: MetadataComponent): {
+    parent: MetadataComponent;
+    group: string;
+    label: string;
+    addressable: boolean;
+  } | undefined;
+  getMetadataContainers(components: MetadataComponent[]): MetadataComponent[];
+  getPackageComponents(components: MetadataComponent[]): MetadataComponent[];
+  isMetadataContainerPath(fileName: string): boolean;
+  resolveMetadata(entries: {fileName: string; data: Buffer}[]): Promise<MetadataComponent[]>;
+}
 
 declare module 'sfdy/package-utils' {
   export function getPackageXml(opts?: {specificFiles?: string[]; specificMeta?: string[]; sfdcConnector: SfdcConnector; apiVersion?: string}): Promise<Package>
@@ -55,12 +69,12 @@ declare module 'sfdy/path-service' {
 }
 
 declare module 'sfdy/format-adapters' {
-  export function getAdapter(config: GenericObject, override?: string, packageMapping?: PackageMapping): {
+  export function getAdapter(config: GenericObject, override?: string, packageMapping?: PackageMapping): ComponentModel & {
     getDestructivePaths(fileNames: string[], availableFiles: string[]): string[];
-    getPackageComponents(components: {type: string; fullName: string}[]): {type: string; fullName: string}[];
     isMetadataPath(fileName: string): boolean;
-    resolve(fileNames: string[]): {type: string; fullName: string}[];
+    resolve(fileNames: string[]): MetadataComponent[];
   } | undefined
+  export function getComponentModel(packageMapping?: PackageMapping): ComponentModel
 }
 
 type SfdyConfig = {

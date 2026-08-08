@@ -1,0 +1,109 @@
+export type MetadataComponent = {
+  type: string;
+  fullName: string;
+}
+
+export type ComponentModel = {
+  getComponentLocation: (component: MetadataComponent) => {
+    parent: MetadataComponent;
+    group: string;
+    label: string;
+    addressable: boolean;
+  } | undefined;
+  getPackageComponents: (components: MetadataComponent[]) => MetadataComponent[];
+}
+
+export type MetadataTreeNode = {
+  key: string;
+  label: string;
+  metadataType?: string;
+  component?: MetadataComponent;
+  operationComponent?: MetadataComponent;
+  children: MetadataTreeNode[];
+}
+
+export const componentKey = (component: MetadataComponent) =>
+  `${component.type}/${component.fullName}`
+
+const sortNodes = (nodes: MetadataTreeNode[]): MetadataTreeNode[] => nodes
+  .sort((left, right) => left.label.localeCompare(right.label))
+  .map(node => ({ ...node, children: sortNodes(node.children) }))
+
+export const buildMetadataTree = (
+  components: MetadataComponent[],
+  model: ComponentModel
+): MetadataTreeNode[] => {
+  const roots = new Map<string, MetadataTreeNode>()
+  const nodes = new Map<string, MetadataTreeNode>()
+
+  const getRoot = (metadataType: string) => {
+    let root = roots.get(metadataType)
+    if (!root) {
+      root = {
+        key: `type/${metadataType}`,
+        label: metadataType,
+        metadataType,
+        children: []
+      }
+      roots.set(metadataType, root)
+    }
+    return root
+  }
+
+  const getComponentNode = (component: MetadataComponent) => {
+    const key = componentKey(component)
+    let node = nodes.get(key)
+    if (!node) {
+      node = {
+        key,
+        label: component.fullName,
+        component,
+        operationComponent: component,
+        children: []
+      }
+      nodes.set(key, node)
+      getRoot(component.type).children.push(node)
+    }
+    return node
+  }
+
+  const uniqueComponents = [...new Map(components.map(component => [componentKey(component), component])).values()]
+  for (const component of uniqueComponents) {
+    const location = model.getComponentLocation(component)
+    if (!location) {
+      getComponentNode(component)
+      continue
+    }
+
+    const parent = getComponentNode(location.parent)
+    const groupKey = `group/${componentKey(location.parent)}/${location.group}`
+    let group = nodes.get(groupKey)
+    if (!group) {
+      group = {
+        key: groupKey,
+        label: location.group,
+        children: []
+      }
+      nodes.set(groupKey, group)
+      parent.children.push(group)
+    }
+
+    let child = nodes.get(componentKey(component))
+    if (!child) {
+      child = {
+        key: componentKey(component),
+        label: location.label,
+        component,
+        operationComponent: model.getPackageComponents([component])[0],
+        children: []
+      }
+      nodes.set(child.key, child)
+    } else {
+      child.label = location.label
+      child.operationComponent = model.getPackageComponents([component])[0]
+    }
+    if (!group.children.some(node => node.key === child?.key)) group.children.push(child)
+  }
+
+  return sortNodes([...roots.values()])
+}

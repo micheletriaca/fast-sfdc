@@ -9,6 +9,8 @@ import { createRequire } from 'module'
 import { suite, test } from 'node:test'
 import { extractApexClassImports, extractInvalidApexClassNames, extractInvalidSObjectFields, extractMissingApexVariables, extractMissingFields, extractMissingRelationships } from '../utils/apex-errors'
 import { resolveSourceLayout } from '../services/source-layout-service'
+import { buildMetadataTree } from '../services/metadata-tree-service'
+import { getComponentModel } from 'sfdy/format-adapters'
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
@@ -138,5 +140,36 @@ suite('Extension Tests', function () {
     } finally {
       fs.rmSync(root, { recursive: true, force: true })
     }
+  })
+
+  test('Builds semantic child metadata under its container', function () {
+    const tree = buildMetadataTree([
+      { type: 'ApexClass', fullName: 'Example' },
+      { type: 'CustomObject', fullName: 'Invoice__c' },
+      { type: 'CustomField', fullName: 'Invoice__c.Status__c' },
+      { type: 'ValidationRule', fullName: 'Invoice__c.RequiredAmount' },
+      { type: 'CustomFieldTranslation', fullName: 'Invoice__c-it.Status__c' }
+    ], getComponentModel())
+
+    assert.deepEqual(tree.map(node => node.label), [
+      'ApexClass',
+      'CustomObject',
+      'CustomObjectTranslation'
+    ])
+    const object = tree[1].children[0]
+    assert.equal(object.label, 'Invoice__c')
+    assert.equal(object.operationComponent?.type, 'CustomObject')
+    assert.deepEqual(object.children.map(node => node.label), ['fields', 'validationRules'])
+    assert.deepEqual(object.children[0].children[0], {
+      key: 'CustomField/Invoice__c.Status__c',
+      label: 'Status__c',
+      component: { type: 'CustomField', fullName: 'Invoice__c.Status__c' },
+      operationComponent: { type: 'CustomField', fullName: 'Invoice__c.Status__c' },
+      children: []
+    })
+    assert.deepEqual(tree[2].children[0].children[0].children[0].operationComponent, {
+      type: 'CustomObjectTranslation',
+      fullName: 'Invoice__c-it'
+    })
   })
 })

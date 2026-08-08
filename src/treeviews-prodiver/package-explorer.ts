@@ -1,4 +1,5 @@
 import * as vscode from 'vscode'
+import * as fs from 'fs'
 import connector from '../sfdc-connector'
 import statusbar from '../statusbar'
 import { getPackageMapping, getPackageXml } from 'sfdy/package-utils'
@@ -9,25 +10,25 @@ import utils from '../utils/utils'
 import fetch from '../utils/org-fetcher'
 import configService from '../services/config-service'
 import { resolveSourceLayout } from '../services/source-layout-service'
-import { getAdapter } from 'sfdy/format-adapters'
+import { getAdapter, getComponentModel } from 'sfdy/format-adapters'
+import { buildMetadataTree, componentKey, MetadataComponent, MetadataTreeNode } from '../services/metadata-tree-service'
 import globby = require('globby')
 
 export class Dependency extends vscode.TreeItem {
-  public parent: Dependency | null = null;
+  public readonly children: Dependency[];
+  public readonly hasWildcard: boolean;
 
-  constructor (
-    public readonly label: string,
-    public rootElement: boolean,
-    public hasWildcard: boolean,
-    public collapsibleState: vscode.TreeItemCollapsibleState,
-    public children: Dependency[]
-  ) {
-    super(label, collapsibleState)
+  constructor (public readonly node: MetadataTreeNode) {
+    super(
+      node.label,
+      node.children.length
+        ? vscode.TreeItemCollapsibleState.Collapsed
+        : vscode.TreeItemCollapsibleState.None
+    )
+    this.hasWildcard = !!node.metadataType && (treeview.pkgMap?.has(`${node.metadataType}/*`) || false)
+    this.children = node.children.map(child => new Dependency(child))
     this.tooltip = this._tooltip
     this.description = this._description
-    if (children.length) {
-      this.children.forEach(x => (x.parent = this))
-    }
   }
 
   getIconPath (): vscode.ThemeIcon | {light: string; dark: string} {
@@ -36,7 +37,7 @@ export class Dependency extends vscode.TreeItem {
     } else if (this.hasWildcard) {
       return new vscode.ThemeIcon('extensions-star-full')
     } else if (!this.inPackage) {
-      return new vscode.ThemeIcon(this.rootElement ? 'package' : 'variable')
+      return new vscode.ThemeIcon(this.node.metadataType ? 'package' : 'variable')
     } else {
       const basePath = (vscode.extensions.getExtension('m1ck83.fast-sfdc') || {}).extensionPath || ''
       const imgPath = path.resolve(basePath, `images/dark/selected-${this.inPackage ? 'all' : 'some'}.svg`)
@@ -48,42 +49,38 @@ export class Dependency extends vscode.TreeItem {
   }
 
   get inPackage (): boolean {
-    return treeview.pkgMap?.has(this.fullPath) || false
+    if (this.node.component && treeview.pkgMap?.has(componentKey(this.node.component))) return true
+    if (this.node.metadataType && (
+      treeview.pkgMap?.has(this.node.metadataType) ||
+      treeview.pkgMap?.has(`${this.node.metadataType}/*`)
+    )) return true
+    return this.children.some(child => child.inPackage)
   }
 
   get _tooltip (): string {
-    return this.label
+    return this.operationPath || this.node.label
   }
 
   get _description (): string {
     return ''
   }
 
-  get parentLabel (): string {
-    let cursor = this as Dependency
-    let res = this.label
-    while (cursor.parent !== null) {
-      cursor = cursor.parent
-      res = cursor.label
-    }
-    return res
+  get operationPath (): string | undefined {
+    return this.node.operationComponent && componentKey(this.node.operationComponent)
   }
 
-  get fullPath (): string {
-    let cursor = this as Dependency
-    const res = [this.label]
-    while (cursor.parent !== null) {
-      cursor = cursor.parent
-      res.unshift(cursor.label)
-    }
-    return res.join('/')
+  get retrievableNodes (): Dependency[] {
+    if (this.operationPath) return [this]
+    const directChildren = this.children.filter(child => child.operationPath)
+    return directChildren.length
+      ? directChildren
+      : this.children.flatMap(child => child.retrievableNodes)
   }
 }
 
 class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
   private initialized = false
   private finalDependencyTree: Dependency[] = []
-  private dependencyTree: {[key: string]: string[]} = {}
   private filtering = true
   public onlyInOrg = true
   public pkgMap: Set<string> | null = null
@@ -94,32 +91,18 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
   }
 
   calcItems () {
-    if (!this.initialized) {
-      this.finalDependencyTree = Object.entries(this.dependencyTree)
-        .map(([x, children]) => new Dependency(
-          x,
-          true,
-          this.pkgMap?.has(x + '/*') || false, //! NO_WILDCARD_METADATA_TIPES.has(x),
-          vscode.TreeItemCollapsibleState.Collapsed,
-          children.map(y => new Dependency(
-            y,
-            false,
-            false,
-            vscode.TreeItemCollapsibleState.None,
-            []
-          ))
-        ))
-    }
-
     return this.finalDependencyTree
       .filter(x => !this.filtering || x.inPackage)
-      .filter(x => !this.onlyInOrg || !x.inPackage || (x.children.length && x.children.some(c => !c.inPackage)))
+      .filter(x => this.isVisible(x))
   }
+
+  private isVisible = (item: Dependency): boolean =>
+    !this.onlyInOrg || !item.inPackage || item.children.some(this.isVisible)
 
   async getChildren (element?: Dependency): Promise<Dependency[]> {
     if (element) {
       const children = element.children
-      return children?.filter(x => !this.onlyInOrg || !x.inPackage)
+      return children.filter(this.isVisible)
     } else if (!this.initialized) {
       return new Promise((resolve, reject) => {
         statusbar.startLongJob(async done => {
@@ -128,25 +111,47 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
             const sfdcConnector = await pkgService.getSfdcConnector()
             const sfdyConfig = configService.getSfdyConfigSync()
             const layout = resolveSourceLayout(utils.getWorkspaceFolder(), sfdyConfig)
+            const packageMapping = await getPackageMapping(sfdcConnector)
+            const componentModel = getComponentModel(packageMapping)
+            const sourceFiles = await globby(['**/*'], { cwd: layout.root })
+            let localComponents: MetadataComponent[]
             if (layout.isSourceFormat) {
-              const adapter = getAdapter(sfdyConfig, undefined, await getPackageMapping(sfdcConnector))
+              const adapter = getAdapter(sfdyConfig, undefined, packageMapping)
               if (!adapter) throw Error('Unable to initialize the source-format adapter')
-              const sourceFiles = await globby(['**/*'], { cwd: layout.root })
-              const components = adapter.resolve(sourceFiles.filter(adapter.isMetadataPath))
-              this.pkgMap = new Set(components.flatMap(component => [
-                component.type,
-                `${component.type}/${component.fullName}`
-              ]))
+              localComponents = adapter.resolve(sourceFiles.filter(adapter.isMetadataPath))
             } else {
-              this.pkgMap = new Set(((await getPackageXml({
+              const packageComponents = ((await getPackageXml({
                 specificFiles: ['**/*'],
                 sfdcConnector,
                 apiVersion: layout.apiVersion
               })).types || [])
-                .flatMap(t => t.members.map(x => t.name[0] + '/' + x).concat([t.name[0]])))
+                .flatMap(type => type.members.map(fullName => ({ type: type.name[0], fullName })))
+              const containerEntries = await Promise.all(sourceFiles
+                .filter(componentModel.isMetadataContainerPath)
+                .map(async fileName => ({
+                  fileName,
+                  data: await fs.promises.readFile(path.resolve(layout.root, fileName))
+                })))
+              localComponents = [
+                ...packageComponents,
+                ...await componentModel.resolveMetadata(containerEntries)
+              ]
             }
 
-            this.dependencyTree = await fetch(connector)
+            this.pkgMap = new Set(localComponents.flatMap(component => [
+              component.type,
+              componentKey(component)
+            ]))
+            const dependencyTree: {[key: string]: string[]} = await fetch(
+              connector,
+              componentModel.getAddressableChildTypes()
+            )
+            const orgComponents = Object.entries(dependencyTree)
+              .flatMap(([type, fullNames]) => fullNames.map(fullName => ({ type, fullName })))
+            this.finalDependencyTree = buildMetadataTree(
+              [...localComponents, ...orgComponents],
+              componentModel
+            ).map(node => new Dependency(node))
             resolve(this.calcItems())
             this.initialized = true
             done('👍🏻')
