@@ -99,6 +99,13 @@ export interface ApexClassMemberObj {
   MetadataContainerId: string;
 }
 
+export interface LightningComponentResourceRecord {
+  Id: string;
+  FilePath: string;
+  Format: string;
+  Source: string;
+}
+
 export interface StaticResourceObj {
   Id?: string;
   Body: string;

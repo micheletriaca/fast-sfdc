@@ -42,6 +42,9 @@ declare module 'sfdy/src/utils/package-utils' {
 
 declare module 'sfdy/src/services/path-service' {
   export function setBasePath(basePath: string): void
+  export function getBasePath(): string
+  export function setSrcFolder(srcFolder: string): void
+  export function getSrcFolder(): string
 }
 
 type SfdyConfig = {

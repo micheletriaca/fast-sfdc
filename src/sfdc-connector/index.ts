@@ -1,4 +1,4 @@
-import { Config, MetaObj, StaticResourceObj, AuraObj, LwcObj, AuraBundle, DescribeMetadataResult, ListMetadataResult, ApexClassRecord, ApexClassMemberObj } from '../fast-sfdc'
+import { Config, MetaObj, StaticResourceObj, AuraObj, LwcObj, AuraBundle, DescribeMetadataResult, ListMetadataResult, ApexClassRecord, ApexClassMemberObj, LightningComponentResourceRecord } from '../fast-sfdc'
 import * as SfdcConn from 'node-salesforce-connection'
 import * as constants from 'sfdy/src/utils/constants'
 import configService from '../services/config-service'
@@ -68,10 +68,31 @@ const patch = async (endpoint: string, body: any, useRest = false) => rest(endpo
 const del = async (endpoint: string, useRest = false) => rest(endpoint, useRest, { method: 'DELETE' })
 const get = async (endpoint: string, useRest = false) => rest(endpoint, useRest)
 const query = (q: string, useRest = false) => get(`/query?q=${encodeURIComponent(q.replace(/ +/g, ' '))}`, useRest)
+const queryAll = async (q: string, useRest = false): Promise<any[]> => {
+  let result = await query(q, useRest)
+  const records = [...(result.records || [])]
+  while (result.done === false) {
+    let endpoint: string
+    if (result.nextRecordsUrl) {
+      const basePath = getBasePath(useRest)
+      endpoint = result.nextRecordsUrl.startsWith(basePath)
+        ? result.nextRecordsUrl.substring(basePath.length)
+        : result.nextRecordsUrl
+    } else if (result.queryLocator) {
+      endpoint = `/query/${encodeURIComponent(result.queryLocator)}`
+    } else {
+      throw Error('Salesforce returned an incomplete Tooling query without a continuation URL')
+    }
+    result = await get(endpoint, useRest)
+    records.push(...(result.records || []))
+  }
+  return records
+}
 
 export default {
   connect,
   query,
+  queryAll,
   metadata,
   async getSession (forceRefresh?: boolean): Promise<{sessionId: string; instanceHostname: string; apiVersion: string}> {
     if (!conn.sessionId || forceRefresh) await connect()
@@ -189,6 +210,18 @@ export default {
     FROM LightningComponentBundle
     WHERE DeveloperName = '${bundleName}'
   `)).records[0].Id,
+
+  findLwcBundleResources: async (bundleName: string): Promise<LightningComponentResourceRecord[]> => {
+    const bundleId = await exports.default.findLwcBundleId(bundleName)
+    return await queryAll(`SELECT
+      Id,
+      FilePath,
+      Format,
+      Source
+      FROM LightningComponentResource
+      WHERE LightningComponentBundleId = '${bundleId}'
+    `)
+  },
 
   findApexClassesByNames: async (classNames: string[]): Promise<ApexClassRecord[]> => {
     if (!classNames.length) return []

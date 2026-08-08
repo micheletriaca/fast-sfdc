@@ -9,7 +9,8 @@ import utils from '../utils/utils'
 import logger, { diagnosticCollection } from '../logger'
 import * as path from 'upath'
 import * as minimatch from 'minimatch'
-import { extractApexClassImports } from '../utils/apex-errors'
+import { extractApexClassImports, extractInvalidSObjectFields } from '../utils/apex-errors'
+import lwcMetadataFallbackService from '../services/lwc-metadata-fallback-service'
 
 function updateProblemsPanel (errors: any[], doc: vscode.TextDocument) {
   diagnosticCollection.set(doc.uri, errors
@@ -104,19 +105,35 @@ const compileLightninWebComponent = async (doc: vscode.TextDocument, done: DoneC
     await sfdcConnector.upsertLwcObj({ ...record, Source: doc.getText() })
   }
 
+  const deployWithMetadataFallback = async () => {
+    const filePath = `lwc/${bundleName}/${parsers.getFilename(doc.fileName)}.${lwcDefType}`
+    logger.appendLine(`Tooling API cannot resolve valid schema references in ${filePath}; using isolated Metadata API fallback`)
+    await lwcMetadataFallbackService.deployResource(bundleName, filePath, doc.getText())
+  }
+
   try {
     try {
       await save()
     } catch (e) {
-      let recompiled = false
-      try {
-        recompiled = await toolingService.repairApexDependencies(e, extractApexClassImports(doc.getText()))
-      } catch (recompileError) {
-        logger.appendLine(`Unable to recompile invalid Apex dependencies: ${recompileError.message}`)
+      const invalidSObjectFields = extractInvalidSObjectFields(e)
+      if (invalidSObjectFields.length) {
+        await deployWithMetadataFallback()
+      } else {
+        let recompiled = false
+        try {
+          recompiled = await toolingService.repairApexDependencies(e, extractApexClassImports(doc.getText()))
+        } catch (recompileError) {
+          logger.appendLine(`Unable to recompile invalid Apex dependencies: ${recompileError.message}`)
+        }
+        if (!recompiled) throw e
+        logger.appendLine(`Retrying ${doc.fileName} after Apex dependency recompilation`)
+        try {
+          await save()
+        } catch (retryError) {
+          if (!extractInvalidSObjectFields(retryError).length) throw retryError
+          await deployWithMetadataFallback()
+        }
       }
-      if (!recompiled) throw e
-      logger.appendLine(`Retrying ${doc.fileName} after Apex dependency recompilation`)
-      await save()
     }
     diagnosticCollection.set(doc.uri, [])
     done('👍🏻')
