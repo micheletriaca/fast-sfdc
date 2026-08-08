@@ -1,11 +1,11 @@
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'upath'
-import sfdyDeploy = require('sfdy/src/deploy')
 import { getBasePath, getSrcFolder, setBasePath, setSrcFolder } from 'sfdy/src/services/path-service'
 import configService from './config-service'
 import sfdcConnector from '../sfdc-connector'
 import logger from '../logger'
+import sfdyDeploy = require('sfdy/src/deploy')
 
 let deploymentQueue: Promise<void> = Promise.resolve()
 

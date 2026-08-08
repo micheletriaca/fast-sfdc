@@ -104,7 +104,7 @@ const toolingService = {
     if (!classesToCompile.length) return missingFields.length > 0 || missingRelationships.length > 0
 
     logger.appendLine(`Recompiling invalid Apex dependencies: ${classesToCompile.map(apexClass => apexClass.Name).join(', ')}`)
-    await exports.default.resetMetadataContainer()
+    await toolingService.resetMetadataContainer()
 
     try {
       await Promise.all(classesToCompile.map(apexClass => sfdcConnector.createObj('ApexClassMember', {
@@ -135,7 +135,7 @@ const toolingService = {
       return true
     } finally {
       try {
-        await exports.default.resetMetadataContainer()
+        await toolingService.resetMetadataContainer()
       } catch (cleanupError) {
         objsInContainer.clear()
         metaContainerId = ''

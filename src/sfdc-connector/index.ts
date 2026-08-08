@@ -212,7 +212,7 @@ const connector = {
   `)).records[0].Id,
 
   findLwcBundleResources: async (bundleName: string): Promise<LightningComponentResourceRecord[]> => {
-    const bundleId = await exports.default.findLwcBundleId(bundleName)
+    const bundleId = await connector.findLwcBundleId(bundleName)
     return await queryAll(`SELECT
       Id,
       FilePath,

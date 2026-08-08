@@ -8,9 +8,9 @@ import toolingService from '../services/tooling-service'
 import utils from '../utils/utils'
 import logger, { diagnosticCollection } from '../logger'
 import * as path from 'upath'
-import minimatch = require('minimatch')
 import { extractApexClassImports, extractInvalidSObjectFields } from '../utils/apex-errors'
 import lwcMetadataFallbackService from '../services/lwc-metadata-fallback-service'
+import minimatch = require('minimatch')
 
 function updateProblemsPanel (errors: any[], doc: vscode.TextDocument) {
   diagnosticCollection.set(doc.uri, errors
