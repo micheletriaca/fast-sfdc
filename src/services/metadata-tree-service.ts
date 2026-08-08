@@ -34,8 +34,23 @@ export type MetadataTreeNode = {
   children: MetadataTreeNode[];
 }
 
+export type SelectionState = 'none' | 'some' | 'all'
+
 export const componentKey = (component: MetadataComponent) =>
   `${component.type}/${component.fullName}`
+
+export const getSelectionState = (
+  node: MetadataTreeNode,
+  selected: Set<string> | null
+): SelectionState => {
+  if (!selected) return 'none'
+  if (node.metadataType && selected.has(`${node.metadataType}/*`)) return 'all'
+  if (node.component && selected.has(componentKey(node.component))) return 'all'
+  if (!node.children.length) return 'none'
+  const childStates = node.children.map(child => getSelectionState(child, selected))
+  if (childStates.every(state => state === 'all')) return 'all'
+  return childStates.some(state => state !== 'none') ? 'some' : 'none'
+}
 
 const sortNodes = (nodes: MetadataTreeNode[]): MetadataTreeNode[] => nodes
   .sort((left, right) => left.label.localeCompare(right.label))
@@ -94,25 +109,38 @@ export const buildMetadataTree = (
   const ensureFolderNode = (
     rootType: string,
     folderType: string,
-    folderPath: string
+    folderPath: string,
+    includeMetadata = false
   ): MetadataTreeNode => {
     let parent = getRoot(rootType)
     let currentPath = ''
     for (const segment of folderPath.split('/').filter(Boolean)) {
       currentPath = currentPath ? `${currentPath}/${segment}` : segment
       const component = { type: folderType, fullName: currentPath }
-      const key = componentKey(component)
+      const key = `folder/${componentKey(component)}`
       let node = nodes.get(key)
       if (!node) {
         node = {
           key,
           label: segment,
-          component,
-          operationComponent: model.getPackageComponents([component])[0],
           children: []
         }
         nodes.set(key, node)
         parent.children.push(node)
+      }
+      if (includeMetadata && currentPath === folderPath) {
+        const metadataKey = componentKey(component)
+        if (!nodes.has(metadataKey)) {
+          const metadataNode = {
+            key: metadataKey,
+            label: 'folder metadata',
+            component,
+            operationComponent: model.getPackageComponents([component])[0],
+            children: []
+          }
+          nodes.set(metadataKey, metadataNode)
+          node.children.push(metadataNode)
+        }
       }
       parent = node
     }
@@ -123,7 +151,7 @@ export const buildMetadataTree = (
   for (const component of uniqueComponents) {
     const folder = model.getFolderLocation(component)
     if (folder?.isFolder) {
-      ensureFolderNode(folder.rootType, folder.folderType, folder.folderPath)
+      ensureFolderNode(folder.rootType, folder.folderType, folder.folderPath, true)
     }
   }
   for (const component of uniqueComponents) {

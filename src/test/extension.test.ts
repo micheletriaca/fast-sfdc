@@ -9,7 +9,7 @@ import { createRequire } from 'module'
 import { suite, test } from 'node:test'
 import { extractApexClassImports, extractInvalidApexClassNames, extractInvalidSObjectFields, extractMissingApexVariables, extractMissingFields, extractMissingRelationships } from '../utils/apex-errors'
 import { resolveSourceLayout } from '../services/source-layout-service'
-import { buildMetadataTree } from '../services/metadata-tree-service'
+import { buildMetadataTree, getSelectionState } from '../services/metadata-tree-service'
 import { getMetadataComponentAliases } from '../services/metadata-component-aliases'
 import { getComponentModel } from 'sfdy/format-adapters'
 import * as fs from 'fs'
@@ -197,20 +197,33 @@ suite('Extension Tests', function () {
     const reportRoot = tree[1]
     const sales = reportRoot.children[0]
     assert.equal(sales.label, 'Sales')
-    assert.deepEqual(sales.component, { type: 'ReportFolder', fullName: 'Sales' })
-    assert.deepEqual(sales.operationComponent, { type: 'Report', fullName: 'Sales/' })
-    assert.deepEqual(sales.children.map(node => node.label), ['Pipeline', 'Quarterly'])
+    assert.equal(sales.component, undefined)
+    assert.equal(sales.operationComponent, undefined)
+    assert.deepEqual(sales.children.map(node => node.label), ['folder metadata', 'Pipeline', 'Quarterly'])
 
-    const quarterly = sales.children[1]
-    assert.deepEqual(quarterly.component, {
+    const salesMetadata = sales.children[0]
+    assert.deepEqual(salesMetadata.component, { type: 'ReportFolder', fullName: 'Sales' })
+    assert.deepEqual(salesMetadata.operationComponent, { type: 'Report', fullName: 'Sales/' })
+
+    const quarterly = sales.children[2]
+    assert.equal(quarterly.component, undefined)
+    assert.deepEqual(quarterly.children[0].component, {
       type: 'ReportFolder',
       fullName: 'Sales/Quarterly'
     })
-    assert.deepEqual(quarterly.operationComponent, {
+    assert.deepEqual(quarterly.children[0].operationComponent, {
       type: 'Report',
       fullName: 'Sales/Quarterly/'
     })
-    assert.deepEqual(quarterly.children.map(node => node.label), ['Forecast'])
+    assert.deepEqual(quarterly.children.map(node => node.label), ['folder metadata', 'Forecast'])
+
+    assert.equal(getSelectionState(sales, new Set(['ReportFolder/Sales'])), 'some')
+    assert.equal(getSelectionState(sales, new Set([
+      'ReportFolder/Sales',
+      'ReportFolder/Sales/Quarterly',
+      'Report/Sales/Pipeline',
+      'Report/Sales/Quarterly/Forecast'
+    ])), 'all')
   })
 
   test('Normalizes person account record type aliases returned by Metadata API', function () {

@@ -11,7 +11,7 @@ import fetch from '../utils/org-fetcher'
 import configService from '../services/config-service'
 import { resolveSourceLayout } from '../services/source-layout-service'
 import { getAdapter, getComponentModel } from 'sfdy/format-adapters'
-import { buildMetadataTree, componentKey, MetadataComponent, MetadataTreeNode } from '../services/metadata-tree-service'
+import { buildMetadataTree, componentKey, getSelectionState, MetadataComponent, MetadataTreeNode } from '../services/metadata-tree-service'
 import globby = require('globby')
 
 export class Dependency extends vscode.TreeItem {
@@ -36,11 +36,11 @@ export class Dependency extends vscode.TreeItem {
       return new vscode.ThemeIcon('sync~spin')
     } else if (this.hasWildcard) {
       return new vscode.ThemeIcon('extensions-star-full')
-    } else if (!this.inPackage) {
+    } else if (this.selectionState === 'none') {
       return new vscode.ThemeIcon(this.node.metadataType ? 'package' : 'variable')
     } else {
       const basePath = (vscode.extensions.getExtension('m1ck83.fast-sfdc') || {}).extensionPath || ''
-      const imgPath = path.resolve(basePath, `images/dark/selected-${this.inPackage ? 'all' : 'some'}.svg`)
+      const imgPath = path.resolve(basePath, `images/dark/selected-${this.selectionState}.svg`)
       return {
         light: imgPath,
         dark: imgPath
@@ -49,12 +49,11 @@ export class Dependency extends vscode.TreeItem {
   }
 
   get inPackage (): boolean {
-    if (this.node.component && treeview.pkgMap?.has(componentKey(this.node.component))) return true
-    if (this.node.metadataType && (
-      treeview.pkgMap?.has(this.node.metadataType) ||
-      treeview.pkgMap?.has(`${this.node.metadataType}/*`)
-    )) return true
-    return this.children.some(child => child.inPackage)
+    return this.selectionState !== 'none'
+  }
+
+  get selectionState () {
+    return getSelectionState(this.node, treeview.pkgMap)
   }
 
   get _tooltip (): string {
@@ -139,10 +138,7 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
               ]
             }
 
-            this.pkgMap = new Set(localComponents.flatMap(component => [
-              component.type,
-              componentKey(component)
-            ]))
+            this.pkgMap = new Set(localComponents.map(componentKey))
             const dependencyTree: {[key: string]: string[]} = await fetch(
               connector,
               componentModel.getAddressableChildTypes()

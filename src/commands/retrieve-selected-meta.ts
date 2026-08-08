@@ -29,7 +29,6 @@ export default async function retrieveSelected (item: Dependency | null, items: 
       const markRetrieved = (dependency: Dependency) => {
         if (dependency.node.component) {
           treeview.pkgMap?.add(`${dependency.node.component.type}/${dependency.node.component.fullName}`)
-          treeview.pkgMap?.add(dependency.node.component.type)
         }
         if (dependency.node.operationComponent) {
           treeview.pkgMap?.add(
