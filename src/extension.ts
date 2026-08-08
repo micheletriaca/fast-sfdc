@@ -78,7 +78,6 @@ export async function activate (ctx: ExtensionContext) {
     languages.registerCodeLensProvider([{ pattern: '**/profiles/*.profile' }, { pattern: '**/permissionsets/*.permissionset' }], new CodeLensFls()),
     commands.registerCommand('FastSfdc.refreshPackageTreeview', packageTreeView.refresh),
     commands.registerCommand('FastSfdc.filterPackageTreeview', packageTreeView.filter),
-    commands.registerCommand('FastSfdc.filterPackageOnlyInOrg', packageTreeView.filterOnlyInOrg),
     window.createTreeView('packageEditor', {
       treeDataProvider: packageTreeView,
       showCollapseAll: true,

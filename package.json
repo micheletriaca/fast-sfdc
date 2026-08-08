@@ -77,12 +77,7 @@
     "commands": [
       {
         "command": "FastSfdc.filterPackageTreeview",
-        "title": "show all Metadata Types/show only project Metadata Types",
-        "icon": "$(filter)"
-      },
-      {
-        "command": "FastSfdc.filterPackageOnlyInOrg",
-        "title": "Show only unversioned Metadata/Show versioned and unversioned Metadata",
+        "title": "Show all metadata types / show project metadata types",
         "icon": "$(filter)"
       },
       {
@@ -316,11 +311,6 @@
       "view/title": [
         {
           "command": "FastSfdc.filterPackageTreeview",
-          "when": "view == packageEditor && fast-sfdc-active && fast-sfdc-configured",
-          "group": "navigation"
-        },
-        {
-          "command": "FastSfdc.filterPackageOnlyInOrg",
           "when": "view == packageEditor && fast-sfdc-active && fast-sfdc-configured",
           "group": "navigation"
         },

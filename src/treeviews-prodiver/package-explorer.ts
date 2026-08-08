@@ -81,8 +81,7 @@ export class Dependency extends vscode.TreeItem {
 class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
   private initialized = false
   private finalDependencyTree: Dependency[] = []
-  private filtering = true
-  public onlyInOrg = true
+  private filtering = false
   public pkgMap: Set<string> | null = null
 
   getTreeItem (element: Dependency): vscode.TreeItem {
@@ -93,16 +92,11 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
   calcItems () {
     return this.finalDependencyTree
       .filter(x => !this.filtering || x.inPackage)
-      .filter(x => this.isVisible(x))
   }
-
-  private isVisible = (item: Dependency): boolean =>
-    !this.onlyInOrg || !item.inPackage || item.children.some(this.isVisible)
 
   async getChildren (element?: Dependency): Promise<Dependency[]> {
     if (element) {
-      const children = element.children
-      return children.filter(this.isVisible)
+      return element.children
     } else if (!this.initialized) {
       return new Promise((resolve, reject) => {
         statusbar.startLongJob(async done => {
@@ -180,11 +174,6 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
 
   filter = () => {
     this.filtering = !this.filtering
-    this._onDidChangeTreeData.fire(undefined)
-  }
-
-  filterOnlyInOrg = () => {
-    this.onlyInOrg = !this.onlyInOrg
     this._onDidChangeTreeData.fire(undefined)
   }
 
