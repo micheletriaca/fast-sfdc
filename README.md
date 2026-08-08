@@ -47,6 +47,10 @@ Deleting metadata from your org is just easy as right-clicking on the metadata i
 
 To set up a `.sfdy.json` config in your project, just open the command palette and type `Fast-Sfdc: Init metadata patching`
 
+`package.xml` is optional in both Metadata API and Salesforce DX projects. Fast-Sfdc derives
+deploy and retrieve manifests from the local metadata tree; `.sfdy.json` supplies the API
+version when it cannot be read from `sfdx-project.json`.
+
 For Salesforce DX source-format projects, add:
 
 ```json

@@ -55,7 +55,6 @@ export default function deploy (checkOnly = false, destructive = false, files: s
           const availableFiles = await globby(['**/*'], { cwd: layout.root })
           listOfSrcFilesToDelete = adapter.getDestructivePaths(selectedFiles, availableFiles)
         } else {
-          await packageService.removeFromPackage(sourceFiles, sfdcConnector)
           listOfSrcFilesToDelete = await getListOfSrcFiles(packageMapping, sourceFiles)
         }
         listOfSrcFilesToDelete.forEach(f => {

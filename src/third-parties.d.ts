@@ -39,7 +39,7 @@ type PackageType = { members: string[]; name: string[] }
 type Package = { types: PackageType[]; version: string[] };
 
 declare module 'sfdy/package-utils' {
-  export function getPackageXml(opts?: {specificFiles?: string[]; specificMeta?: string[]; sfdcConnector: SfdcConnector}): Promise<Package>
+  export function getPackageXml(opts?: {specificFiles?: string[]; specificMeta?: string[]; sfdcConnector: SfdcConnector; apiVersion?: string}): Promise<Package>
   export function getPackageMapping(sfdcConnector: SfdcConnector): Promise<PackageMapping>
   export function getListOfSrcFiles(packageMapping: PackageMapping, pattern: string[]): Promise<string[]>
   export function expandDirectoryPatterns(patterns: string[], cwd?: string): string[]

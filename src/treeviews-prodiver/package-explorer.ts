@@ -138,7 +138,11 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
                 `${component.type}/${component.fullName}`
               ]))
             } else {
-              this.pkgMap = new Set(((await getPackageXml({ specificFiles: ['**/*'], sfdcConnector })).types || [])
+              this.pkgMap = new Set(((await getPackageXml({
+                specificFiles: ['**/*'],
+                sfdcConnector,
+                apiVersion: layout.apiVersion
+              })).types || [])
                 .flatMap(t => t.members.map(x => t.name[0] + '/' + x).concat([t.name[0]])))
             }
 

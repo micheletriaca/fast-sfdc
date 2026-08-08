@@ -6,7 +6,6 @@ import toolingService from '../services/tooling-service'
 import utils from '../utils/utils'
 import * as path from 'upath'
 import sfdcConnector from '../sfdc-connector'
-import packageService from '../services/package-service'
 import { buildXml } from 'sfdy/xml-utils'
 import createField from './create-field'
 import { resolveSourceLayout } from '../services/source-layout-service'
@@ -145,13 +144,6 @@ async function storeOnFileSystem (docBody: string, docBodyHtml: string, docMeta:
   }
 
   await utils.writeFile(`${p}-meta.xml`, metaString)
-  const sfdcConnector = await packageService.getSfdcConnector()
-  const metaPath = (
-    isAuraBundle
-      ? path.join(docType.folder, docName, docName + docType.extension)
-      : path.join(docType.folder, docName + docType.extension)
-  )
-  await packageService.addToPackage([metaPath], sfdcConnector)
   await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(vscode.Uri.file(p)))
 }
 

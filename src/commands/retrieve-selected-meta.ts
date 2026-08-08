@@ -1,6 +1,5 @@
 import retrieve from './retrieve'
 import treeview, { Dependency } from '../treeviews-prodiver/package-explorer'
-import packageService from '../services/package-service'
 
 export default async function retrieveSelected (item: Dependency | null, items: Dependency[]) {
   if (item && !items) items = [item]
@@ -13,7 +12,6 @@ export default async function retrieveSelected (item: Dependency | null, items: 
       metaToRetrieve.forEach(x => treeview.pkgMap?.add(x.fullPath))
       const pkgs = items.map(x => x.rootElement ? x.label : x.parentLabel)
       pkgs.forEach(x => treeview.pkgMap?.add(x))
-      packageService.addMetaToPackage(metaToRetrieve.map(x => x.fullPath))
     } finally {
       metaToRetrieve.forEach(x => { x.contextValue = '' })
       treeview.refreshItem(metaToRetrieve)

@@ -124,4 +124,19 @@ suite('Extension Tests', function () {
       fs.rmSync(root, { recursive: true, force: true })
     }
   })
+
+  test('Resolves a metadata project without package.xml', function () {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fast-sfdc-metadata-layout-'))
+    try {
+      const layout = resolveSourceLayout(root, {
+        stored: true,
+        sourceFormat: 'metadata',
+        apiVersion: '65.0'
+      })
+      assert.equal(layout.relativeRoot, 'src')
+      assert.equal(layout.apiVersion, '65.0')
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true })
+    }
+  })
 })
