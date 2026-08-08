@@ -9,6 +9,12 @@ export default async function fetch (sfdc: SfdcConnector, supportedChildTypes: s
   logger.appendLine('Fetching org metadata...')
   reporter.sendEvent('sfdcExplorer')
   const FOLDERED_METAS = ['Report', 'Dashboard', 'EmailTemplate', 'Document']
+  const FOLDER_TYPES: {[type: string]: string} = {
+    Report: 'ReportFolder',
+    Dashboard: 'DashboardFolder',
+    EmailTemplate: 'EmailFolder',
+    Document: 'DocumentFolder'
+  }
 
   const personRecordTypesRequest = supportedChildTypes.includes('RecordType')
     ? sfdc.query(`SELECT DeveloperName, NamespacePrefix, SobjectType, IsPersonType
@@ -54,7 +60,8 @@ export default async function fetch (sfdc: SfdcConnector, supportedChildTypes: s
 
   const appendAllFoldersToFolder = (x: {Type: string; DeveloperName: string}) => {
     const joinedFolders = joinFolders(x.Type, x.DeveloperName)
-    return { parent: x.Type, name: joinedFolders, key: x.Type + '/' + joinedFolders }
+    const folderType = FOLDER_TYPES[x.Type]
+    return { parent: folderType, name: joinedFolders, key: folderType + '/' + joinedFolders }
   }
 
   const s1 = _(allFolders.records)

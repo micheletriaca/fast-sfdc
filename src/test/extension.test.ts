@@ -184,6 +184,35 @@ suite('Extension Tests', function () {
     })
   })
 
+  test('Builds folder metadata inside its content type', function () {
+    const tree = buildMetadataTree([
+      { type: 'ReportFolder', fullName: 'Sales' },
+      { type: 'ReportFolder', fullName: 'Sales/Quarterly' },
+      { type: 'Report', fullName: 'Sales/Pipeline' },
+      { type: 'Report', fullName: 'Sales/Quarterly/Forecast' },
+      { type: 'DashboardFolder', fullName: 'Operations' }
+    ], getComponentModel())
+
+    assert.deepEqual(tree.map(node => node.label), ['Dashboard', 'Report'])
+    const reportRoot = tree[1]
+    const sales = reportRoot.children[0]
+    assert.equal(sales.label, 'Sales')
+    assert.deepEqual(sales.component, { type: 'ReportFolder', fullName: 'Sales' })
+    assert.deepEqual(sales.operationComponent, { type: 'Report', fullName: 'Sales/' })
+    assert.deepEqual(sales.children.map(node => node.label), ['Pipeline', 'Quarterly'])
+
+    const quarterly = sales.children[1]
+    assert.deepEqual(quarterly.component, {
+      type: 'ReportFolder',
+      fullName: 'Sales/Quarterly'
+    })
+    assert.deepEqual(quarterly.operationComponent, {
+      type: 'Report',
+      fullName: 'Sales/Quarterly/'
+    })
+    assert.deepEqual(quarterly.children.map(node => node.label), ['Forecast'])
+  })
+
   test('Normalizes person account record type aliases returned by Metadata API', function () {
     const aliases = getMetadataComponentAliases([
       {

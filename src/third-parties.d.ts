@@ -50,9 +50,17 @@ type ComponentModel = {
     label: string;
     component: MetadataComponent;
   } | undefined;
+  getFolderLocation(component: MetadataComponent): {
+    rootType: string;
+    folderType: string;
+    folderPath: string;
+    label: string;
+    isFolder: boolean;
+  } | undefined;
   getMetadataContainers(components: MetadataComponent[]): MetadataComponent[];
   getPackageComponents(components: MetadataComponent[]): MetadataComponent[];
   isMetadataContainerPath(fileName: string): boolean;
+  isMetadataFolderPath(fileName: string): boolean;
   resolveMetadata(entries: {fileName: string; data: Buffer}[]): Promise<MetadataComponent[]>;
 }
 

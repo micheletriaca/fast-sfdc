@@ -15,6 +15,13 @@ export type ComponentModel = {
     label: string;
     component: MetadataComponent;
   } | undefined;
+  getFolderLocation: (component: MetadataComponent) => {
+    rootType: string;
+    folderType: string;
+    folderPath: string;
+    label: string;
+    isFolder: boolean;
+  } | undefined;
   getPackageComponents: (components: MetadataComponent[]) => MetadataComponent[];
 }
 
@@ -84,8 +91,62 @@ export const buildMetadataTree = (
     return node
   }
 
+  const ensureFolderNode = (
+    rootType: string,
+    folderType: string,
+    folderPath: string
+  ): MetadataTreeNode => {
+    let parent = getRoot(rootType)
+    let currentPath = ''
+    for (const segment of folderPath.split('/').filter(Boolean)) {
+      currentPath = currentPath ? `${currentPath}/${segment}` : segment
+      const component = { type: folderType, fullName: currentPath }
+      const key = componentKey(component)
+      let node = nodes.get(key)
+      if (!node) {
+        node = {
+          key,
+          label: segment,
+          component,
+          operationComponent: model.getPackageComponents([component])[0],
+          children: []
+        }
+        nodes.set(key, node)
+        parent.children.push(node)
+      }
+      parent = node
+    }
+    return parent
+  }
+
   const uniqueComponents = [...new Map(components.map(component => [componentKey(component), component])).values()]
   for (const component of uniqueComponents) {
+    const folder = model.getFolderLocation(component)
+    if (folder?.isFolder) {
+      ensureFolderNode(folder.rootType, folder.folderType, folder.folderPath)
+    }
+  }
+  for (const component of uniqueComponents) {
+    const folder = model.getFolderLocation(component)
+    if (folder) {
+      if (folder.isFolder) continue
+      const parent = folder.folderPath
+        ? ensureFolderNode(folder.rootType, folder.folderType, folder.folderPath)
+        : getRoot(folder.rootType)
+      const key = componentKey(component)
+      if (!nodes.has(key)) {
+        const node = {
+          key,
+          label: folder.label,
+          component,
+          operationComponent: component,
+          children: []
+        }
+        nodes.set(key, node)
+        parent.children.push(node)
+      }
+      continue
+    }
     const location = model.getComponentLocation(component)
     if (!location) {
       getComponentNode(component)

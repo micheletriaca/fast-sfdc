@@ -71,10 +71,7 @@ export class Dependency extends vscode.TreeItem {
 
   get retrievableNodes (): Dependency[] {
     if (this.operationPath) return [this]
-    const directChildren = this.children.filter(child => child.operationPath)
-    return directChildren.length
-      ? directChildren
-      : this.children.flatMap(child => child.retrievableNodes)
+    return this.children.flatMap(child => child.retrievableNodes)
   }
 }
 
@@ -120,15 +117,25 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
                 apiVersion: layout.apiVersion
               })).types || [])
                 .flatMap(type => type.members.map(fullName => ({ type: type.name[0], fullName })))
-              const containerEntries = await Promise.all(sourceFiles
-                .filter(componentModel.isMetadataContainerPath)
+              const semanticEntries = await Promise.all(sourceFiles
+                .filter((fileName: string) =>
+                  componentModel.isMetadataContainerPath(fileName) ||
+                  componentModel.isMetadataFolderPath(fileName))
                 .map(async fileName => ({
                   fileName,
                   data: await fs.promises.readFile(path.resolve(layout.root, fileName))
                 })))
+              const semanticComponents = await componentModel.resolveMetadata(semanticEntries)
+              const folderPackageKeys = new Set(semanticComponents
+                .filter((component: MetadataComponent) => componentModel.getFolderLocation(component)?.isFolder)
+                .flatMap((component: MetadataComponent) => componentModel.getPackageComponents([component]))
+                .map((component: MetadataComponent) => componentKey({
+                  ...component,
+                  fullName: component.fullName.replace(/\/$/, '')
+                })))
               localComponents = [
-                ...packageComponents,
-                ...await componentModel.resolveMetadata(containerEntries)
+                ...packageComponents.filter(component => !folderPackageKeys.has(componentKey(component))),
+                ...semanticComponents
               ]
             }
 
