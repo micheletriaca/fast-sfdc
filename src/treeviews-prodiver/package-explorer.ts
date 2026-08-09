@@ -15,20 +15,34 @@ import { buildMetadataTree, componentKey, getSelectionState, MetadataComponent, 
 import globby = require('globby')
 
 export class Dependency extends vscode.TreeItem {
-  public readonly children: Dependency[];
-  public readonly hasWildcard: boolean;
+  public children: Dependency[];
+  public hasWildcard: boolean;
 
-  constructor (public readonly node: MetadataTreeNode) {
+  constructor (public node: MetadataTreeNode) {
     super(
       node.label,
       node.children.length
         ? vscode.TreeItemCollapsibleState.Collapsed
         : vscode.TreeItemCollapsibleState.None
     )
+    this.id = node.key
     this.hasWildcard = !!node.metadataType && (treeview.pkgMap?.has(`${node.metadataType}/*`) || false)
     this.children = node.children.map(child => new Dependency(child))
+    if (node.loading) this.contextValue = 'downloading'
     this.tooltip = this._tooltip
     this.description = this._description
+  }
+
+  updateFrom (next: Dependency) {
+    this.node = next.node
+    this.children = next.children
+    this.hasWildcard = next.hasWildcard
+    this.label = next.label
+    this.collapsibleState = next.collapsibleState
+    this.contextValue = next.contextValue
+    this.tooltip = next.tooltip
+    this.description = next.description
+    this.iconPath = this.getIconPath()
   }
 
   getIconPath (): vscode.ThemeIcon | {light: vscode.Uri; dark: vscode.Uri} {
@@ -77,11 +91,21 @@ export class Dependency extends vscode.TreeItem {
 class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
   private initialized = false
   private finalDependencyTree: Dependency[] = []
+  private localComponents: MetadataComponent[] = []
+  private orgComponents: MetadataComponent[] = []
+  private componentModel: ReturnType<typeof getComponentModel> | null = null
+  private visibleMetadataTypes = new Set<string>()
+  private treeView: vscode.TreeView<Dependency> | undefined
+  private initialRenderResolve: (() => void) | undefined
   private filtering = false
   public pkgMap: Set<string> | null = null
 
   getTreeItem (element: Dependency): vscode.TreeItem {
     element.iconPath = element.getIconPath()
+    if (element.node.metadataType && this.initialRenderResolve) {
+      this.initialRenderResolve()
+      this.initialRenderResolve = undefined
+    }
     return element
   }
 
@@ -90,84 +114,186 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
       .filter(x => !this.filtering || x.inPackage)
   }
 
+  attachTreeView (treeView: vscode.TreeView<Dependency>) {
+    this.treeView = treeView
+  }
+
+  private updateProgress (pendingTypes: number) {
+    if (!this.treeView) return
+    this.treeView.description = pendingTypes ? `${pendingTypes} loading…` : undefined
+    this.treeView.badge = pendingTypes
+      ? { value: pendingTypes, tooltip: `${pendingTypes} metadata types still loading` }
+      : undefined
+  }
+
+  private waitForInitialRender (): Promise<void> {
+    return new Promise(resolve => {
+      const timeout = setTimeout(() => {
+        this.initialRenderResolve = undefined
+        resolve()
+      }, 1000)
+      this.initialRenderResolve = () => {
+        clearTimeout(timeout)
+        resolve()
+      }
+    })
+  }
+
   async getChildren (element?: Dependency): Promise<Dependency[]> {
     if (element) {
       return element.children
     } else if (!this.initialized) {
-      return new Promise((resolve, reject) => {
-        statusbar.startLongJob(async done => {
-          try {
-            setBasePath(utils.getWorkspaceFolder())
-            const sfdcConnector = await pkgService.getSfdcConnector()
-            const sfdyConfig = configService.getSfdyConfigSync()
-            const layout = resolveSourceLayout(utils.getWorkspaceFolder(), sfdyConfig)
-            const packageMapping = await getPackageMapping(sfdcConnector)
-            const componentModel = getComponentModel(packageMapping)
-            const sourceFiles = await globby(['**/*'], { cwd: layout.root })
-            let localComponents: MetadataComponent[]
-            if (layout.isSourceFormat) {
-              const adapter = getAdapter(sfdyConfig, undefined, packageMapping)
-              if (!adapter) throw Error('Unable to initialize the source-format adapter')
-              localComponents = adapter.resolve(sourceFiles.filter(adapter.isMetadataPath))
-            } else {
-              const packageComponents = ((await getPackageXml({
-                specificFiles: ['**/*'],
-                sfdcConnector,
-                apiVersion: layout.apiVersion
-              })).types || [])
-                .flatMap(type => type.members.map(fullName => ({ type: type.name[0], fullName })))
-              const semanticEntries = await Promise.all(sourceFiles
-                .filter((fileName: string) =>
-                  componentModel.isMetadataContainerPath(fileName) ||
-                  componentModel.isMetadataFolderPath(fileName))
-                .map(async fileName => ({
-                  fileName,
-                  data: await fs.promises.readFile(path.resolve(layout.root, fileName))
-                })))
-              const semanticComponents = await componentModel.resolveMetadata(semanticEntries)
-              const folderPackageKeys = new Set(semanticComponents
-                .filter((component: MetadataComponent) => componentModel.getFolderLocation(component)?.isFolder)
-                .flatMap((component: MetadataComponent) => componentModel.getPackageComponents([component]))
-                .map((component: MetadataComponent) => componentKey({
-                  ...component,
-                  fullName: component.fullName.replace(/\/$/, '')
-                })))
-              localComponents = [
-                ...packageComponents.filter(component => !folderPackageKeys.has(componentKey(component))),
-                ...semanticComponents
-              ]
+      this.initialized = true
+      this.finalDependencyTree = [new Dependency({
+        key: 'loading/package-explorer',
+        label: 'Loading Package Explorer…',
+        loading: true,
+        children: []
+      })]
+      statusbar.startLongJob(async done => {
+        try {
+          setBasePath(utils.getWorkspaceFolder())
+          const sfdcConnector = await pkgService.getSfdcConnector()
+          const sfdyConfig = configService.getSfdyConfigSync()
+          const layout = resolveSourceLayout(utils.getWorkspaceFolder(), sfdyConfig)
+          const packageMapping = await getPackageMapping(sfdcConnector)
+          const componentModel = getComponentModel(packageMapping)
+          this.componentModel = componentModel
+          const orgTreePromise = fetch(
+            connector,
+            componentModel.getAddressableChildTypes(),
+            async (partialTree, pendingTypes) => {
+              const isInitialTree = this.visibleMetadataTypes.size === 0
+              const renderBarrier = isInitialTree ? this.waitForInitialRender() : undefined
+              this.orgComponents = Object.entries(partialTree)
+                .flatMap(([type, fullNames]) => fullNames.map(fullName => ({ type, fullName })))
+              pendingTypes.forEach(type => this.visibleMetadataTypes.add(type))
+              this.rebuild(pendingTypes)
+              this.updateProgress(pendingTypes.length)
+              if (renderBarrier) await renderBarrier
+              else await new Promise(resolve => setTimeout(resolve, 0))
             }
-
-            this.pkgMap = new Set(localComponents.map(componentKey))
-            const dependencyTree: {[key: string]: string[]} = await fetch(
-              connector,
-              componentModel.getAddressableChildTypes()
-            )
-            const orgComponents = Object.entries(dependencyTree)
-              .flatMap(([type, fullNames]) => fullNames.map(fullName => ({ type, fullName })))
-            this.finalDependencyTree = buildMetadataTree(
-              [...localComponents, ...orgComponents],
-              componentModel
-            ).map(node => new Dependency(node))
-            resolve(this.calcItems())
-            this.initialized = true
-            done('👍🏻')
-          } catch (e) {
-            done('👎🏻')
-            reject(e)
+          )
+          const sourceFiles = await globby(['**/*'], { cwd: layout.root })
+          let localComponents: MetadataComponent[]
+          if (layout.isSourceFormat) {
+            const adapter = getAdapter(sfdyConfig, undefined, packageMapping)
+            if (!adapter) throw Error('Unable to initialize the source-format adapter')
+            localComponents = adapter.resolve(sourceFiles.filter(adapter.isMetadataPath))
+          } else {
+            const packageComponents = ((await getPackageXml({
+              specificFiles: ['**/*'],
+              sfdcConnector,
+              apiVersion: layout.apiVersion
+            })).types || [])
+              .flatMap(type => type.members.map(fullName => ({ type: type.name[0], fullName })))
+            const semanticEntries = await Promise.all(sourceFiles
+              .filter((fileName: string) =>
+                componentModel.isMetadataContainerPath(fileName) ||
+                  componentModel.isMetadataFolderPath(fileName))
+              .map(async fileName => ({
+                fileName,
+                data: await fs.promises.readFile(path.resolve(layout.root, fileName))
+              })))
+            const semanticComponents = await componentModel.resolveMetadata(semanticEntries)
+            const folderPackageKeys = new Set(semanticComponents
+              .filter((component: MetadataComponent) => componentModel.getFolderLocation(component)?.isFolder)
+              .flatMap((component: MetadataComponent) => componentModel.getPackageComponents([component]))
+              .map((component: MetadataComponent) => componentKey({
+                ...component,
+                fullName: component.fullName.replace(/\/$/, '')
+              })))
+            localComponents = [
+              ...packageComponents.filter(component => !folderPackageKeys.has(componentKey(component))),
+              ...semanticComponents
+            ]
           }
-        })
+
+          this.pkgMap = new Set(localComponents.map(componentKey))
+          this.localComponents = localComponents
+          const dependencyTree: {[key: string]: string[]} = await orgTreePromise
+          this.orgComponents = Object.entries(dependencyTree)
+            .flatMap(([type, fullNames]) => fullNames.map(fullName => ({ type, fullName })))
+          this.rebuild([])
+          this.updateProgress(0)
+          done('👍🏻')
+        } catch (e) {
+          done('👎🏻')
+          this.updateProgress(0)
+          this.finalDependencyTree = [new Dependency({
+            key: 'error/package-explorer',
+            label: `Unable to load Package Explorer: ${String(e?.message || e)}`,
+            children: []
+          })]
+          this._onDidChangeTreeData.fire(undefined)
+        }
       })
+      return this.calcItems()
     } else {
       return this.calcItems()
     }
   }
 
-  public _onDidChangeTreeData: vscode.EventEmitter<Dependency | undefined> = new vscode.EventEmitter<Dependency | undefined>();
-  readonly onDidChangeTreeData: vscode.Event<Dependency | undefined> = this._onDidChangeTreeData.event;
+  private rebuild (pendingTypes: string[]) {
+    if (!this.componentModel) return
+    const roots = buildMetadataTree(
+      [...this.localComponents, ...this.orgComponents],
+      this.componentModel
+    )
+    const rootsByType = new Map(roots.map(root => [root.metadataType, root]))
+    const pending = new Set(pendingTypes)
+    for (const metadataType of pending) {
+      const existing = rootsByType.get(metadataType)
+      if (existing) {
+        existing.loading = pending.has(metadataType)
+      } else {
+        roots.push({
+          key: `type/${metadataType}`,
+          label: metadataType,
+          metadataType,
+          loading: pending.has(metadataType),
+          children: []
+        })
+      }
+    }
+    roots.sort((left, right) => left.label.localeCompare(right.label))
+    const previousRoots = new Map(this.finalDependencyTree.map(root => [root.node.key, root]))
+    const changed: Dependency[] = []
+    const descendantKeys = (item: Dependency): string[] => [
+      item.node.key,
+      ...item.children.flatMap(descendantKeys)
+    ]
+    let structureChanged = roots.length !== this.finalDependencyTree.length
+    this.finalDependencyTree = roots.map(node => {
+      const next = new Dependency(node)
+      const previous = previousRoots.get(node.key)
+      if (!previous) {
+        structureChanged = true
+        return next
+      }
+      const changedItem = previous.node.loading !== node.loading ||
+        descendantKeys(previous).join('\n') !== descendantKeys(next).join('\n')
+      previous.updateFrom(next)
+      if (changedItem) changed.push(previous)
+      previousRoots.delete(node.key)
+      return previous
+    })
+    if (previousRoots.size) structureChanged = true
+    if (structureChanged) this._onDidChangeTreeData.fire(undefined)
+    else if (changed.length) this._onDidChangeTreeData.fire(changed)
+  }
+
+  public _onDidChangeTreeData = new vscode.EventEmitter<Dependency | Dependency[] | undefined>();
+  readonly onDidChangeTreeData: vscode.Event<Dependency | Dependency[] | undefined> = this._onDidChangeTreeData.event;
 
   refresh = () => {
     treeview.finalDependencyTree = []
+    treeview.localComponents = []
+    treeview.orgComponents = []
+    treeview.componentModel = null
+    treeview.visibleMetadataTypes.clear()
+    treeview.initialRenderResolve = undefined
+    treeview.updateProgress(0)
     this._onDidChangeTreeData.fire(undefined)
     setTimeout(() => {
       this.initialized = false

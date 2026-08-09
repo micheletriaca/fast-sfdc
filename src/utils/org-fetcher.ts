@@ -5,7 +5,16 @@ import _ = require('exstream.js')
 const asArray = <T>(value: T | T[] | undefined): T[] =>
   Array.isArray(value) ? value : value ? [value] : []
 
-export default async function fetch (sfdc: SfdcConnector, supportedChildTypes: string[] = []) {
+export type OrgMetadataProgress = (
+  components: {[key: string]: string[]},
+  pendingTypes: string[]
+) => void | Promise<void>
+
+export default async function fetch (
+  sfdc: SfdcConnector,
+  supportedChildTypes: string[] = [],
+  onProgress?: OrgMetadataProgress
+) {
   logger.appendLine('Fetching org metadata...')
   reporter.sendEvent('sfdcExplorer')
   const FOLDERED_METAS = ['Report', 'Dashboard', 'EmailTemplate', 'Document']
@@ -25,9 +34,25 @@ export default async function fetch (sfdc: SfdcConnector, supportedChildTypes: s
       return { records: [] }
     })
     : Promise.resolve({ records: [] })
-  const [allFolders, metadataDescription, personRecordTypes] = await Promise.all([
-    sfdc.query('SELECT Id, ParentId, NamespacePrefix, DeveloperName, Type FROM Folder WHERE DeveloperName != null', true),
-    sfdc.describeMetadata(),
+  const allFoldersRequest = sfdc.query(
+    'SELECT Id, ParentId, NamespacePrefix, DeveloperName, Type FROM Folder WHERE DeveloperName != null',
+    true
+  )
+  const metadataDescription = await sfdc.describeMetadata()
+  const supportedChildren = new Set(supportedChildTypes)
+  const metadataTypes = [...new Set(asArray(metadataDescription.metadataObjects)
+    .filter((metadata: {inFolder: string}) => metadata.inFolder !== 'true')
+    .flatMap((metadata: {xmlName: string; childXmlNames?: string | string[]}) => [
+      metadata.xmlName,
+      ...asArray(metadata.childXmlNames).filter(type => supportedChildren.has(type))
+    ]))]
+
+  // As soon as describeMetadata returns, render the complete top level. Folder
+  // discovery and component listing can continue without holding back the tree.
+  await onProgress?.({}, [...new Set([...metadataTypes, ...FOLDERED_METAS])].sort())
+
+  const [allFolders, personRecordTypes] = await Promise.all([
+    allFoldersRequest,
     personRecordTypesRequest
   ])
   const componentAliases = getMetadataComponentAliases(personRecordTypes.records || [])
@@ -68,53 +93,111 @@ export default async function fetch (sfdc: SfdcConnector, supportedChildTypes: s
     return { parent: folderType, name: joinedFolders, key: folderType + '/' + joinedFolders }
   }
 
-  const s1 = _(allFolders.records)
+  const folderQueries = _(allFolders.records)
     .filter((x: {Type: string}) => FOLDERED_METAS.includes(x.Type))
     .map((x: {Type: any; DeveloperName: any}) => ({ type: x.Type, folder: x.DeveloperName }))
-    .tap((x: {type: string; folder: string}) => logger.appendLine(`Fetching folder ${x.folder}...`))
-    .batch(3)
-    .map((metas: any) => sfdc.listMetadata(metas))
-    .resolve(10, false)
-    .flatMap((x: {result: any}) => x || [])
-    .map(appendAllFoldersToFilename)
-    .map((x: {type: string; fullName: string}) => ({ parent: x.type, name: x.fullName, key: x.type + '/' + x.fullName }))
+    .values() as {type: string; folder: string}[]
 
-  const s2 = _(allFolders.records)
+  const folderEntries = _(allFolders.records)
     .reject((x: {DeveloperName: string}) => x.DeveloperName === 'unfiled$public')
     .map(appendAllFoldersToFolder)
+    .values() as {parent: string; name: string; key: string}[]
 
-  const supportedChildren = new Set(supportedChildTypes)
-  const metadataTypes = [...new Set(asArray(metadataDescription.metadataObjects)
-    .filter((metadata: {inFolder: string}) => metadata.inFolder !== 'true')
-    .flatMap((metadata: {xmlName: string; childXmlNames?: string | string[]}) => [
-      metadata.xmlName,
-      ...asArray(metadata.childXmlNames).filter(type => supportedChildren.has(type))
-    ]))]
+  const metadataQueries = metadataTypes.map(type => ({ type }))
+  const remainingByType = new Map<string, number>()
+  for (const query of [...folderQueries, ...metadataQueries]) {
+    remainingByType.set(query.type, (remainingByType.get(query.type) || 0) + 1)
+  }
 
-  const s3 = _(metadataTypes)
-    .map((x: string) => ({ type: x }))
-    .tap((x: {type: string}) => logger.appendLine(`Fetching metadata ${x.type}...`))
-    .batch(3)
-    .map((x: any) => sfdc.listMetadata(x))
-    .resolve(10, false)
-    .flatMap((x: any) => x || [])
-    .filter((x:any) => x.manageableState !== 'installed')
-    .map((x: {fileName: string; type: string; fullName: string}) => {
-      if (x.fileName.startsWith('standardValueSetTranslations')) x.type = 'StandardValueSetTranslation'
-      if (x.fileName.startsWith('globalValueSetTranslations')) x.type = 'GlobalValueSetTranslation'
-      const key = x.type + '/' + x.fullName
-      const fullName = componentAliases.get(key) || x.fullName
-      return { parent: x.type, name: fullName, key: x.type + '/' + fullName }
+  const entries = new Map<string, {parent: string; name: string; key: string}>()
+  folderEntries.forEach(entry => entries.set(entry.key, entry))
+
+  const snapshot = () => Object.fromEntries(
+    [...entries.values()]
+      .sort((left, right) => left.key.localeCompare(right.key))
+      .reduce((groups, entry) => {
+        const names = groups.get(entry.parent) || []
+        names.push(entry.name)
+        groups.set(entry.parent, names)
+        return groups
+      }, new Map<string, string[]>())
+  )
+  let lastProgressAt = 0
+  let progressInFlight: Promise<void> | undefined
+  let progressDirty = false
+  let progressFailure: any
+  const emitProgress = (): Promise<void> => {
+    progressDirty = true
+    if (progressInFlight) return progressInFlight
+    progressInFlight = (async () => {
+      while (progressDirty) {
+        progressDirty = false
+        const delay = Math.max(0, 1000 - (Date.now() - lastProgressAt))
+        if (delay) await new Promise(resolve => setTimeout(resolve, delay))
+        // Build the snapshot after the delay so every response received during
+        // this second is folded into one TreeView update.
+        const pendingTypes = [...remainingByType.entries()]
+          .filter(([, remaining]) => remaining > 0)
+          .map(([type]) => type)
+          .sort()
+        await onProgress?.(snapshot(), pendingTypes)
+        lastProgressAt = Date.now()
+      }
+    })().finally(() => {
+      progressInFlight = undefined
     })
+    return progressInFlight
+  }
+  await emitProgress()
 
-  return await _([s1, s2, s3])
-    .merge()
-    .uniqBy('key')
-    .sortBy((a: {key: string}, b: {key: string}) => a.key > b.key ? 1 : -1)
-    .groupBy((x: {parent: any}) => x.parent)
-    .flatMap(Object.entries)
-    .map(([k, v]: [string, {name: any}[]]) => [k, v.map(x => x.name)])
-    .collect()
-    .map(Object.fromEntries)
-    .value()
+  const chunk = <T>(items: T[], size: number): T[][] => {
+    const chunks: T[][] = []
+    for (let index = 0; index < items.length; index += size) chunks.push(items.slice(index, index + size))
+    return chunks
+  }
+
+  const fetchBatches = async <T extends {type: string; folder?: string}> (
+    queries: T[],
+    transform: (result: any) => {parent: string; name: string; key: string} | undefined
+  ) => {
+    const batches = chunk(queries, 3)
+    let nextBatch = 0
+    const worker = async () => {
+      while (nextBatch < batches.length) {
+        const batch = batches[nextBatch++]
+        batch.forEach(query => logger.appendLine(
+          query.folder ? `Fetching folder ${query.folder}...` : `Fetching metadata ${query.type}...`
+        ))
+        const results = asArray(await sfdc.listMetadata(batch))
+        results.map(transform).filter(Boolean).forEach(entry => {
+          const value = entry as {parent: string; name: string; key: string}
+          entries.set(value.key, value)
+        })
+        batch.forEach(query => remainingByType.set(query.type, (remainingByType.get(query.type) || 1) - 1))
+        // Rendering is intentionally decoupled from network throughput.
+        emitProgress().catch(error => { progressFailure = error })
+      }
+    }
+    // Network concurrency is independent from the UI refresh cadence: results
+    // are folded into the single aggregated TreeView update emitted each second.
+    await Promise.all(Array.from({ length: Math.min(10, batches.length) }, worker))
+  }
+
+  await fetchBatches(metadataQueries, (x: {fileName: string; type: string; fullName: string; manageableState?: string}) => {
+    if (x.manageableState === 'installed') return undefined
+    if (x.fileName.startsWith('standardValueSetTranslations')) x.type = 'StandardValueSetTranslation'
+    if (x.fileName.startsWith('globalValueSetTranslations')) x.type = 'GlobalValueSetTranslation'
+    const key = x.type + '/' + x.fullName
+    const fullName = componentAliases.get(key) || x.fullName
+    return { parent: x.type, name: fullName, key: x.type + '/' + fullName }
+  })
+
+  await fetchBatches(folderQueries, result => {
+    const item = appendAllFoldersToFilename(result)
+    return { parent: item.type, name: item.fullName, key: item.type + '/' + item.fullName }
+  })
+  await emitProgress()
+  if (progressFailure) throw progressFailure
+
+  return snapshot()
 }

@@ -32,6 +32,7 @@ export type MetadataTreeNode = {
   component?: MetadataComponent;
   operationComponent?: MetadataComponent;
   sortOrder?: number;
+  loading?: boolean;
   children: MetadataTreeNode[];
 }
 

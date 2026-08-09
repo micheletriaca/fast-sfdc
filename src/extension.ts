@@ -59,6 +59,12 @@ export async function activate (ctx: ExtensionContext) {
   initializeLogger(ctx)
   statusBar.initialize(ctx)
   configService.initialize(ctx.secrets)
+  const packageExplorerView = window.createTreeView('packageEditor', {
+    treeDataProvider: packageTreeView,
+    showCollapseAll: true,
+    canSelectMany: true
+  })
+  packageTreeView.attachTreeView(packageExplorerView)
   ctx.subscriptions.push(...[
     workspace.onDidChangeWorkspaceFolders(() => activateExtension(ctx)),
     workspace.onDidSaveTextDocument(textDocument => cmds.compile(textDocument)),
@@ -96,11 +102,7 @@ export async function activate (ctx: ExtensionContext) {
     ], new CodeLensFls()),
     commands.registerCommand('FastSfdc.refreshPackageTreeview', packageTreeView.refresh),
     commands.registerCommand('FastSfdc.filterPackageTreeview', packageTreeView.filter),
-    window.createTreeView('packageEditor', {
-      treeDataProvider: packageTreeView,
-      showCollapseAll: true,
-      canSelectMany: true
-    })
+    packageExplorerView
   ])
   await activateExtension(ctx)
 }
