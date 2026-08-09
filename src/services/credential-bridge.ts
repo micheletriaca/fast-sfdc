@@ -6,7 +6,6 @@ export interface CredentialSettings {
 }
 
 export interface StoredFastConfig {
-  lastVersion?: string;
   currentCredentialId?: string;
   credentialSettings?: Record<string, CredentialSettings>;
   credentials?: ConfigCredential[];
@@ -15,7 +14,7 @@ export interface StoredFastConfig {
 
 export const toSharedCredential = (credential: ConfigCredential): CredentialProfile => ({
   id: credential.id,
-  alias: credential.alias || credential.username,
+  alias: credential.alias || credential.environment || credential.username,
   username: credential.username!,
   environment: credential.environment,
   instanceUrl: credential.instanceUrl,
@@ -50,7 +49,6 @@ export const toStoredFastConfig = (config: Config): StoredFastConfig => {
     .map(credential => [credential.id!, { deployOnSave: credential.deployOnSave }]))
 
   return {
-    ...(config.lastVersion ? { lastVersion: config.lastVersion } : {}),
     ...(currentCredentialId ? { currentCredentialId } : {}),
     ...(Object.keys(credentialSettings).length ? { credentialSettings } : {})
   }

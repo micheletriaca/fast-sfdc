@@ -1,0 +1,75 @@
+name: Publish platform extensions
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Package ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: linux-x64
+          - runner: ubuntu-24.04-arm
+            target: linux-arm64
+          - runner: windows-2025
+            target: win32-x64
+          - runner: windows-11-arm
+            target: win32-arm64
+          - runner: macos-15-intel
+            target: darwin-x64
+          - runner: macos-15
+            target: darwin-arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Package VSIX
+        run: npx --yes @vscode/vsce@3.9.2 package --no-dependencies --target ${{ matrix.target }} --out fast-sfdc-${{ matrix.target }}.vsix
+      - uses: actions/upload-artifact@v7
+        with:
+          name: fast-sfdc-${{ matrix.target }}
+          path: fast-sfdc-${{ matrix.target }}.vsix
+          if-no-files-found: error
+
+  publish:
+    name: Publish to Visual Studio Marketplace
+    needs: package
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Verify release tag
+        run: node -e "const version = require('./package.json').version; if ('v' + version !== process.env.GITHUB_REF_NAME) throw new Error('Tag and package version do not match')"
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: fast-sfdc-*
+          path: vsix
+          merge-multiple: true
+      - name: Publish every platform package
+        shell: bash
+        run: |
+          for package in vsix/*.vsix; do
+            npx --yes @vscode/vsce@3.9.2 publish --oidc --packagePath "$package"
+          done

@@ -1,11 +1,12 @@
 import * as vscode from 'vscode'
 import { AnyObj, DoneCallback } from '../fast-sfdc'
 import configService from '../services/config-service'
+import { credentialLabel } from '../services/credential-label-service'
 
 let sbItem: vscode.StatusBarItem | undefined
 const MENU_PREFIX = () => {
   const cfg = configService.getConfigSync()
-  return `fast-sfdc - ${cfg.stored ? cfg.credentials[cfg.currentCredential].username : 'not logged in'}`
+  return `fast-sfdc - ${cfg.stored ? credentialLabel(cfg.credentials[cfg.currentCredential]) : 'not logged in'}`
 }
 
 let loadingCounter = 0

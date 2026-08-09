@@ -1,26 +1,33 @@
 import * as vscode from 'vscode'
 import configService from '../services/config-service'
 import { ConfigCredential } from '../fast-sfdc'
+import { credentialLabel } from '../services/credential-label-service'
 
-async function showCredsMenu (credentials: ConfigCredential[], currentCredential: number): Promise<string | undefined> {
+async function showCredsMenu (credentials: ConfigCredential[], currentCredential: number): Promise<number | undefined> {
   return (await vscode.window.showQuickPick(credentials
-    .filter((x, idx) => idx !== currentCredential)
-    .map((x, idx) => ({ val: x.username, label: '$(person) ' + x.username!, idx }))
-  , { placeHolder: 'Select credential to remove' }))?.val
+    .map((credential, credentialIndex) => ({ credential, credentialIndex }))
+    .filter(item => item.credentialIndex !== currentCredential)
+    .map(item => ({
+      credentialIndex: item.credentialIndex,
+      label: `$(person) ${credentialLabel(item.credential)}`,
+      description: item.credential.alias && item.credential.alias !== item.credential.environment
+        ? `target: ${item.credential.alias}`
+        : undefined
+    }))
+  , { placeHolder: 'Select credential to remove' }))?.credentialIndex
 }
 
 export default async function removeCredentials () {
   const config = await configService.getConfig()
-  const selUsername = await showCredsMenu(config.credentials, config.currentCredential)
-  if (!selUsername) return
+  const credentialIndex = await showCredsMenu(config.credentials, config.currentCredential)
+  if (credentialIndex === undefined) return
 
-  const credToRemoveIdx = config.credentials.findIndex(x => x.username === selUsername)
   const currentIdx = config.currentCredential
 
   await configService.storeConfig({
     ...config,
-    credentials: config.credentials.filter(x => x.username !== selUsername),
-    currentCredential: credToRemoveIdx < currentIdx ? currentIdx - 1 : currentIdx
+    credentials: config.credentials.filter((_, index) => index !== credentialIndex),
+    currentCredential: credentialIndex < currentIdx ? currentIdx - 1 : currentIdx
   })
   vscode.window.showInformationMessage('Credential removed!')
 }

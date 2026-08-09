@@ -127,12 +127,10 @@ type SfdyConfig = {
   apiVersion?: string;
   preDeployPlugins?: string[];
   postRetrievePlugins?: string[];
+  pluginRecipes?: Record<string, unknown>;
   renderers?: string[];
   staticResources?: {
     useBundleRenderer?: string[];
-  };
-  permissionSets?: {
-    stripUselessFls: boolean;
   };
   objectTranslations?: {
     stripUntranslatedFields?: boolean;

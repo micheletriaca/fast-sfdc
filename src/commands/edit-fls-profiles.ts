@@ -133,8 +133,10 @@ export default async function editFlsProfile (document: vscode.TextDocument) {
   const objFieldsMap = Object.fromEntries(objectFields.map(x => [selectedObjectName + '.' + x.apiName, x]))
   flsList.forEach(x => {
     if (x.field.startsWith(selectedObjectName + '.')) {
-      x.readable = objFieldsMap[x.field].readable
-      x.editable = objFieldsMap[x.field].editable
+      const objectField = objFieldsMap[x.field]
+      if (!objectField) return
+      x.readable = objectField.readable
+      x.editable = objectField.editable
     }
   })
 
@@ -147,11 +149,6 @@ export default async function editFlsProfile (document: vscode.TextDocument) {
   })
 
   Object.values(profileXml)[0].fieldPermissions = flsList
-
-  // Reapplying standard patches
-  if (sfdyCfg.permissionSets?.stripUselessFls && profileXml.PermissionSet) {
-    Object.values(profileXml)[0].fieldPermissions = flsList.filter(x => x.editable || x.readable)
-  }
 
   // Saving
   await utils.transformAndStoreFiles([{

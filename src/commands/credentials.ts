@@ -6,26 +6,8 @@ import utils from '../utils/utils'
 import { ConfigCredential } from '../fast-sfdc'
 import toolingService from '../services/tooling-service'
 import * as constants from 'sfdy/constants'
-import * as fs from 'fs'
-import * as path from 'upath'
+import { environmentIsAvailable } from '../services/credential-label-service'
 import auth = require('sfdy/auth')
-
-const CONFIG_GITIGNORE_ENTRY = `**/${configService.getConfigFileName()}`
-
-function ensureConfigIsGitIgnored () {
-  const gitIgnorePath = path.join(utils.getWorkspaceFolder(), '.gitignore')
-  const gitIgnore = fs.existsSync(gitIgnorePath) ? fs.readFileSync(gitIgnorePath, 'utf8') : ''
-  const existingEntries = new Set(gitIgnore
-    .split(/\r?\n/)
-    .map(line => line.trim())
-    .filter(line => line && !line.startsWith('#')))
-
-  const configFileName = configService.getConfigFileName()
-  if ([CONFIG_GITIGNORE_ENTRY, configFileName, `/${configFileName}`].some(entry => existingEntries.has(entry))) return
-
-  const separator = gitIgnore && !gitIgnore.endsWith('\n') ? '\n' : ''
-  fs.appendFileSync(gitIgnorePath, `${separator}${CONFIG_GITIGNORE_ENTRY}\n`)
-}
 
 async function getUrl (): Promise<string> {
   const res = await vscode.window.showQuickPick([
@@ -56,14 +38,6 @@ async function getAuthType (): Promise<string> {
   return (res && res.description) || ''
 }
 
-async function getDeployOnSave (): Promise<boolean> {
-  const res = await vscode.window.showQuickPick(
-    [{ label: 'true' }, { label: 'false' }],
-    { ignoreFocusOut: true, placeHolder: 'Compile on save?' }
-  )
-  return (res && res.label === 'true') || false
-}
-
 export default async function enterCredentials (addMode = false) {
   const config = await configService.getConfig()
 
@@ -82,12 +56,7 @@ export default async function enterCredentials (addMode = false) {
   if (creds.type === 'userpwd') {
     creds.instanceUrl = undefined
     creds.username = await utils.inputText('Please enter your SFDC username', creds.username, {
-      validateInput: v => {
-        if (config.credentials.find((x, idx) => x.username === v && (addMode || idx !== config.currentCredential))) {
-          return 'Username already configured'
-        }
-        return null
-      }
+      validateInput: value => value.trim() ? null : 'A username is required'
     })
     if (!creds.username) return
 
@@ -95,29 +64,28 @@ export default async function enterCredentials (addMode = false) {
     if (!creds.password) return
   }
 
-  creds.environment = await utils.inputText('Give this environment a name (it will be used in sfdy patches)', creds.environment)
-  creds.deployOnSave = await getDeployOnSave()
+  const currentCredential = addMode ? undefined : creds
+  creds.environment = await utils.inputText('Environment name (for example dev, uat or prod)', creds.environment || creds.alias, {
+    validateInput: value => {
+      if (!value.trim()) return 'An environment name is required'
+      if (!environmentIsAvailable(config.credentials, value, currentCredential)) return 'Environment already configured'
+      return null
+    }
+  })
+  if (!creds.environment) return
+  creds.environment = creds.environment.trim()
+  creds.alias = creds.environment
 
   if (creds.type === 'oauth2') {
     const infos = await auth(creds.url, constants.DEFAULT_CLIENT_ID, undefined, 3000)
     creds.username = infos.userInfo.username
     creds.password = infos.oauth2.refresh_token
     creds.instanceUrl = infos.oauth2.instance_url
-    if (config.credentials.find((x, idx) => x.username === creds.username && (addMode || idx !== config.currentCredential))) {
-      vscode.window.showErrorMessage('Username already configured')
-      return
-    }
   }
 
   if (addMode) {
     config.credentials.push(creds)
     config.currentCredential = config.credentials.length - 1
-  }
-
-  try {
-    ensureConfigIsGitIgnored()
-  } catch (_) {
-    vscode.window.showErrorMessage('There was a problem updating the .gitignore file')
   }
 
   await configService.storeConfig(config)

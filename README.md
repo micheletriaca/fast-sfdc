@@ -20,7 +20,7 @@ You can now authorize your org both using the canonical user+pass+token method o
 ### Deploy, Retrieve, Validate & Compile
 
 Canonical deployment and retrieval of metadata based on your package.xml configuration is fully featured, but you can also deploy or retrieve single files/folders!
-Compile on save for apex classes, Visualforce pages, triggers, Visualforce components, aura bundles and **lightning web components** is supported!
+Deploy on save for apex classes, Visualforce pages, triggers, Visualforce components, aura bundles and **lightning web components** is supported. Fast-Sfdc asks whether to enable it the first time an eligible file is saved for a credential; click the active credential in the status bar to change the preference later.
 
 ### Metadata Creation
 
@@ -75,8 +75,9 @@ Handle your static resources as uncompressed folders. Just select the static res
 
 Fast-Sfdc and the `sfdy` CLI share the encrypted project vault in
 `.sfdy/credentials.vault`; only its encryption key is stored in the operating-system
-keychain. `fastsfdc.json` contains only the selected credential UUID and Fast-Sfdc-specific
-settings such as compile on save. Existing configurations are migrated automatically.
+keychain. The selected credential and Fast-Sfdc-specific preferences live in
+`.sfdy/fast-sfdc.json`. Existing root-level `fastsfdc.json` files are migrated and removed
+automatically.
 
 ### Lightning Web Components
 

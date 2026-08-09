@@ -18,9 +18,6 @@ export default async function initSfdy () {
     configService.storeSfdyConfig({
       stored: true,
       apiVersion,
-      permissionSets: {
-        stripUselessFls: false
-      },
       objectTranslations: {
         stripUntranslatedFields: false,
         stripNotVersionedFields: false

@@ -12,6 +12,39 @@ import lwcMetadataFallbackService from '../services/lwc-metadata-fallback-servic
 import { resolveSourceLayout } from '../services/source-layout-service'
 import minimatch = require('minimatch')
 
+const ENABLE_DEPLOY_ON_SAVE = 'Enable'
+const KEEP_DEPLOY_ON_SAVE_DISABLED = 'Keep disabled'
+const deployOnSavePrompts = new Map<string, Promise<boolean>>()
+
+const shouldDeployOnSave = async (cfg: Awaited<ReturnType<typeof configService.getConfig>>): Promise<boolean> => {
+  const credential = cfg.credentials[cfg.currentCredential]
+  if (credential.deployOnSave !== undefined) return credential.deployOnSave
+
+  const target = credential.alias || credential.username || 'the active credential'
+  const key = credential.id || target
+  const pending = deployOnSavePrompts.get(key)
+  if (pending) return pending
+
+  const decision = (async () => {
+    const answer = await vscode.window.showInformationMessage(
+      `Deploy on save is not configured for ${target}. Enable it? You can change this later by clicking the active credential in the status bar.`,
+      ENABLE_DEPLOY_ON_SAVE,
+      KEEP_DEPLOY_ON_SAVE_DISABLED
+    )
+
+    if (!answer) return false
+    credential.deployOnSave = answer === ENABLE_DEPLOY_ON_SAVE
+    await configService.storeConfig(cfg)
+    return credential.deployOnSave
+  })()
+  deployOnSavePrompts.set(key, decision)
+  try {
+    return await decision
+  } finally {
+    deployOnSavePrompts.delete(key)
+  }
+}
+
 function updateProblemsPanel (errors: any[], doc: vscode.TextDocument) {
   diagnosticCollection.set(doc.uri, errors
     .filter(e => e.ProblemType !== 'Error')
@@ -178,12 +211,10 @@ const compileStaticResource = async (doc: vscode.TextDocument, done: DoneCallbac
 }
 
 export default async function compile (doc?: vscode.TextDocument) {
+  const triggeredBySave = !!doc
   const cfg = await configService.getConfig()
   const sfdyConfig = configService.getSfdyConfigSync()
   if (!cfg.stored) return
-
-  const creds = cfg.credentials[cfg.currentCredential]
-  if (doc && !creds.deployOnSave) return
 
   if (!doc && vscode.window.activeTextEditor && vscode.window.activeTextEditor.document) {
     doc = vscode.window.activeTextEditor.document
@@ -199,6 +230,7 @@ export default async function compile (doc?: vscode.TextDocument) {
   const fileName = layout.toRelativePath(doc.fileName)
 
   if ((sfdyConfig.excludeFiles || []).some(gl => minimatch(fileName, gl))) return
+  if (triggeredBySave && !await shouldDeployOnSave(cfg)) return
 
   StatusBar.startLongJob(done => {
     switch (type) {

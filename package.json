@@ -30,6 +30,9 @@
   "activationEvents": [
     "workspaceContains:**/package.xml",
     "workspaceContains:sfdx-project.json",
+    "workspaceContains:.sfdy.json",
+    "workspaceContains:**/.sfdy/fast-sfdc.json",
+    "workspaceContains:**/.sfdy/credentials.vault",
     "workspaceContains:**/fastsfdc.json"
   ],
   "main": "./dist/extension",
@@ -170,6 +173,10 @@
       {
         "command": "FastSfdc.configureStaticResourceBundles",
         "title": "Fast-Sfdc: Configure static resource bundles.."
+      },
+      {
+        "command": "FastSfdc.generatePlugin",
+        "title": "Fast-Sfdc: Generate sfdy plugin..."
       }
     ],
     "viewsContainers": {
@@ -262,6 +269,10 @@
         },
         {
           "command": "FastSfdc.initSfdy",
+          "when": "fast-sfdc-active && fast-sfdc-configured"
+        },
+        {
+          "command": "FastSfdc.generatePlugin",
           "when": "fast-sfdc-active && fast-sfdc-configured"
         }
       ],

@@ -10,7 +10,33 @@ import packageTreeView from './treeviews-prodiver/package-explorer'
 import * as vscode from 'vscode'
 import open = require('open')
 
-const activateExtension = async () => {
+const LAST_CHANGELOG_VERSION = 'fastSfdc.lastChangelogVersion'
+const CHANGELOG_DISABLED = 'fastSfdc.changelogDisabled'
+let changelogPromptedVersion: string | undefined
+
+const showChangelogForNewVersion = async (ctx: ExtensionContext) => {
+  const currentVersion = vscode.extensions.getExtension('m1ck83.fast-sfdc')?.packageJSON.version as string | undefined
+  if (!currentVersion || changelogPromptedVersion === currentVersion) return
+  if (ctx.globalState.get<boolean>(CHANGELOG_DISABLED, false)) return
+  if (ctx.globalState.get<string>(LAST_CHANGELOG_VERSION) === currentVersion) return
+
+  changelogPromptedVersion = currentVersion
+  const res = await vscode.window.showInformationMessage(
+    `Fast-Sfdc updated to version ${currentVersion}. Check out the changelog!`,
+    'Show me the news', 'Maybe later', 'Don\'t show again'
+  )
+  if (!res || res === 'Maybe later') return
+
+  reporter.sendEvent('newVersion', { clicked: res })
+  await ctx.globalState.update(LAST_CHANGELOG_VERSION, currentVersion)
+  if (res === 'Don\'t show again') {
+    await ctx.globalState.update(CHANGELOG_DISABLED, true)
+  } else {
+    open(`https://github.com/micheletriaca/fast-sfdc/blob/v${currentVersion}/CHANGELOG.md`)
+  }
+}
+
+const activateExtension = async (ctx: ExtensionContext) => {
   const isOneWorkspaceOpened = workspace.workspaceFolders?.length === 1
   if (isOneWorkspaceOpened) {
     commands.executeCommand('setContext', 'fast-sfdc-active', true)
@@ -21,21 +47,7 @@ const activateExtension = async () => {
     if (configService.consumeCredentialMigrationNotice()) {
       window.showInformationMessage('Fast-Sfdc credentials are now shared securely with the sfdy CLI.')
     }
-    const currentVersion = vscode.extensions.getExtension('m1ck83.fast-sfdc')?.packageJSON.version
-    if (cfg.stored && (!cfg.lastVersion || cfg.lastVersion !== currentVersion)) {
-      const res = await vscode.window.showInformationMessage(
-        `Fast-Sfdc updated to version ${currentVersion}. Checkout the CHANGELOG!`,
-        'Show me the news', 'Maybe later', 'Don\'t show again'
-      )
-      if (res && res !== 'Maybe later') {
-        reporter.sendEvent('newVersion', { clicked: res })
-        cfg.lastVersion = currentVersion
-        await configService.storeConfig(cfg)
-        if (res === 'Show me the news') {
-          open(`https://github.com/micheletriaca/fast-sfdc/blob/v${currentVersion}/CHANGELOG.md`)
-        }
-      }
-    }
+    await showChangelogForNewVersion(ctx)
   } else {
     statusBar.hideStatusBar()
     commands.executeCommand('setContext', 'fast-sfdc-active', false)
@@ -48,7 +60,7 @@ export async function activate (ctx: ExtensionContext) {
   statusBar.initialize(ctx)
   configService.initialize(ctx.secrets)
   ctx.subscriptions.push(...[
-    workspace.onDidChangeWorkspaceFolders(() => activateExtension()),
+    workspace.onDidChangeWorkspaceFolders(() => activateExtension(ctx)),
     workspace.onDidSaveTextDocument(textDocument => cmds.compile(textDocument)),
     commands.registerCommand('FastSfdc.compile', cmds.compile),
     commands.registerCommand('FastSfdc.statusBarClick', cmds.statusBarClick),
@@ -74,8 +86,14 @@ export async function activate (ctx: ExtensionContext) {
     commands.registerCommand('FastSfdc.runTest', cmds.runTest),
     commands.registerCommand('FastSfdc.initSfdy', cmds.initSfdy),
     commands.registerCommand('FastSfdc.editFlsProfiles', cmds.editFlsProfiles),
+    commands.registerCommand('FastSfdc.generatePlugin', cmds.generatePlugin),
     languages.registerCodeLensProvider({ language: 'apex', scheme: 'file' }, new CodeLensRunTest()),
-    languages.registerCodeLensProvider([{ pattern: '**/profiles/*.profile' }, { pattern: '**/permissionsets/*.permissionset' }], new CodeLensFls()),
+    languages.registerCodeLensProvider([
+      { pattern: '**/profiles/*.profile' },
+      { pattern: '**/profiles/*.profile-meta.xml' },
+      { pattern: '**/permissionsets/*.permissionset' },
+      { pattern: '**/permissionsets/*.permissionset-meta.xml' }
+    ], new CodeLensFls()),
     commands.registerCommand('FastSfdc.refreshPackageTreeview', packageTreeView.refresh),
     commands.registerCommand('FastSfdc.filterPackageTreeview', packageTreeView.filter),
     window.createTreeView('packageEditor', {
@@ -84,5 +102,5 @@ export async function activate (ctx: ExtensionContext) {
       canSelectMany: true
     })
   ])
-  await activateExtension()
+  await activateExtension(ctx)
 }

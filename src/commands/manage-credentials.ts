@@ -6,39 +6,48 @@ import { ConfigCredential } from '../fast-sfdc'
 import toolingService from '../services/tooling-service'
 import { prompt } from '../utils/field-builders'
 import logger from '../logger'
+import { credentialLabel } from '../services/credential-label-service'
 import open = require('open')
 
 const ADD_OTHER_CREDENTIAL = -2
 const REMOVE_CREDENTIAL = -3
 const REPLACE_CREDENTIAL = -4
-const TOGGLE_COMPILE_ON_SAVE = -5
+const TOGGLE_DEPLOY_ON_SAVE = -5
 const OPEN_SALESFORCE_IN_BROWSER = -6
 const OPEN_SALESFORCE_IN_BROWSER_CLASSIC = -7
 
 async function showCredsMenu (credentials: ConfigCredential[], currentCredential: number): Promise<number> {
+  type CredentialMenuItem = vscode.QuickPickItem & { credentialIndex?: number; action?: number }
+  const items: CredentialMenuItem[] = [
+    { label: '$(cloud) Open Salesforce setup in browser (lex)', action: OPEN_SALESFORCE_IN_BROWSER },
+    { label: '$(cloud) Open Salesforce setup in browser (classic)', action: OPEN_SALESFORCE_IN_BROWSER_CLASSIC },
+    ...credentials
+      .map((credential, credentialIndex) => ({ credential, credentialIndex }))
+      .filter(item => item.credentialIndex !== currentCredential)
+      .map(item => ({
+        label: `$(person) ${credentialLabel(item.credential)}`,
+        description: item.credential.alias && item.credential.alias !== item.credential.environment
+          ? `target: ${item.credential.alias}`
+          : undefined,
+        credentialIndex: item.credentialIndex
+      })),
+    { label: '$(add) Add credential...', action: ADD_OTHER_CREDENTIAL },
+    { label: '$(remove) Remove credential...', action: REMOVE_CREDENTIAL },
+    { label: '$(replace) Replace current credential...', action: REPLACE_CREDENTIAL },
+    { label: '$(symbol-null) Change deploy on save...', action: TOGGLE_DEPLOY_ON_SAVE }
+  ]
+
   const res = await vscode.window.showQuickPick(
-    [
-      { label: '$(cloud) Open Salesforce setup in browser (lex)', hidden: credentials.length === 0 },
-      { label: '$(cloud) Open Salesforce setup in browser (classic)', hidden: credentials.length === 0 }
-    ].concat(credentials
-      .filter((x: any, y: number) => y !== currentCredential)
-      .map(x => ({ label: '$(person) ' + x.username, hidden: false }))
-    ).concat([
-      { label: '$(add) Add credential...', hidden: false },
-      { label: '$(remove) Remove credential...', hidden: credentials.length < 2 },
-      { label: '$(replace) Replace current credential...', hidden: credentials.length === 0 },
-      { label: '$(symbol-null) Toggle compile on save...', hidden: credentials.length === 0 }
-    ].filter(x => !x.hidden))
+    items.filter(item => {
+      if (item.action === OPEN_SALESFORCE_IN_BROWSER || item.action === OPEN_SALESFORCE_IN_BROWSER_CLASSIC) return credentials.length > 0
+      if (item.action === REMOVE_CREDENTIAL) return credentials.length > 1
+      if (item.action === REPLACE_CREDENTIAL || item.action === TOGGLE_DEPLOY_ON_SAVE) return credentials.length > 0
+      return true
+    })
   )
 
   if (!res) return -1
-  else if (res.label === '$(add) Add credential...') return ADD_OTHER_CREDENTIAL
-  else if (res.label === '$(remove) Remove credential...') return REMOVE_CREDENTIAL
-  else if (res.label === '$(replace) Replace current credential...') return REPLACE_CREDENTIAL
-  else if (res.label === '$(symbol-null) Toggle compile on save...') return TOGGLE_COMPILE_ON_SAVE
-  else if (res.label === '$(cloud) Open Salesforce setup in browser (lex)') return OPEN_SALESFORCE_IN_BROWSER
-  else if (res.label === '$(cloud) Open Salesforce setup in browser (classic)') return OPEN_SALESFORCE_IN_BROWSER_CLASSIC
-  else return credentials.findIndex(x => '$(person) ' + x.username === res.label)
+  return res.action === undefined ? res.credentialIndex! : res.action
 }
 
 export default async function changeCredentials () {
@@ -53,9 +62,10 @@ export default async function changeCredentials () {
     const urlToOpen = 'https://' + session.instanceHostname + '/secur/frontdoor.jsp?sid=' + encodeURIComponent(session.sessionId) + '&retURL=' + retUrl
     open(urlToOpen)
     return
-  } else if (credIdx === TOGGLE_COMPILE_ON_SAVE) {
-    const compileOnSave = config.credentials[config.currentCredential]?.deployOnSave || false
-    const newValue = await prompt(`Actual value: ${compileOnSave}`, undefined, [{ label: 'True', value: true }, { label: 'False', value: false }])()
+  } else if (credIdx === TOGGLE_DEPLOY_ON_SAVE) {
+    const deployOnSave = config.credentials[config.currentCredential]?.deployOnSave
+    const currentValue = deployOnSave === undefined ? 'not configured' : deployOnSave ? 'enabled' : 'disabled'
+    const newValue = await prompt(`Deploy on save is currently ${currentValue}`, undefined, [{ label: 'Enabled', value: true }, { label: 'Disabled', value: false }])()
     if (newValue !== undefined) {
       config.credentials[config.currentCredential].deployOnSave = newValue
       await configService.storeConfig(config)

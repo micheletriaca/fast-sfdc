@@ -15,6 +15,7 @@ import retrieveSelected from './retrieve-selected'
 import retrieveSelectedMeta from './retrieve-selected-meta'
 import configureStaticResourceBundles from './static-resource-bundles'
 import runTest from './run-test'
+import generatePlugin from './generate-plugin'
 import { reporter } from '../logger'
 import { TextDocument, Uri } from 'vscode'
 import * as vscode from 'vscode'
@@ -91,5 +92,9 @@ export default {
   editFlsProfiles: (document: vscode.TextDocument) => {
     reporter.sendEvent('editFlsProfiles')
     editFlsProfiles(document)
+  },
+  generatePlugin: () => {
+    reporter.sendEvent('generatePlugin')
+    generatePlugin()
   }
 }

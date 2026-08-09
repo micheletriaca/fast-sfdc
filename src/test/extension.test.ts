@@ -18,6 +18,8 @@ import * as constants from 'sfdy/constants'
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
+import { credentialLabel, environmentIsAvailable } from '../services/credential-label-service'
+import { buildPluginRecipe } from '../services/plugin-recipe-service'
 
 const requireModule = createRequire(__filename)
 
@@ -135,10 +137,9 @@ suite('Extension Tests', function () {
     assert.strictEqual(hydrated.deployOnSave, true)
   })
 
-  test('Stores only Fast-Sfdc credential references and preferences locally', function () {
+  test('Stores only the active credential and deploy-on-save preferences locally', function () {
     assert.deepEqual(toStoredFastConfig({
       stored: true,
-      lastVersion: '1.2.3',
       currentCredential: 1,
       credentials: [{
         id: 'dev-id',
@@ -157,13 +158,75 @@ suite('Extension Tests', function () {
         deployOnSave: true
       }]
     }), {
-      lastVersion: '1.2.3',
       currentCredentialId: 'uat-id',
       credentialSettings: {
         'dev-id': { deployOnSave: false },
         'uat-id': { deployOnSave: true }
       }
     })
+  })
+
+  test('Labels credentials by environment and allows duplicate usernames', function () {
+    const credentials = [{ id: 'dev-id', environment: 'dev', username: 'same@example.com' }, {
+      id: 'uat-id', environment: 'uat', username: 'same@example.com'
+    }]
+    assert.strictEqual(credentialLabel(credentials[0]), 'dev - same@example.com')
+    assert.strictEqual(environmentIsAvailable(credentials, 'prod'), true)
+    assert.strictEqual(environmentIsAvailable(credentials, 'DEV'), false)
+    assert.strictEqual(environmentIsAvailable(credentials, 'dev', credentials[0]), true)
+  })
+
+  test('Generates environment-aware sfdy plugin recipes', function () {
+    const generated = buildPluginRecipe('environment-endpoints', ['uat', 'dev', 'dev'])
+    assert.strictEqual(generated.relativePath, 'sfdy-plugins/environment-endpoints.js')
+    assert.deepEqual(generated.configuration, {
+      gitUrl: 'https://service.example.invalid',
+      urlsByEnvironment: {
+        dev: 'TODO: set endpoint for dev',
+        uat: 'TODO: set endpoint for uat'
+      }
+    })
+    assert.match(generated.source, /stage: 'metadata'/)
+    assert.match(generated.source, /target\.environment/)
+    assert.match(generated.source, /namedCredentials\/\*\.namedCredential/)
+    assert.match(generated.source, /^\/\*\*[\s\S]*dev can use a test server while prod uses the real server/)
+    for (const recipe of ['environment-endpoints', 'workflow-emails', 'custom-metadata-values'] as const) {
+      const module = { exports: {} as any }
+      // eslint-disable-next-line no-new-func
+      Function('require', 'module', 'exports', buildPluginRecipe(recipe, ['dev']).source)(requireModule, module, module.exports)
+      assert.strictEqual(module.exports.apiVersion, 2)
+    }
+  })
+
+  test('Generated endpoint plugin remaps deploy values', async function () {
+    const generated = buildPluginRecipe('environment-endpoints', ['dev'])
+    const module = { exports: {} as any }
+    // eslint-disable-next-line no-new-func
+    Function('require', 'module', 'exports', generated.source)(requireModule, module, module.exports)
+    const { FileTree } = requireModule('sfdy/plugin')
+    const tree = new FileTree({
+      files: [{
+        path: 'namedCredentials/Backend.namedCredential',
+        contents: '<NamedCredential xmlns="http://soap.sforce.com/2006/04/metadata"><endpoint>https://service.example.invalid</endpoint></NamedCredential>'
+      }]
+    })
+    await module.exports.onDeploy({
+      files: tree.files,
+      target: { environment: 'dev' },
+      config: {
+        pluginRecipes: {
+          environmentEndpoints: {
+            gitUrl: 'https://service.example.invalid',
+            urlsByEnvironment: { dev: 'https://dev.example.com' }
+          }
+        }
+      },
+      log: { info: (message: string) => assert.ok(message) }
+    })
+    assert.match(
+      await tree.files.get('namedCredentials/Backend.namedCredential').readText(),
+      /https:\/\/dev\.example\.com/
+    )
   })
 
   test('Omits an unavailable client secret from refresh-token requests', function () {
