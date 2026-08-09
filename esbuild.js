@@ -7,11 +7,9 @@ const fs = require('fs')
 const production = process.argv.includes('--production')
 const watch = process.argv.includes('--watch')
 
+/** @type {import('esbuild').Plugin} */
 const watchPlugin = {
   name: 'watch-reporter',
-  /**
-   * @param {{ onStart: (arg0: () => void) => void; onEnd: (arg0: () => void) => void; }} build
-   */
   setup (build) {
     build.onStart(() => {
       console.log('[watch] build started')
@@ -22,6 +20,7 @@ const watchPlugin = {
   }
 }
 
+/** @type {import('esbuild').Plugin} */
 const sfdyLoggingPlugin = {
   name: 'sfdy-logging',
   setup (build) {
