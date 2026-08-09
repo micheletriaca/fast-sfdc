@@ -40,6 +40,7 @@ async function main () {
     bundle: true,
     external: ['vscode'],
     format: 'cjs',
+    loader: { '.node': 'copy' },
     minify: production,
     outfile: 'dist/extension.js',
     platform: 'node',

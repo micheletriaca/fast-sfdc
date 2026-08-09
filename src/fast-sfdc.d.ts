@@ -1,8 +1,11 @@
 export interface ConfigCredential {
   id?: string;
+  alias?: string;
   type?: string;
   username?: string;
   password?: string;
+  clientId?: string;
+  clientSecret?: string;
   instanceUrl?: string;
   environment?: string;
   url?: string;

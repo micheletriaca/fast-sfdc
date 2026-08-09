@@ -12,6 +12,9 @@ import { resolveSourceLayout } from '../services/source-layout-service'
 import { buildMetadataTree, getSelectionState } from '../services/metadata-tree-service'
 import { getMetadataComponentAliases } from '../services/metadata-component-aliases'
 import { getComponentModel } from 'sfdy/format-adapters'
+import { fromSharedCredential, toSharedCredential, toStoredFastConfig } from '../services/credential-bridge'
+import { buildRefreshTokenRequest } from '../services/oauth-utils'
+import * as constants from 'sfdy/constants'
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
@@ -101,11 +104,83 @@ suite('Extension Tests', function () {
 
   test('Loads sfdy through its public entry points', function () {
     for (const entryPoint of [
-      'auth', 'constants', 'deploy', 'format-adapters', 'package-utils', 'path-service',
+      'auth', 'constants', 'credentials', 'deploy', 'format-adapters', 'package-utils', 'path-service',
       'retrieve', 'sfdc-utils', 'transformer', 'xml-utils'
     ]) {
       assert.doesNotThrow(() => requireModule(`sfdy/${entryPoint}`))
     }
+  })
+
+  test('Maps OAuth credentials to and from the shared sfdy vault', function () {
+    const shared = toSharedCredential({
+      id: 'credential-id',
+      alias: 'acme-dev',
+      type: 'oauth2',
+      username: 'developer@example.com',
+      password: 'refresh-token',
+      instanceUrl: 'https://acme.my.salesforce.com',
+      environment: 'dev',
+      deployOnSave: true
+    })
+    assert.strictEqual(shared.refreshToken, 'refresh-token')
+    assert.strictEqual(shared.password, undefined)
+
+    const hydrated = fromSharedCredential({
+      ...shared,
+      id: 'credential-id',
+      alias: 'acme-dev'
+    }, { deployOnSave: true })
+    assert.strictEqual(hydrated.password, 'refresh-token')
+    assert.strictEqual(hydrated.type, 'oauth2')
+    assert.strictEqual(hydrated.deployOnSave, true)
+  })
+
+  test('Stores only Fast-Sfdc credential references and preferences locally', function () {
+    assert.deepEqual(toStoredFastConfig({
+      stored: true,
+      lastVersion: '1.2.3',
+      currentCredential: 1,
+      credentials: [{
+        id: 'dev-id',
+        alias: 'dev',
+        username: 'developer@example.com',
+        password: 'secret',
+        instanceUrl: 'https://example.my.salesforce.com',
+        environment: 'dev',
+        type: 'oauth2',
+        deployOnSave: false
+      }, {
+        id: 'uat-id',
+        alias: 'uat',
+        username: 'developer@example.com.uat',
+        password: 'another-secret',
+        deployOnSave: true
+      }]
+    }), {
+      lastVersion: '1.2.3',
+      currentCredentialId: 'uat-id',
+      credentialSettings: {
+        'dev-id': { deployOnSave: false },
+        'uat-id': { deployOnSave: true }
+      }
+    })
+  })
+
+  test('Omits an unavailable client secret from refresh-token requests', function () {
+    assert.deepEqual(buildRefreshTokenRequest({
+      type: 'oauth2',
+      password: 'refresh-token'
+    }), {
+      grant_type: 'refresh_token',
+      client_id: constants.DEFAULT_CLIENT_ID,
+      refresh_token: 'refresh-token'
+    })
+
+    assert.strictEqual(buildRefreshTokenRequest({
+      type: 'oauth2',
+      password: 'refresh-token',
+      clientSecret: 'connected-app-secret'
+    }).client_secret, 'connected-app-secret')
   })
 
   test('Resolves a standard source-format project without package.xml', function () {

@@ -67,7 +67,9 @@ const deployResource = async (bundleName: string, filePath: string, source: stri
         username: creds.username,
         password: creds.password,
         instanceUrl: creds.type === 'oauth2' ? creds.instanceUrl : undefined,
-        refreshToken: creds.type === 'oauth2' ? creds.password : undefined
+        refreshToken: creds.type === 'oauth2' ? creds.password : undefined,
+        clientId: creds.clientId,
+        clientSecret: creds.clientSecret
       },
       checkOnly: false,
       files: `lwc/${bundleName}/**/*`,

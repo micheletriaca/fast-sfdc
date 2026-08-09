@@ -37,7 +37,9 @@ export default function deploy (checkOnly = false, destructive = false, files: s
           username: creds.username,
           password: creds.password,
           instanceUrl: creds.type === 'oauth2' ? creds.instanceUrl : undefined,
-          refreshToken: creds.type === 'oauth2' ? creds.password : undefined
+          refreshToken: creds.type === 'oauth2' ? creds.password : undefined,
+          clientId: creds.clientId,
+          clientSecret: creds.clientSecret
         },
         checkOnly,
         config: sfdyConfig,

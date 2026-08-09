@@ -19,7 +19,7 @@ const activateExtension = async () => {
     statusBar.initStatusBar()
     commands.executeCommand('setContext', 'fast-sfdc-configured', cfg.stored && cfg.credentials.length > 0)
     if (configService.consumeCredentialMigrationNotice()) {
-      window.showInformationMessage('Fast-Sfdc credentials were moved from fastsfdc.json to your system keychain.')
+      window.showInformationMessage('Fast-Sfdc credentials are now shared securely with the sfdy CLI.')
     }
     const currentVersion = vscode.extensions.getExtension('m1ck83.fast-sfdc')?.packageJSON.version
     if (cfg.stored && (!cfg.lastVersion || cfg.lastVersion !== currentVersion)) {

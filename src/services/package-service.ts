@@ -22,7 +22,8 @@ export default {
       oauth2: loginOpts.type === 'oauth2' ? {
         instanceUrl: loginOpts.instanceUrl,
         refreshToken: loginOpts.password,
-        clientId: constants.DEFAULT_CLIENT_ID
+        clientId: loginOpts.clientId || constants.DEFAULT_CLIENT_ID,
+        clientSecret: loginOpts.clientSecret
       } : undefined,
       apiVersion
     })

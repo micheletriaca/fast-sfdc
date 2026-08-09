@@ -8,6 +8,36 @@ declare module 'sfdy/deploy'
 declare module 'sfdy/retrieve'
 declare module 'sfdy/auth'
 declare module 'sfdy/constants'
+declare module 'sfdy/credentials' {
+  export interface CredentialProfile {
+    id?: string;
+    alias?: string;
+    username: string;
+    environment?: string;
+    instanceUrl?: string;
+    refreshToken?: string;
+    clientId?: string;
+    clientSecret?: string;
+    password?: string;
+    serverUrl?: string;
+    authType?: string;
+  }
+  export interface CredentialMetadata extends Omit<CredentialProfile, 'refreshToken' | 'clientSecret' | 'password'> {
+    id: string;
+    alias: string;
+  }
+  export interface CredentialManager {
+    list(): Promise<CredentialMetadata[]>
+    get(selector: string): Promise<CredentialProfile & {id: string; alias: string}>
+    save(profile: CredentialProfile): Promise<CredentialProfile & {id: string; alias: string}>
+    remove(selector: string): Promise<boolean>
+  }
+  export function createCredentialManager(options?: {basePath?: string}): CredentialManager
+  export function list(): Promise<CredentialMetadata[]>
+  export function get(selector: string): Promise<CredentialProfile & {id: string; alias: string}>
+  export function save(profile: CredentialProfile): Promise<CredentialProfile & {id: string; alias: string}>
+  export function remove(selector: string): Promise<boolean>
+}
 declare module 'exstream.js'
 
 type GenericObject = { [key: string]: any };
@@ -24,6 +54,7 @@ declare module 'sfdy/sfdc-utils' {
       instanceUrl?: string;
       refreshToken?: string;
       clientId?: string;
+      clientSecret?: string;
     };
   }): SfdcConnector
 }

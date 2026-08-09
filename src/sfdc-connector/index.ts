@@ -1,9 +1,9 @@
 import { Config, MetaObj, StaticResourceObj, AuraObj, LwcObj, AuraBundle, DescribeMetadataResult, ListMetadataResult, ApexClassRecord, ApexClassMemberObj, LightningComponentResourceRecord } from '../fast-sfdc'
-import * as constants from 'sfdy/constants'
 import configService from '../services/config-service'
 import utils from '../utils/utils'
 import soapWithDebug from './soap-with-debug'
 import logger from '../logger'
+import { buildRefreshTokenRequest } from '../services/oauth-utils'
 import SfdcConn = require('node-salesforce-connection')
 
 let config: Config | undefined
@@ -15,11 +15,7 @@ const connect = async function (cfg?: Config) {
   const creds = config.credentials[config.currentCredential]
   apiVersion = await configService.getPackageXmlVersion()
   if (creds.type === 'oauth2') {
-    await conn.oauthToken(creds.instanceUrl?.replace('https://', ''), {
-      grant_type: 'refresh_token',
-      client_id: constants.DEFAULT_CLIENT_ID,
-      refresh_token: creds.password
-    })
+    await conn.oauthToken(creds.instanceUrl?.replace('https://', ''), buildRefreshTokenRequest(creds))
   } else {
     await conn.soapLogin({
       hostname: creds.url,

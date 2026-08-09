@@ -3,19 +3,23 @@ import * as path from 'upath'
 import * as fs from 'fs'
 import * as crypto from 'crypto'
 import { SecretStorage } from 'vscode'
+import * as sharedCredentials from 'sfdy/credentials'
 import utils from '../utils/utils'
 import { resolveSourceLayout } from './source-layout-service'
+import { fromSharedCredential, StoredFastConfig, toSharedCredential, toStoredFastConfig } from './credential-bridge'
 
 const CONFIG_NAME = 'fastsfdc.json'
 const SFDY_CONFIG_NAME = '.sfdy.json'
 
 const getCfgPath = () => path.join(utils.getWorkspaceFolder(), CONFIG_NAME)
 const getSfdyCfgPath = () => path.join(utils.getWorkspaceFolder(), SFDY_CONFIG_NAME)
-const SECRET_FIELDS = ['username', 'password', 'instanceUrl'] as const
+const SECRET_FIELDS = ['username', 'password', 'instanceUrl', 'clientSecret'] as const
 let secrets: SecretStorage | undefined
 let migratedCredentials = false
 let configCache: Config | undefined
 let configCachePath: string | undefined
+let credentialManager: sharedCredentials.CredentialManager | undefined
+let credentialManagerPath: string | undefined
 
 type SecretField = typeof SECRET_FIELDS[number]
 type CredentialSecret = Partial<Pick<ConfigCredential, SecretField>>
@@ -26,15 +30,18 @@ const getSecrets = (): SecretStorage => {
   if (!secrets) throw new Error('Fast-Sfdc secret storage has not been initialized')
   return secrets
 }
-const readStoredConfig = (): Config => {
+const readStoredConfig = (): StoredFastConfig & {stored: boolean} => {
   const cfgPath = getCfgPath()
-  if (!fs.existsSync(cfgPath)) return { stored: false, credentials: [], currentCredential: 0 }
+  if (!fs.existsSync(cfgPath)) return { stored: false }
   return { ...JSON.parse(fs.readFileSync(cfgPath, 'utf8')), stored: true }
 }
-const withoutSecrets = (credential: ConfigCredential): ConfigCredential => {
-  const sanitized = { ...credential }
-  SECRET_FIELDS.forEach(field => delete sanitized[field])
-  return sanitized
+const getCredentialManager = (): sharedCredentials.CredentialManager => {
+  const workspacePath = utils.getWorkspaceFolder()
+  if (!credentialManager || credentialManagerPath !== workspacePath) {
+    credentialManager = sharedCredentials.createCredentialManager({ basePath: workspacePath })
+    credentialManagerPath = workspacePath
+  }
+  return credentialManager
 }
 const getCredentialSecret = (credential: ConfigCredential): CredentialSecret => Object.fromEntries(
   SECRET_FIELDS.filter(field => credential[field] !== undefined).map(field => [field, credential[field]])
@@ -55,7 +62,9 @@ const cloneConfig = (config: Config): Config => ({
   ...config,
   credentials: config.credentials.map(credential => ({ ...credential }))
 })
-
+const storeLocalConfig = async (cfg: Config): Promise<void> => {
+  await utils.writeFile(getCfgPath(), JSON.stringify(toStoredFastConfig(cfg), undefined, 2))
+}
 export default {
   initialize (secretStorage: SecretStorage) {
     secrets = secretStorage
@@ -80,69 +89,96 @@ export default {
   getConfigSync (): Config {
     if (configCache && configCachePath === getCfgPath()) return cloneConfig(configCache)
     const config = readStoredConfig()
-    return { ...config, credentials: config.credentials.map(withoutSecrets) }
+    return { stored: false, lastVersion: config.lastVersion, credentials: [], currentCredential: 0 }
   },
 
   async getConfig (): Promise<Config> {
     const config = readStoredConfig()
-    if (!config.stored) {
-      configCache = config
-      configCachePath = getCfgPath()
-      return cloneConfig(config)
+    const credentialsVault = getCredentialManager()
+    const globalProfiles = await credentialsVault.list()
+    const globalByAlias = new Map(globalProfiles.map(profile => [profile.alias.toLowerCase(), profile]))
+    const localCredentials = (config.credentials || []).map(normalizeCredential)
+    let needsMigration = Array.isArray(config.credentials) || config.currentCredential !== undefined
+
+    for (const credential of localCredentials) {
+      const legacyCredentialId = credential.id!
+      const legacySecret = getCredentialSecret(credential)
+      const storedSecret = parseSecret(await getSecrets().get(secretKey(legacyCredentialId)))
+      const secret = { ...storedSecret, ...legacySecret }
+      if (Object.keys(secret).length === 0) continue
+
+      const hydrated = { ...credential, ...secret }
+      const existing = hydrated.alias ? globalByAlias.get(hydrated.alias.toLowerCase()) : undefined
+      const existingByUsername = hydrated.username ? globalProfiles.find(profile => profile.username === hydrated.username) : undefined
+      const matchingProfile = existing || existingByUsername
+      if (matchingProfile) {
+        hydrated.id = matchingProfile.id
+        hydrated.alias = matchingProfile.alias
+      }
+      const saved = await credentialsVault.save(toSharedCredential(hydrated))
+      credential.id = saved.id
+      credential.alias = saved.alias
+      await getSecrets().delete(secretKey(legacyCredentialId))
+      needsMigration = true
     }
 
-    let needsMigration = false
-    const credentials = await Promise.all(config.credentials.map(async storedCredential => {
-      const hadCredentialId = !!storedCredential.id
-      const credential = normalizeCredential(storedCredential)
-      const legacySecret = getCredentialSecret(credential)
-      const hasLegacySecret = Object.keys(legacySecret).length > 0
-      const storedSecret = parseSecret(await getSecrets().get(secretKey(credential.id!)))
-
-      if (!hadCredentialId || hasLegacySecret) {
-        await getSecrets().store(secretKey(credential.id!), JSON.stringify({ ...storedSecret, ...legacySecret }))
-        needsMigration = true
+    const profiles = await credentialsVault.list()
+    const localById = new Map(localCredentials.map(credential => [credential.id, credential]))
+    const localByAlias = new Map(localCredentials
+      .filter(credential => credential.alias)
+      .map(credential => [credential.alias!.toLowerCase(), credential]))
+    const credentials = await Promise.all(profiles.map(async profile => fromSharedCredential(
+      await credentialsVault.get(profile.id),
+      {
+        ...(localById.get(profile.id) || localByAlias.get(profile.alias.toLowerCase())),
+        ...config.credentialSettings?.[profile.id]
       }
-      return { ...withoutSecrets(credential), ...storedSecret, ...legacySecret }
-    }))
+    )))
 
+    const configuredCredential = localCredentials[config.currentCredential || 0]
+    let currentCredential = config.currentCredentialId
+      ? credentials.findIndex(credential => credential.id === config.currentCredentialId)
+      : configuredCredential
+        ? credentials.findIndex(credential => credential.id === configuredCredential.id || credential.alias === configuredCredential.alias)
+        : 0
+    if (currentCredential < 0) currentCredential = 0
+
+    const hydratedConfig: Config = {
+      lastVersion: config.lastVersion,
+      stored: credentials.length > 0,
+      credentials,
+      currentCredential
+    }
     if (needsMigration) {
-      await utils.writeFile(getCfgPath(), JSON.stringify({
-        ...config,
-        credentials: credentials.map(withoutSecrets),
-        stored: undefined
-      }, undefined, 2))
+      await storeLocalConfig(hydratedConfig)
       migratedCredentials = true
     }
-    configCache = { ...config, credentials, stored: true }
+    configCache = hydratedConfig
     configCachePath = getCfgPath()
-    return cloneConfig(configCache)
+    return cloneConfig(hydratedConfig)
   },
 
   async storeConfig (cfg: Config): Promise<void> {
-    const previousConfig = readStoredConfig()
-    const credentials = cfg.credentials.map(normalizeCredential)
-    const credentialIds = new Set(credentials.map(credential => credential.id))
+    const credentialsVault = getCredentialManager()
+    const previousCredentials = configCache && configCachePath === getCfgPath() ? configCache.credentials : []
+    const storedCredentials: ConfigCredential[] = []
+    for (const credential of cfg.credentials) {
+      const saved = await credentialsVault.save(toSharedCredential(credential))
+      credential.id = saved.id
+      credential.alias = saved.alias
+      storedCredentials.push(credential)
+      await getSecrets().delete(secretKey(saved.id))
+    }
 
-    await Promise.all(credentials.map(async credential => {
-      const secret = getCredentialSecret(credential)
-      if (Object.keys(secret).length > 0) {
-        await getSecrets().store(secretKey(credential.id!), JSON.stringify(secret))
-      }
-    }))
-
-    await utils.writeFile(getCfgPath(), JSON.stringify({
-      ...cfg,
-      credentials: credentials.map(withoutSecrets),
-      stored: undefined
-    }, undefined, 2))
-
-    configCache = { ...cfg, credentials, stored: true }
-    configCachePath = getCfgPath()
-
-    await Promise.all(previousConfig.credentials
+    const credentialIds = new Set(storedCredentials.map(credential => credential.id))
+    await Promise.all(previousCredentials
       .filter(credential => credential.id && !credentialIds.has(credential.id))
-      .map(credential => getSecrets().delete(secretKey(credential.id!))))
+      .map(credential => credentialsVault.remove(credential.id!)))
+
+    const storedConfig = { ...cfg, credentials: storedCredentials }
+    await storeLocalConfig(storedConfig)
+    configCache = { ...storedConfig, stored: true }
+    configCachePath = getCfgPath()
   },
 
   async storeSfdyConfig (cfg: SfdyConfig): Promise<void> {

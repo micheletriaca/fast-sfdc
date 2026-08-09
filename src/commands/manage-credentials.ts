@@ -5,6 +5,7 @@ import StatusBar from '../statusbar'
 import { ConfigCredential } from '../fast-sfdc'
 import toolingService from '../services/tooling-service'
 import { prompt } from '../utils/field-builders'
+import logger from '../logger'
 import open = require('open')
 
 const ADD_OTHER_CREDENTIAL = -2
@@ -80,7 +81,9 @@ export default async function changeCredentials () {
       vscode.window.showInformationMessage('Credentials ok!')
       done('👍🏻')
     } catch (error) {
-      vscode.window.showErrorMessage('Wrong credentials. Fix them to retry')
+      const message = error instanceof Error ? error.message : String(error)
+      logger.appendLine(`Unable to switch Salesforce credentials: ${message}`)
+      vscode.window.showErrorMessage(`Unable to switch Salesforce credentials: ${message}`)
       done('👎🏻')
     }
   })
