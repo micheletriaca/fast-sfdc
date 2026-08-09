@@ -102,6 +102,7 @@ export async function activate (ctx: ExtensionContext) {
     ], new CodeLensFls()),
     commands.registerCommand('FastSfdc.refreshPackageTreeview', packageTreeView.refresh),
     commands.registerCommand('FastSfdc.filterPackageTreeview', packageTreeView.filter),
+    commands.registerCommand('FastSfdc.showAllPackageTreeview', packageTreeView.filter),
     packageExplorerView
   ])
   await activateExtension(ctx)

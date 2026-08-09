@@ -90,8 +90,13 @@
     "commands": [
       {
         "command": "FastSfdc.filterPackageTreeview",
-        "title": "Show all metadata types / show project metadata types",
+        "title": "Show project metadata types",
         "icon": "$(filter)"
+      },
+      {
+        "command": "FastSfdc.showAllPackageTreeview",
+        "title": "Show all metadata types",
+        "icon": "$(filter-filled)"
       },
       {
         "command": "FastSfdc.refreshPackageTreeview",
@@ -332,7 +337,12 @@
       "view/title": [
         {
           "command": "FastSfdc.filterPackageTreeview",
-          "when": "view == packageEditor && fast-sfdc-active && fast-sfdc-configured",
+          "when": "view == packageEditor && fast-sfdc-active && fast-sfdc-configured && fast-sfdc-package-has-metadata && !fast-sfdc-package-filtering",
+          "group": "navigation"
+        },
+        {
+          "command": "FastSfdc.showAllPackageTreeview",
+          "when": "view == packageEditor && fast-sfdc-active && fast-sfdc-configured && fast-sfdc-package-has-metadata && fast-sfdc-package-filtering",
           "group": "navigation"
         },
         {

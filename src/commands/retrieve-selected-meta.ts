@@ -3,8 +3,9 @@ import treeview, { Dependency } from '../treeviews-prodiver/package-explorer'
 import { MetadataComponent } from '../services/metadata-tree-service'
 
 export default async function retrieveSelected (item: Dependency | null, items: Dependency[]) {
-  if (item && !items) items = [item]
+  if (item && (!items || !items.length)) items = [item]
   if (items && items.length) {
+    if (items.some(item => item.contextValue === 'downloading')) return
     const selectedNodes = items
       .flatMap(selected => selected.retrievableNodes)
       .filter(selected => selected.operationPath)
@@ -18,8 +19,16 @@ export default async function retrieveSelected (item: Dependency | null, items: 
     })
     const metaToRetrieve = [...selectionByPath.values()]
     if (!metaToRetrieve.length) return
-    metaToRetrieve.forEach(x => { x.contextValue = 'downloading' })
-    treeview.refreshItem(metaToRetrieve)
+    const subtreeItems = (dependency: Dependency): Dependency[] => [
+      dependency,
+      ...dependency.children.flatMap(subtreeItems)
+    ]
+    const loadingItems = [...new Set([
+      ...items.flatMap(subtreeItems),
+      ...metaToRetrieve
+    ])]
+    loadingItems.forEach(x => { x.contextValue = 'downloading' })
+    treeview.refreshItem(loadingItems)
     try {
       await retrieve(
         metaToRetrieve.map(x => x.operationPath as string),
@@ -39,8 +48,8 @@ export default async function retrieveSelected (item: Dependency | null, items: 
       }
       metaToRetrieve.forEach(markRetrieved)
     } finally {
-      metaToRetrieve.forEach(x => { x.contextValue = '' })
-      treeview.refreshItem(metaToRetrieve)
+      loadingItems.forEach(x => { x.contextValue = '' })
+      treeview.refreshItem(loadingItems)
       treeview._onDidChangeTreeData.fire(undefined)
     }
   }

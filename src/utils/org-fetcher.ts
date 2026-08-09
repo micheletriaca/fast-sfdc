@@ -13,7 +13,9 @@ export type OrgMetadataProgress = (
 export default async function fetch (
   sfdc: SfdcConnector,
   supportedChildTypes: string[] = [],
-  onProgress?: OrgMetadataProgress
+  onProgress?: OrgMetadataProgress,
+  priorityTypes: string[] = [],
+  waitForRemaining?: () => Promise<void>
 ) {
   logger.appendLine('Fetching org metadata...')
   reporter.sendEvent('sfdcExplorer')
@@ -46,6 +48,9 @@ export default async function fetch (
       metadata.xmlName,
       ...asArray(metadata.childXmlNames).filter(type => supportedChildren.has(type))
     ]))]
+  const priority = new Set(priorityTypes)
+  metadataTypes.sort((left, right) =>
+    Number(priority.has(right)) - Number(priority.has(left)) || left.localeCompare(right))
 
   // As soon as describeMetadata returns, render the complete top level. Folder
   // discovery and component listing can continue without holding back the tree.
@@ -97,6 +102,8 @@ export default async function fetch (
     .filter((x: {Type: string}) => FOLDERED_METAS.includes(x.Type))
     .map((x: {Type: any; DeveloperName: any}) => ({ type: x.Type, folder: x.DeveloperName }))
     .values() as {type: string; folder: string}[]
+  folderQueries.sort((left, right) =>
+    Number(priority.has(right.type)) - Number(priority.has(left.type)) || left.type.localeCompare(right.type))
 
   const folderEntries = _(allFolders.records)
     .reject((x: {DeveloperName: string}) => x.DeveloperName === 'unfiled$public')
@@ -183,19 +190,36 @@ export default async function fetch (
     await Promise.all(Array.from({ length: Math.min(10, batches.length) }, worker))
   }
 
-  await fetchBatches(metadataQueries, (x: {fileName: string; type: string; fullName: string; manageableState?: string}) => {
+  const transformMetadata = (x: {fileName: string; type: string; fullName: string; manageableState?: string}) => {
     if (x.manageableState === 'installed') return undefined
     if (x.fileName.startsWith('standardValueSetTranslations')) x.type = 'StandardValueSetTranslation'
     if (x.fileName.startsWith('globalValueSetTranslations')) x.type = 'GlobalValueSetTranslation'
     const key = x.type + '/' + x.fullName
     const fullName = componentAliases.get(key) || x.fullName
     return { parent: x.type, name: fullName, key: x.type + '/' + fullName }
-  })
+  }
 
-  await fetchBatches(folderQueries, result => {
+  const transformFolder = (result: any) => {
     const item = appendAllFoldersToFilename(result)
     return { parent: item.type, name: item.fullName, key: item.type + '/' + item.fullName }
-  })
+  }
+
+  const priorityMetadataQueries = metadataQueries.filter(query => priority.has(query.type))
+  const remainingMetadataQueries = metadataQueries.filter(query => !priority.has(query.type))
+  const priorityFolderQueries = folderQueries.filter(query => priority.has(query.type))
+  const remainingFolderQueries = folderQueries.filter(query => !priority.has(query.type))
+
+  await fetchBatches(priorityMetadataQueries, transformMetadata)
+  await fetchBatches(priorityFolderQueries, transformFolder)
+  await emitProgress()
+
+  if ((remainingMetadataQueries.length || remainingFolderQueries.length) && waitForRemaining) {
+    await waitForRemaining()
+    await emitProgress()
+  }
+
+  await fetchBatches(remainingMetadataQueries, transformMetadata)
+  await fetchBatches(remainingFolderQueries, transformFolder)
   await emitProgress()
   if (progressFailure) throw progressFailure
 

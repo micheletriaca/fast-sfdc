@@ -97,7 +97,10 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
   private visibleMetadataTypes = new Set<string>()
   private treeView: vscode.TreeView<Dependency> | undefined
   private initialRenderResolve: (() => void) | undefined
+  private remainingFetchResolve: (() => void) | undefined
   private filtering = false
+  private filteringInitialized = false
+  private hasLocalMetadata = false
   public pkgMap: Set<string> | null = null
 
   getTreeItem (element: Dependency): vscode.TreeItem {
@@ -126,6 +129,11 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
       : undefined
   }
 
+  private updateFilterContext () {
+    vscode.commands.executeCommand('setContext', 'fast-sfdc-package-filtering', this.filtering)
+    vscode.commands.executeCommand('setContext', 'fast-sfdc-package-has-metadata', this.hasLocalMetadata)
+  }
+
   private waitForInitialRender (): Promise<void> {
     return new Promise(resolve => {
       const timeout = setTimeout(() => {
@@ -139,7 +147,7 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
     })
   }
 
-  async getChildren (element?: Dependency): Promise<Dependency[]> {
+  getChildren (element?: Dependency): Dependency[] {
     if (element) {
       return element.children
     } else if (!this.initialized) {
@@ -151,6 +159,12 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
         children: []
       })]
       statusbar.startLongJob(async done => {
+        let jobFinished = false
+        const finishJob = (status: string) => {
+          if (jobFinished) return
+          jobFinished = true
+          done(status)
+        }
         try {
           setBasePath(utils.getWorkspaceFolder())
           const sfdcConnector = await pkgService.getSfdcConnector()
@@ -159,21 +173,6 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
           const packageMapping = await getPackageMapping(sfdcConnector)
           const componentModel = getComponentModel(packageMapping)
           this.componentModel = componentModel
-          const orgTreePromise = fetch(
-            connector,
-            componentModel.getAddressableChildTypes(),
-            async (partialTree, pendingTypes) => {
-              const isInitialTree = this.visibleMetadataTypes.size === 0
-              const renderBarrier = isInitialTree ? this.waitForInitialRender() : undefined
-              this.orgComponents = Object.entries(partialTree)
-                .flatMap(([type, fullNames]) => fullNames.map(fullName => ({ type, fullName })))
-              pendingTypes.forEach(type => this.visibleMetadataTypes.add(type))
-              this.rebuild(pendingTypes)
-              this.updateProgress(pendingTypes.length)
-              if (renderBarrier) await renderBarrier
-              else await new Promise(resolve => setTimeout(resolve, 0))
-            }
-          )
           const sourceFiles = await globby(['**/*'], { cwd: layout.root })
           let localComponents: MetadataComponent[]
           if (layout.isSourceFormat) {
@@ -211,14 +210,48 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
 
           this.pkgMap = new Set(localComponents.map(componentKey))
           this.localComponents = localComponents
+          this.hasLocalMetadata = this.pkgMap.size > 0
+          if (!this.hasLocalMetadata) {
+            this.filtering = false
+          } else if (!this.filteringInitialized) {
+            this.filtering = true
+          }
+          this.filteringInitialized = true
+          this.updateFilterContext()
+          const priorityTypes = [...new Set(localComponents.map(component => component.type))]
+          this.rebuild(priorityTypes)
+
+          const orgTreePromise = fetch(
+            connector,
+            componentModel.getAddressableChildTypes(),
+            async (partialTree, pendingTypes) => {
+              const isInitialTree = this.visibleMetadataTypes.size === 0
+              const renderBarrier = isInitialTree ? this.waitForInitialRender() : undefined
+              this.orgComponents = Object.entries(partialTree)
+                .flatMap(([type, fullNames]) => fullNames.map(fullName => ({ type, fullName })))
+              pendingTypes.forEach(type => this.visibleMetadataTypes.add(type))
+              this.rebuild(pendingTypes)
+              this.updateProgress(pendingTypes.length)
+              if (renderBarrier) await renderBarrier
+              else await new Promise(resolve => setTimeout(resolve, 0))
+            },
+            priorityTypes,
+            async () => {
+              if (!this.filtering) return
+              finishJob('👍🏻')
+              this.updateProgress(0)
+              await new Promise<void>(resolve => { this.remainingFetchResolve = resolve })
+              this.remainingFetchResolve = undefined
+            }
+          )
           const dependencyTree: {[key: string]: string[]} = await orgTreePromise
           this.orgComponents = Object.entries(dependencyTree)
             .flatMap(([type, fullNames]) => fullNames.map(fullName => ({ type, fullName })))
           this.rebuild([])
           this.updateProgress(0)
-          done('👍🏻')
+          finishJob('👍🏻')
         } catch (e) {
-          done('👎🏻')
+          finishJob('👎🏻')
           this.updateProgress(0)
           this.finalDependencyTree = [new Dependency({
             key: 'error/package-explorer',
@@ -293,6 +326,8 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
     treeview.componentModel = null
     treeview.visibleMetadataTypes.clear()
     treeview.initialRenderResolve = undefined
+    treeview.remainingFetchResolve?.()
+    treeview.remainingFetchResolve = undefined
     treeview.updateProgress(0)
     this._onDidChangeTreeData.fire(undefined)
     setTimeout(() => {
@@ -302,7 +337,10 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
   }
 
   filter = () => {
+    if (!this.hasLocalMetadata) return
     this.filtering = !this.filtering
+    if (!this.filtering) this.remainingFetchResolve?.()
+    this.updateFilterContext()
     this._onDidChangeTreeData.fire(undefined)
   }
 
