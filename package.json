@@ -477,7 +477,6 @@
   "devDependencies": {
     "@types/delete-empty": "^2.0.0",
     "@types/fs-extra": "^9.0.1",
-    "@types/highland": "^2.12.9",
     "@types/mocha": "^2.2.42",
     "@types/node": "^14.18.63",
     "@types/vscode": "1.100.0",
@@ -502,7 +501,6 @@
     "delete-empty": "^3.0.0",
     "exstream.js": "^0.22.0",
     "fs-extra": "^9.0.1",
-    "highland": "^2.13.5",
     "multimatch": "^4.0.0",
     "node-salesforce-connection": "^2.3.1",
     "open": "^8.4.0",

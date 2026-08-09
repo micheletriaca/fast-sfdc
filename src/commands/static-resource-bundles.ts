@@ -6,24 +6,22 @@ import utils from '../utils/utils'
 import retrieve from './retrieve'
 import { resolveSourceLayout } from '../services/source-layout-service'
 import multimatch = require('multimatch')
-import _ = require('highland')
+import _ = require('exstream.js')
 
 export default async function configureBundles () {
   const sfdyConfig = configService.getSfdyConfigSync()
   const layout = resolveSourceLayout(utils.getWorkspaceFolder(), sfdyConfig)
   const srPath = path.resolve(layout.root, 'staticresources')
-  const files = await _(readdirSync(srPath))
-    .filter(x => x.endsWith('.resource-meta.xml'))
-    .map(async x => ({
+  const files = (await _(readdirSync(srPath))
+    .filter((x: string) => x.endsWith('.resource-meta.xml'))
+    .map(async (x: string) => ({
       fileName: x,
       contentType: (await utils.parseXml(readFileSync(path.join(srPath, x)))).StaticResource.contentType[0]
     }))
-    .map(x => _(x))
-    .sequence()
-    .filter(x => x.contentType === 'application/zip')
-    .map(x => x.fileName.replace('-meta.xml', ''))
-    .collect()
-    .toPromise(Promise as PConstructor<string[], PromiseLike<string[]>>)
+    .resolve()
+    .filter((x: {fileName: string; contentType: string}) => x.contentType === 'application/zip')
+    .map((x: {fileName: string}) => x.fileName.replace('-meta.xml', ''))
+    .values()) as string[]
 
   const savedSr = new Set(multimatch(files, sfdyConfig?.staticResources?.useBundleRenderer || []))
   const selectedSr = await vscode.window.showQuickPick(files.sort().map(x => ({

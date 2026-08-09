@@ -2,7 +2,7 @@ import utils from '../utils/utils'
 import fieldBuilders, { prompt, promptMany } from '../utils/field-builders'
 import { buildXml } from 'sfdy/xml-utils'
 import sfdcConnector from '../sfdc-connector'
-import _ = require('highland')
+import _ = require('exstream.js')
 
 function xmlArrayWrap (obj: GenericObject) {
   return Object.fromEntries(Object.entries(obj)
@@ -70,25 +70,30 @@ export default async function createField () {
         ? new Set(rProfileOptions.map(x => x.label))
         : new Set(rProfileOptions.length ? await promptMany('Apply Read FLS on profiles', rProfileOptions)() : [])
     )
-    filesToStore.push(...await _(Object.values(files))
-      .filter(x => x.fileName.endsWith('.profile'))
-      .map(async x => ({ ...x, xml: await utils.parseXml(x.data), profileName: x.fileName.replace(/profiles\/(.*).profile/, '$1') }))
-      .map(x => _(x))
-      .parallel(100)
-      .map(x => {
+    const retrievedFiles = Object.values(files)
+    type RetrievedFile = typeof retrievedFiles[number]
+    type ParsedProfile = RetrievedFile & {xml: any; profileName: string}
+    filesToStore.push(...await _(retrievedFiles)
+      .filter((x: RetrievedFile) => x.fileName.endsWith('.profile'))
+      .map(async (x: RetrievedFile): Promise<ParsedProfile> => ({
+        ...x,
+        xml: await utils.parseXml(x.data),
+        profileName: x.fileName.replace(/profiles\/(.*).profile/, '$1')
+      }))
+      .resolve(100)
+      .map((profile: ParsedProfile) => {
         const fieldName = selected.replace(/objects\/(.*).object/, '$1') + '.' + fieldDefinition.fullName
-        const fieldPermissions = x.xml!.Profile.fieldPermissions || []
+        const fieldPermissions = profile.xml.Profile.fieldPermissions || []
         utils.sortedPush(fieldPermissions, xmlArrayWrap({
-          editable: rwProfiles.has(x.profileName),
+          editable: rwProfiles.has(profile.profileName),
           field: fieldName,
-          readable: rwProfiles.has(x.profileName) || readProfiles.has(x.profileName)
+          readable: rwProfiles.has(profile.profileName) || readProfiles.has(profile.profileName)
         }), (newEl, el) => el.field[0] > newEl.field)
-        x.xml!.Profile.fieldPermissions = fieldPermissions
-        return x
+        profile.xml.Profile.fieldPermissions = fieldPermissions
+        return profile
       })
-      .map(x => ({ fileName: x.fileName, data: Buffer.from(buildXml(x.xml!) + '\n', 'utf8') }))
-      .collect()
-      .toPromise(Promise as PConstructor<{ fileName: string; data: Buffer; }[], PromiseLike<{ fileName: string; data: Buffer; }[]>>))
+      .map((profile: ParsedProfile) => ({ fileName: profile.fileName, data: Buffer.from(buildXml(profile.xml) + '\n', 'utf8') }))
+      .values())
   }
 
   await utils.transformAndStoreFiles(filesToStore, sfdcConnector)

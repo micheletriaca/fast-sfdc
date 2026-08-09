@@ -6,7 +6,7 @@ import * as path from 'upath'
 import * as transformer from 'sfdy/transformer'
 import configService from '../services/config-service'
 import logger from '../logger'
-import _ = require('highland')
+import _ = require('exstream.js')
 
 const getWorkspaceFolder = () => path.toUnix((vscode.workspace.workspaceFolders as vscode.WorkspaceFolder[])[0].uri.fsPath)
 
@@ -26,9 +26,7 @@ const untransformAndfetchFiles = async (fileGlob: string, sfdcConnector: SfdcCon
     logger: (msg: string) => logger.appendLine(msg),
     files: fileGlob,
     config: sfdyConfig
-  })))
-    .collect()
-    .toPromise(Promise as PConstructor<[string, unknown][], PromiseLike<[string, unknown][]>>)) as {[fileName: string]: {fileName: string; data: Uint8Array}}
+  }))).values()) as {[fileName: string]: {fileName: string; data: Uint8Array}}
 }
 
 const transformAndStoreFiles = async (files: {fileName: string; data: Uint8Array}[], sfdcConnector: SfdcConnector) => {
