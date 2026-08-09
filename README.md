@@ -1,99 +1,51 @@
-# fast-sfdc README
+# fast-sfdc ⚡
 
-Standalone VSCode extension for fast development in the salesforce.com platform.
-Built from scratch, no jsforce/salesforceDX dependencies, **LIGHTNING FAST!** ⚡️
+## Connect. Code. Save. Test. Done.
 
-## Features
+The fast Salesforce development loop, directly in VS Code. No Salesforce CLI, no heavyweight toolchain, no constant context switching.
 
-![Command Palette](images/commands.png "Command Palette")
+**[→ Install fast-sfdc](https://marketplace.visualstudio.com/items?itemName=m1ck83.fast-sfdc)**
 
-### NEW!!! 🔥 Metadata explorer 🔥
+## From zero to working code
 
-![Metadata Explorer](images/metadata-explorer.png "Metadata Explorer")
+1. **Connect your org.** Click **fast-sfdc — not logged in** in the status bar, choose **Add credential**, then OAuth. Two clicks later, your org is ready. Keep multiple orgs in the project and switch between them from the same place.
 
-Explore Metadata in your org and download from Salesforce everything you need. The retrieved metadata will be automatically added to package.xml
+2. **Create or edit metadata.** Run **Fast-Sfdc: Create new...** for an Apex class, trigger, Visualforce page or component, Aura bundle, LWC or custom field. Or just open an existing file and start coding.
 
-### NEW!!! 🔥 Authorize an org via OAuth2 flow 🔥
+3. **Save. It compiles.** Press `⌘ S`. The first time, enable deploy on save; from then on every save compiles the current Apex, Visualforce, Aura or LWC file directly in the active org. You immediately get success or compiler errors in VS Code.
 
-You can now authorize your org both using the canonical user+pass+token method or using an OAuth2 flow. The OAuth2 flow is useful if you have enforced MFA using the high assurance requirement on the profile. In this case, the user+pass+token flow will not work anymore
+4. **Bring changes back.** Right-click a file and choose **Retrieve**, or press `⌘ I R`. Need something that is not local yet? Open Package Explorer with `⌘ I P`, find it in the org and retrieve it straight into the project.
 
-### Deploy, Retrieve, Validate & Compile
+5. **Run the tests beside the code.** Open an Apex test class and click **Run test** or **Run all tests** in CodeLens. Results and coverage appear in the Output panel—no Developer Console required.
 
-Canonical deployment and retrieval of metadata based on your package.xml configuration is fully featured, but you can also deploy or retrieve single files/folders!
-Deploy on save for apex classes, Visualforce pages, triggers, Visualforce components, aura bundles and **lightning web components** is supported. Fast-Sfdc asks whether to enable it the first time an eligible file is saved for a credential; click the active credential in the status bar to change the preference later.
+6. **Open Salesforce when you actually need it.** Click the active credential in the status bar and choose **Open Salesforce setup in browser**. You land in Setup already authenticated.
 
-### Metadata Creation
+That is the whole loop: connect an org, change code, compile, retrieve metadata, run tests and jump into Setup without leaving your editor.
 
-Straightforward metadata creation and deployment for apex classes, Visualforce pages & components, triggers, aura bundles, and LWC.
+## The shortcuts worth remembering
 
-#### Offline Field Creation
+| Action | macOS | Windows/Linux |
+| --- | --- | --- |
+| Deploy current file | `⌘ I D` | `Ctrl I D` |
+| Retrieve current file | `⌘ I R` | `Ctrl I R` |
+| Compile current file | `⌘ I C` | `Ctrl I C` |
+| Execute Anonymous | `⌘ I E` | `Ctrl I E` |
+| Open Package Explorer | `⌘ I P` | `Ctrl I P` |
 
-You can create most of the supported fields and set the Profile FLS directly from the `Create new...` command. No more endless metadata retrieval and insane hunk versioning of profiles! This functionality is highly inspired by the excellent [swift-sfdc](https://marketplace.visualstudio.com/items?itemName=tr4uma.swift-sfdc) extension of [tr4uma](https://github.com/tr4uma). Thanks, tr4uma for helping me to integrate this useful functionality
+## More when you need it
 
-![Create New Field](images/create-new-field.gif "Create new field")
+- **A lightweight extension, not a half-finished editor.** Apex classes, triggers and Anonymous Apex scripts have native syntax highlighting, as do Visualforce pages and components. You get the language support needed for everyday work without installing a heavyweight Salesforce toolchain.
+- **Work on more than one file.** Multi-select files and folders in the VS Code Explorer, then deploy, retrieve or delete the whole selection from Salesforce. You can also deploy, retrieve and validate an entire project or folder.
+- **Execute Apex without the Developer Console.** Run an entire `.apex` script—or just the selected lines—with `⌘ I E` (`Ctrl I E` on Windows/Linux). Debug logs and compiler or runtime errors stay in VS Code.
+- **Create metadata, not boilerplate.** Create Apex classes and triggers, Visualforce pages and components, Aura bundles, LWCs and custom fields. When creating a field, set its Profile access at the same time.
+- **Explore the org.** Package Explorer shows metadata that is not in your project yet and can switch between the complete org and the types already used by the project. Select exactly what you need and retrieve it into the correct local structure; Profiles also have a dedicated retrieval flow.
+- **Keep security changes close to the code.** Open a Profile or Permission Set and use CodeLens to edit field-level security without manually wrestling with the XML.
+- **Handle the awkward parts.** Work with zipped static resources as regular folders, create destructive changesets from the Explorer and generate ready-to-edit [sfdy](https://github.com/micheletriaca/sfdy) plugins for repeatable pre-deploy and post-retrieve transformations.
+- **Use the project format you already have.** Metadata API and Salesforce DX source formats are both supported, and `package.xml` is optional.
+- **Keep every org one click away.** Add, switch, replace or remove Production, Sandbox and custom-domain credentials, and configure deploy on save independently for each org. Credentials live in an encrypted project vault; its encryption key stays in the operating-system keychain, so the project never contains readable secrets.
 
-### Edit FLS directly from Profile or PermissionSet
+For non-standard layouts and metadata transformations, run **Fast-Sfdc: Init metadata patching** and configure [sfdy](https://github.com/micheletriaca/sfdy).
 
-Just open the Profile or PermissionSet and click on the codelen
-![Edit FLS](images/edit-fls.png "Edit FLS")
+Built from scratch for speed—and trusted in production since its first public release in 2020.
 
-### Destructive changesets
-
-Deleting metadata from your org is just easy as right-clicking on the metadata in the file explorer
-
-### Metadata Patching
-
-`fast-sfdc` uses [sfdy](https://www.npmjs.com/package/sfdy) as the engine to deploy and retrieve metadata. Thanks to that, it supports a bunch of useful metadata patches (see [here](https://github.com/micheletriaca/sfdy#apply-standard-patches-to-metadata-after-retrieve))
-
-To set up a `.sfdy.json` config in your project, just open the command palette and type `Fast-Sfdc: Init metadata patching`
-
-`package.xml` is optional in both Metadata API and Salesforce DX projects. Fast-Sfdc derives
-deploy and retrieve manifests from the local metadata tree; `.sfdy.json` supplies the API
-version when it cannot be read from `sfdx-project.json`.
-
-For Salesforce DX source-format projects, add:
-
-```json
-{
-  "sourceFormat": "sfdx"
-}
-```
-
-The default package directory is read from `sfdx-project.json` (for example,
-`force-app/main/default`) and `package.xml` is not required. Use `sourceFolder` in
-`.sfdy.json` only when the source root is non-standard.
-
-### Static resource bundles
-
-Handle your static resources as uncompressed folders. Just select the static resource you want to handle as folders:
-
-![Command Palette](images/static-resources.png "Static Resource Configuration")
-
-`fast-sfdc` will do the rest!
-
-### Multi-org support
-
-Fast-Sfdc and the `sfdy` CLI share the encrypted project vault in
-`.sfdy/credentials.vault`; only its encryption key is stored in the operating-system
-keychain. The selected credential and Fast-Sfdc-specific preferences live in
-`.sfdy/fast-sfdc.json`. Existing root-level `fastsfdc.json` files are migrated and removed
-automatically.
-
-### Lightning Web Components
-
-**Full support for lightning web components**: from their creation to their deployment!
-
-### Execute Anonymous
-
-Run your code snippets directly from VSCode. Buggy developer console is now a distant memory.
-
-![Execute Anonymous](images/execute-anonymous.gif "Execute Anonymous")
-
-### Run tests
-
-Just open a test class and click on the codelen
-![Tests](images/tests.png "Tests")
-
-## Release Notes
-
-See [here](CHANGELOG.md)
+[Release notes](CHANGELOG.md) · [Source](https://github.com/micheletriaca/fast-sfdc) · [License](LICENSE.md)

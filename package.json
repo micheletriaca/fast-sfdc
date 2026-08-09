@@ -1,7 +1,7 @@
 {
   "name": "fast-sfdc",
-  "displayName": "fast-sfdc",
-  "description": "Standalone VSCode extension for fast development in the salesforce.com platform. Built from scratch, no jsforce/salesforceDX dependencies, LIGHTNING FAST!",
+  "displayName": "fast-sfdc — Salesforce Development",
+  "description": "Lightweight Salesforce development for VS Code. Connect orgs, deploy and retrieve metadata, run Apex tests, and execute Anonymous Apex—without the Salesforce CLI.",
   "repository": {
     "type": "git",
     "url": "https://github.com/micheletriaca/fast-sfdc"
@@ -15,17 +15,26 @@
     "vscode": "^1.100.0"
   },
   "categories": [
+    "Programming Languages",
+    "Testing",
     "Other"
   ],
   "keywords": [
-    "lightning",
-    "force.com",
-    "aura",
-    "apex",
-    "visualforce",
-    "lwc",
     "salesforce",
-    "sfdc"
+    "salesforce development",
+    "salesforce metadata",
+    "sfdc",
+    "apex",
+    "anonymous apex",
+    "visualforce",
+    "lightning",
+    "aura",
+    "lwc",
+    "force.com",
+    "metadata api",
+    "deploy",
+    "retrieve",
+    "salesforce tests"
   ],
   "activationEvents": [
     "workspaceContains:**/package.xml",
@@ -385,6 +394,61 @@
           ".design",
           ".object"
         ]
+      },
+      {
+        "id": "apex",
+        "aliases": [
+          "Apex",
+          "apex"
+        ],
+        "extensions": [
+          ".cls",
+          ".trigger"
+        ],
+        "configuration": "./syntaxes/apex.configuration.json"
+      },
+      {
+        "id": "apex-anon",
+        "aliases": [
+          "Anonymous Apex"
+        ],
+        "extensions": [
+          ".apex"
+        ],
+        "configuration": "./syntaxes/apex.configuration.json"
+      },
+      {
+        "id": "visualforce",
+        "aliases": [
+          "Visualforce",
+          "visualforce"
+        ],
+        "extensions": [
+          ".page",
+          ".component"
+        ],
+        "configuration": "./syntaxes/visualforce.configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "apex",
+        "scopeName": "source.apex",
+        "path": "./grammars/apex.tmLanguage"
+      },
+      {
+        "language": "apex-anon",
+        "scopeName": "source.apex",
+        "path": "./grammars/apex.tmLanguage"
+      },
+      {
+        "language": "visualforce",
+        "scopeName": "text.visualforce.markup",
+        "path": "./syntaxes/visualforce.json",
+        "embeddedLanguages": {
+          "source.css": "css",
+          "source.js": "javascript"
+        }
       }
     ]
   },

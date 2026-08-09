@@ -19,7 +19,11 @@ export default async function fetch (sfdc: SfdcConnector, supportedChildTypes: s
   const personRecordTypesRequest = supportedChildTypes.includes('RecordType')
     ? sfdc.query(`SELECT DeveloperName, NamespacePrefix, SobjectType, IsPersonType
       FROM RecordType
-      WHERE IsPersonType = true`, true)
+      WHERE IsPersonType = true`, true).catch((error: any) => {
+      if (!String(error?.message || error).includes('INVALID_FIELD')) throw error
+      logger.appendLine('Person Accounts are not available in this org; skipping their RecordType aliases.')
+      return { records: [] }
+    })
     : Promise.resolve({ records: [] })
   const [allFolders, metadataDescription, personRecordTypes] = await Promise.all([
     sfdc.query('SELECT Id, ParentId, NamespacePrefix, DeveloperName, Type FROM Folder WHERE DeveloperName != null', true),
