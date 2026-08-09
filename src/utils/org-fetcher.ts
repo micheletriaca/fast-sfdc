@@ -15,7 +15,7 @@ export default async function fetch (
   supportedChildTypes: string[] = [],
   onProgress?: OrgMetadataProgress,
   priorityTypes: string[] = [],
-  waitForRemaining?: () => Promise<void>
+  waitForRemaining?: () => Promise<boolean>
 ) {
   logger.appendLine('Fetching org metadata...')
   reporter.sendEvent('sfdcExplorer')
@@ -214,7 +214,8 @@ export default async function fetch (
   await emitProgress()
 
   if ((remainingMetadataQueries.length || remainingFolderQueries.length) && waitForRemaining) {
-    await waitForRemaining()
+    const shouldContinue = await waitForRemaining()
+    if (!shouldContinue) return snapshot()
     await emitProgress()
   }
 

@@ -97,7 +97,8 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
   private visibleMetadataTypes = new Set<string>()
   private treeView: vscode.TreeView<Dependency> | undefined
   private initialRenderResolve: (() => void) | undefined
-  private remainingFetchResolve: (() => void) | undefined
+  private remainingFetchResolve: ((shouldContinue: boolean) => void) | undefined
+  private loadGeneration = 0
   private filtering = false
   private filteringInitialized = false
   private hasLocalMetadata = false
@@ -152,6 +153,7 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
       return element.children
     } else if (!this.initialized) {
       this.initialized = true
+      const generation = ++this.loadGeneration
       this.finalDependencyTree = [new Dependency({
         key: 'loading/package-explorer',
         label: 'Loading Package Explorer…',
@@ -225,6 +227,7 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
             connector,
             componentModel.getAddressableChildTypes(),
             async (partialTree, pendingTypes) => {
+              if (generation !== this.loadGeneration) return
               const isInitialTree = this.visibleMetadataTypes.size === 0
               const renderBarrier = isInitialTree ? this.waitForInitialRender() : undefined
               this.orgComponents = Object.entries(partialTree)
@@ -237,20 +240,30 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
             },
             priorityTypes,
             async () => {
-              if (!this.filtering) return
+              if (generation !== this.loadGeneration) return false
+              if (!this.filtering) return true
               finishJob('👍🏻')
               this.updateProgress(0)
-              await new Promise<void>(resolve => { this.remainingFetchResolve = resolve })
+              const shouldContinue = await new Promise<boolean>(resolve => { this.remainingFetchResolve = resolve })
               this.remainingFetchResolve = undefined
+              return shouldContinue && generation === this.loadGeneration
             }
           )
           const dependencyTree: {[key: string]: string[]} = await orgTreePromise
+          if (generation !== this.loadGeneration) {
+            finishJob('')
+            return
+          }
           this.orgComponents = Object.entries(dependencyTree)
             .flatMap(([type, fullNames]) => fullNames.map(fullName => ({ type, fullName })))
           this.rebuild([])
           this.updateProgress(0)
           finishJob('👍🏻')
         } catch (e) {
+          if (generation !== this.loadGeneration) {
+            finishJob('')
+            return
+          }
           finishJob('👎🏻')
           this.updateProgress(0)
           this.finalDependencyTree = [new Dependency({
@@ -320,13 +333,14 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
   readonly onDidChangeTreeData: vscode.Event<Dependency | Dependency[] | undefined> = this._onDidChangeTreeData.event;
 
   refresh = () => {
+    treeview.loadGeneration++
     treeview.finalDependencyTree = []
     treeview.localComponents = []
     treeview.orgComponents = []
     treeview.componentModel = null
     treeview.visibleMetadataTypes.clear()
     treeview.initialRenderResolve = undefined
-    treeview.remainingFetchResolve?.()
+    treeview.remainingFetchResolve?.(false)
     treeview.remainingFetchResolve = undefined
     treeview.updateProgress(0)
     this._onDidChangeTreeData.fire(undefined)
@@ -339,7 +353,7 @@ class PackageExplorerProvider implements vscode.TreeDataProvider<Dependency> {
   filter = () => {
     if (!this.hasLocalMetadata) return
     this.filtering = !this.filtering
-    if (!this.filtering) this.remainingFetchResolve?.()
+    if (!this.filtering) this.remainingFetchResolve?.(true)
     this.updateFilterContext()
     this._onDidChangeTreeData.fire(undefined)
   }
