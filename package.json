@@ -144,6 +144,10 @@
         "title": "Fast-Sfdc: Deploy metadata"
       },
       {
+        "command": "FastSfdc.cancelDeploy",
+        "title": "Fast-Sfdc: Cancel active deployment"
+      },
+      {
         "command": "FastSfdc.validate",
         "title": "Fast-Sfdc: Validate metadata"
       },
@@ -255,6 +259,10 @@
         },
         {
           "command": "FastSfdc.deploy",
+          "when": "fast-sfdc-active && fast-sfdc-configured"
+        },
+        {
+          "command": "FastSfdc.cancelDeploy",
           "when": "fast-sfdc-active && fast-sfdc-configured"
         },
         {

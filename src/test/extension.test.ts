@@ -22,6 +22,7 @@ import { credentialLabel, environmentIsAvailable } from '../services/credential-
 import { buildPluginRecipe } from '../services/plugin-recipe-service'
 import { classifyOrganization } from '../services/org-protection'
 import { metadataRequiresTests, productionTestLevels } from '../services/deploy-test-options'
+import { cancellableDeployments, deploymentTimestamp } from '../services/deployment-cancellation'
 
 const requireModule = createRequire(__filename)
 
@@ -36,6 +37,19 @@ suite('Extension Tests', function () {
   test('Something 1', function () {
     assert.equal(-1, [1, 2, 3].indexOf(5))
     assert.equal(-1, [1, 2, 3].indexOf(0))
+  })
+
+  test('Selects only deployments that Salesforce can still cancel', function () {
+    const records = [{ Id: 'pending', Status: 'Pending', CreatedDate: '2026-08-10T10:00:00Z' }, {
+      Id: 'running', Status: 'InProgress', StartDate: '2026-08-10T10:01:00Z'
+    }, {
+      Id: 'canceling', Status: 'Canceling'
+    }, {
+      Id: 'finished', Status: 'Succeeded'
+    }]
+    assert.deepEqual(cancellableDeployments(records).map(record => record.Id), ['pending', 'running'])
+    assert.strictEqual(deploymentTimestamp(records[0]), '2026-08-10T10:00:00Z')
+    assert.strictEqual(deploymentTimestamp(records[1]), '2026-08-10T10:01:00Z')
   })
 
   test('Extracts invalid Apex dependency chains', function () {

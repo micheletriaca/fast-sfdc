@@ -1,4 +1,5 @@
 import manageCredentials from './manage-credentials'
+import cancelDeploy from './cancel-deploy'
 import removeCredentials from './remove-credentials'
 import compile from './compile'
 import convertSourceFormat from './convert-source-format'
@@ -23,6 +24,10 @@ import * as vscode from 'vscode'
 import { Dependency } from '../treeviews-prodiver/package-explorer'
 
 export default {
+  cancelDeploy: () => {
+    reporter.sendEvent('cancelDeploy')
+    cancelDeploy()
+  },
   manageCredentials: () => {
     reporter.sendEvent('manageCredentials')
     manageCredentials()

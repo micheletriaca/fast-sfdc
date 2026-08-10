@@ -112,6 +112,12 @@ const connector = {
     return res
   },
 
+  async cancelDeploy (deploymentId: string): Promise<any> {
+    return patch(`/metadata/deployRequest/${encodeURIComponent(deploymentId)}`, {
+      deployResult: { status: 'Canceling' }
+    }, true)
+  },
+
   describeSObject: async (objectApiName: string): Promise<any> => get(`/sobjects/${encodeURIComponent(objectApiName)}/describe`, true),
 
   async createMetadataContainer (name: string): Promise<string> {

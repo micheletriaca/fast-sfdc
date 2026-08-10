@@ -2,6 +2,8 @@
 
 ## 2.0.0
 
+- Added `Fast-Sfdc: Cancel active deployment`, which discovers pending and in-progress deployments in the active org and can request cancellation even when another tool started them.
+
 Fast-Sfdc 2.0 modernizes the extension and aligns it with `sfdy` 2.0. Existing
 projects and `.sfdy.json` configurations do not require a manual migration, and
 stored credentials are migrated automatically. The only new compatibility
