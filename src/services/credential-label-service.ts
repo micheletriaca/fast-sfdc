@@ -4,7 +4,7 @@ export const credentialEnvironment = (credential: ConfigCredential): string =>
   credential.environment || credential.alias || 'unknown environment'
 
 export const credentialLabel = (credential: ConfigCredential): string =>
-  `${credentialEnvironment(credential)} - ${credential.username || 'unknown user'}`
+  `${credentialEnvironment(credential)} - ${credential.username || 'unknown user'}${credential.readOnly ? ' [read-only]' : ''}`
 
 export const environmentIsAvailable = (
   credentials: ConfigCredential[],

@@ -20,6 +20,8 @@ import * as os from 'os'
 import * as path from 'path'
 import { credentialLabel, environmentIsAvailable } from '../services/credential-label-service'
 import { buildPluginRecipe } from '../services/plugin-recipe-service'
+import { classifyOrganization } from '../services/org-protection'
+import { metadataRequiresTests, productionTestLevels } from '../services/deploy-test-options'
 
 const requireModule = createRequire(__filename)
 
@@ -122,7 +124,8 @@ suite('Extension Tests', function () {
       password: 'refresh-token',
       instanceUrl: 'https://acme.my.salesforce.com',
       environment: 'dev',
-      deployOnSave: true
+      deployOnSave: true,
+      readOnly: true
     })
     assert.strictEqual(shared.refreshToken, 'refresh-token')
     assert.strictEqual(shared.password, undefined)
@@ -131,13 +134,14 @@ suite('Extension Tests', function () {
       ...shared,
       id: 'credential-id',
       alias: 'acme-dev'
-    }, { deployOnSave: true })
+    }, { deployOnSave: true, readOnly: true })
     assert.strictEqual(hydrated.password, 'refresh-token')
     assert.strictEqual(hydrated.type, 'oauth2')
     assert.strictEqual(hydrated.deployOnSave, true)
+    assert.strictEqual(hydrated.readOnly, true)
   })
 
-  test('Stores only the active credential and deploy-on-save preferences locally', function () {
+  test('Stores only the active credential and Fast-specific preferences locally', function () {
     assert.deepEqual(toStoredFastConfig({
       stored: true,
       currentCredential: 1,
@@ -149,7 +153,8 @@ suite('Extension Tests', function () {
         instanceUrl: 'https://example.my.salesforce.com',
         environment: 'dev',
         type: 'oauth2',
-        deployOnSave: false
+        deployOnSave: false,
+        readOnly: true
       }, {
         id: 'uat-id',
         alias: 'uat',
@@ -160,7 +165,7 @@ suite('Extension Tests', function () {
     }), {
       currentCredentialId: 'uat-id',
       credentialSettings: {
-        'dev-id': { deployOnSave: false },
+        'dev-id': { deployOnSave: false, readOnly: true },
         'uat-id': { deployOnSave: true }
       }
     })
@@ -174,6 +179,27 @@ suite('Extension Tests', function () {
     assert.strictEqual(environmentIsAvailable(credentials, 'prod'), true)
     assert.strictEqual(environmentIsAvailable(credentials, 'DEV'), false)
     assert.strictEqual(environmentIsAvailable(credentials, 'dev', credentials[0]), true)
+  })
+
+  test('Labels read-only credentials and classifies Salesforce organization kinds', function () {
+    assert.strictEqual(credentialLabel({ environment: 'prod', username: 'user@example.com', readOnly: true }), 'prod - user@example.com [read-only]')
+    assert.strictEqual(classifyOrganization({ IsSandbox: true, OrganizationType: 'Enterprise Edition' }), 'sandbox')
+    assert.strictEqual(classifyOrganization({ IsSandbox: false, OrganizationType: 'Developer Edition' }), 'development')
+    assert.strictEqual(classifyOrganization({ IsSandbox: 'false', OrganizationType: 'Scratch Org' }), 'development')
+    assert.strictEqual(classifyOrganization({ IsSandbox: false, OrganizationType: 'Enterprise Edition' }), 'production')
+    assert.strictEqual(classifyOrganization(), 'unknown')
+  })
+
+  test('Offers only production-safe deployment test levels', function () {
+    assert.strictEqual(metadataRequiresTests(true), true)
+    assert.strictEqual(metadataRequiresTests('true'), true)
+    assert.strictEqual(metadataRequiresTests('false'), false)
+    assert.deepEqual(productionTestLevels(), [
+      'RunLocalTests',
+      'RunRelevantTests',
+      'RunSpecifiedTests',
+      'RunAllTestsInOrg'
+    ])
   })
 
   test('Generates environment-aware sfdy plugin recipes', function () {

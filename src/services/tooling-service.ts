@@ -27,6 +27,10 @@ const clearMetadataContainer = async function (toolingType: string, currentMembe
 }
 
 const toolingService = {
+  clearLocalState: () => {
+    objsInContainer.clear()
+    metaContainerId = ''
+  },
   requestCompile: async (): Promise<CompileFn> => {
     if (!metaContainerId) await toolingService.resetMetadataContainer()
     let counter = 0

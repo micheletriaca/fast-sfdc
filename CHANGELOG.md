@@ -25,6 +25,13 @@ requirement is VS Code 1.100 or newer.
 * Fast-Sfdc and the `sfdy` CLI now share the same encrypted project credential
   vault. Existing Fast-Sfdc credentials are migrated automatically while
   keeping per-org settings such as deploy on save.
+* Added per-org read-only mode. Retrieve and local editing remain available,
+  while deploy, compile, destructive operations, metadata creation and
+  Anonymous Apex execution are blocked. Production orgs require an explicit
+  confirmation before these operations even when they are writable; when Apex
+  tests are required, deploy and validation commands prompt for the permitted
+  test level and any specified test classes. Production deploy commands also
+  offer a validate-only path before any changes are applied.
 * Improved environment propagation across retrieve, deploy, compile and plugin
   workflows.
 * Added ready-to-edit `sfdy` plugin recipes for repeatable pre-deploy and

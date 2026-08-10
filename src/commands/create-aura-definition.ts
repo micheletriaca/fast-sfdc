@@ -6,6 +6,7 @@ import sfdcConnector from '../sfdc-connector'
 import codeTemplates from '../utils/code-templates'
 import statusbar from '../statusbar'
 import * as path from 'upath'
+import { authorizeOrgMutation } from '../services/org-protection-service'
 
 type AuraOption = { label: AuraDefType; format: AuraFormat }
 
@@ -21,6 +22,7 @@ const auraTypes: AuraOption[] = [
 ]
 
 export default async function createAuraDefinition (docUri: vscode.Uri) {
+  if (!await authorizeOrgMutation('create an Aura definition')) return
   const lastFolder = parsers.getLastFolder(docUri)
   const existingTypes = (await utils.readdir(lastFolder)).map(parsers.getAuraDefType) as AuraDefType[]
   const selected = await vscode.window.showQuickPick(auraTypes.filter(x => !existingTypes.includes(x.label)))

@@ -1,4 +1,5 @@
 import * as fs from 'fs'
+import * as vscode from 'vscode'
 import * as path from 'upath'
 import statusbar from '../statusbar'
 import configService from '../services/config-service'
@@ -8,14 +9,62 @@ import { expandDirectoryPatterns, getListOfSrcFiles, getPackageMapping } from 's
 import { getAdapter } from 'sfdy/format-adapters'
 import utils from '../utils/utils'
 import { resolveSourceLayout } from '../services/source-layout-service'
+import { confirmProductionMutation, ensureOrgWritable, getOrganizationKind } from '../services/org-protection-service'
+import { chooseProductionDeployTests, DeploymentTestSelection } from '../services/deploy-test-service'
 import sfdyDeploy = require('sfdy/deploy')
 import deleteEmpty = require('delete-empty')
 import globby = require('globby')
 
-export default function deploy (checkOnly = false, destructive = false, files: string[] = []) {
+const chooseProductionDeployMode = async (destructive: boolean): Promise<boolean | undefined> => {
+  const selected = await vscode.window.showQuickPick([{
+    label: '$(shield) Validate only',
+    description: destructive
+      ? 'Validate the destructive changes without deleting metadata'
+      : 'Run a check-only deployment without changing the org',
+    checkOnly: true
+  }, {
+    label: destructive ? '$(trash) Deploy destructive changes now' : '$(cloud-upload) Deploy now',
+    description: 'Apply the changes to the production org',
+    checkOnly: false
+  }], {
+    ignoreFocusOut: true,
+    title: 'Choose how to proceed with the production deployment',
+    placeHolder: 'Validate first or deploy immediately'
+  })
+  return selected?.checkOnly
+}
+
+export default async function deploy (checkOnly = false, destructive = false, files: string[] = []) {
+  let operation = checkOnly
+    ? 'validate metadata'
+    : destructive
+      ? 'destructively deploy metadata'
+      : 'deploy metadata'
+  const config = await configService.getConfig()
+  if (!await ensureOrgWritable(operation, { config })) return
+
+  let testSelection: DeploymentTestSelection = { proceed: true, testRequired: false }
+  const organizationKind = await getOrganizationKind(config)
+  if (organizationKind === 'production' || organizationKind === 'unknown') {
+    if (!checkOnly) {
+      const selectedCheckOnly = await chooseProductionDeployMode(destructive)
+      if (selectedCheckOnly === undefined) return
+      checkOnly = selectedCheckOnly
+      operation = checkOnly
+        ? destructive ? 'validate destructive metadata changes' : 'validate metadata'
+        : destructive ? 'destructively deploy metadata' : 'deploy metadata'
+    }
+    testSelection = await chooseProductionDeployTests()
+    if (!testSelection.proceed) return
+  }
+
+  const testDetail = testSelection.testLevel
+    ? `Apex test level: ${testSelection.testLevel}${testSelection.specifiedTests ? ` (${testSelection.specifiedTests})` : ''}.`
+    : undefined
+  if (!await confirmProductionMutation(operation, config, testDetail)) return
+
   statusbar.startLongJob(async done => {
     const rootFolder = utils.getWorkspaceFolder()
-    const config = configService.getConfigSync()
     const creds = config.credentials[config.currentCredential]
     process.env.environment = creds.environment
     const sfdyConfig = configService.getSfdyConfigSync()
@@ -42,6 +91,8 @@ export default function deploy (checkOnly = false, destructive = false, files: s
           clientSecret: creds.clientSecret
         },
         checkOnly,
+        testLevel: testSelection.testLevel,
+        specifiedTests: testSelection.specifiedTests,
         config: sfdyConfig,
         files: sanitizedFiles.length > 0 ? sanitizedFiles : undefined
       })

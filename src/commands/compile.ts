@@ -10,6 +10,7 @@ import logger, { diagnosticCollection } from '../logger'
 import { extractApexClassImports, extractInvalidSObjectFields } from '../utils/apex-errors'
 import lwcMetadataFallbackService from '../services/lwc-metadata-fallback-service'
 import { resolveSourceLayout } from '../services/source-layout-service'
+import { confirmProductionMutation, ensureOrgWritable } from '../services/org-protection-service'
 import minimatch = require('minimatch')
 
 const ENABLE_DEPLOY_ON_SAVE = 'Enable'
@@ -230,7 +231,10 @@ export default async function compile (doc?: vscode.TextDocument) {
   const fileName = layout.toRelativePath(doc.fileName)
 
   if ((sfdyConfig.excludeFiles || []).some(gl => minimatch(fileName, gl))) return
+  const operation = `compile and deploy ${fileName}`
+  if (!await ensureOrgWritable(operation, { config: cfg, silent: triggeredBySave })) return
   if (triggeredBySave && !await shouldDeployOnSave(cfg)) return
+  if (!await confirmProductionMutation(operation, cfg)) return
 
   StatusBar.startLongJob(done => {
     switch (type) {

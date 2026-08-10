@@ -7,6 +7,7 @@ import { ConfigCredential } from '../fast-sfdc'
 import toolingService from '../services/tooling-service'
 import * as constants from 'sfdy/constants'
 import { environmentIsAvailable } from '../services/credential-label-service'
+import { clearOrganizationKindCache } from '../services/org-protection-service'
 import auth = require('sfdy/auth')
 
 async function getUrl (): Promise<string> {
@@ -36,6 +37,23 @@ async function getAuthType (): Promise<string> {
     }
   ], { ignoreFocusOut: true })
   return (res && res.description) || ''
+}
+
+async function getReadOnlyMode (currentValue = false): Promise<boolean | undefined> {
+  const writable = {
+    label: 'Writable',
+    description: 'Deploy, compile, and execute commands are allowed',
+    value: false
+  }
+  const readOnly = {
+    label: 'Read-only',
+    description: 'Retrieve is allowed; remote changes are blocked',
+    value: true
+  }
+  return (await vscode.window.showQuickPick(
+    currentValue ? [readOnly, writable] : [writable, readOnly],
+    { ignoreFocusOut: true, title: 'Access mode for this environment' }
+  ))?.value
 }
 
 export default async function enterCredentials (addMode = false) {
@@ -76,6 +94,11 @@ export default async function enterCredentials (addMode = false) {
   creds.environment = creds.environment.trim()
   creds.alias = creds.environment
 
+  const readOnly = await getReadOnlyMode(creds.readOnly)
+  if (readOnly === undefined) return
+  creds.readOnly = readOnly
+  if (readOnly) creds.deployOnSave = false
+
   if (creds.type === 'oauth2') {
     const infos = await auth(creds.url, constants.DEFAULT_CLIENT_ID, undefined, 3000)
     creds.username = infos.userInfo.username
@@ -93,8 +116,9 @@ export default async function enterCredentials (addMode = false) {
 
   StatusBar.startLongJob(async done => {
     try {
+      toolingService.clearLocalState()
+      clearOrganizationKindCache()
       await connector.connect(config)
-      await toolingService.resetMetadataContainer()
       vscode.commands.executeCommand('FastSfdc.refreshPackageTreeview')
       vscode.window.showInformationMessage('Credentials ok!')
       done('👍🏻')

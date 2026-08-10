@@ -9,6 +9,7 @@ import sfdcConnector from '../sfdc-connector'
 import { buildXml } from 'sfdy/xml-utils'
 import createField from './create-field'
 import { resolveSourceLayout } from '../services/source-layout-service'
+import { authorizeOrgMutation } from '../services/org-protection-service'
 
 interface DocType { label: string; toolingType: string; folder?: string; extension?: string }
 
@@ -159,6 +160,7 @@ export default async function createMeta () {
   if (!docType) return
 
   if (docType.toolingType === 'CustomField') return createField()
+  if (!await authorizeOrgMutation(`create ${docType.label.toLowerCase()} metadata`)) return
 
   const docName = await utils.inputText(`enter ${docType.label.toLowerCase()} name`, '', {
     validateInput: v => {

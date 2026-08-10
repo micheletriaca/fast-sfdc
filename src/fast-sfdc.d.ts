@@ -10,6 +10,7 @@ export interface ConfigCredential {
   environment?: string;
   url?: string;
   deployOnSave?: boolean;
+  readOnly?: boolean;
 }
 
 export interface Config {
@@ -30,7 +31,7 @@ export interface DescribeMetadataResult {
   metadataObjects: DescribeMetadataItem[];
   organizationNamespace: string;
   partialSaveAllowed: string;
-  testRequired: string;
+  testRequired: string | boolean;
 }
 
 export interface ListMetadataResult {

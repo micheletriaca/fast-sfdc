@@ -5,8 +5,10 @@ import * as fs from 'fs'
 import utils from '../utils/utils'
 import configService from '../services/config-service'
 import { resolveSourceLayout } from '../services/source-layout-service'
+import { ensureOrgWritable } from '../services/org-protection-service'
 
 export default async function destroySelected (uri: vscode.Uri, allUris: vscode.Uri[]) {
+  if (!await ensureOrgWritable('destructively deploy metadata')) return
   const layout = resolveSourceLayout(utils.getWorkspaceFolder(), configService.getSfdyConfigSync())
   const isFolder = (p: string) => fs.statSync(path.resolve(layout.root, p)).isDirectory()
   const filesToDelete = (allUris || [])

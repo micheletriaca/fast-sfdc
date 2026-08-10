@@ -7,6 +7,7 @@ import toolingService from '../services/tooling-service'
 import { prompt } from '../utils/field-builders'
 import logger from '../logger'
 import { credentialLabel } from '../services/credential-label-service'
+import { clearOrganizationKindCache } from '../services/org-protection-service'
 import open = require('open')
 
 const ADD_OTHER_CREDENTIAL = -2
@@ -15,6 +16,7 @@ const REPLACE_CREDENTIAL = -4
 const TOGGLE_DEPLOY_ON_SAVE = -5
 const OPEN_SALESFORCE_IN_BROWSER = -6
 const OPEN_SALESFORCE_IN_BROWSER_CLASSIC = -7
+const CHANGE_READ_ONLY_MODE = -8
 
 async function showCredsMenu (credentials: ConfigCredential[], currentCredential: number): Promise<number> {
   type CredentialMenuItem = vscode.QuickPickItem & { credentialIndex?: number; action?: number }
@@ -34,6 +36,7 @@ async function showCredsMenu (credentials: ConfigCredential[], currentCredential
     { label: '$(add) Add credential...', action: ADD_OTHER_CREDENTIAL },
     { label: '$(remove) Remove credential...', action: REMOVE_CREDENTIAL },
     { label: '$(replace) Replace current credential...', action: REPLACE_CREDENTIAL },
+    { label: '$(lock) Change read-only mode...', action: CHANGE_READ_ONLY_MODE },
     { label: '$(symbol-null) Change deploy on save...', action: TOGGLE_DEPLOY_ON_SAVE }
   ]
 
@@ -41,7 +44,8 @@ async function showCredsMenu (credentials: ConfigCredential[], currentCredential
     items.filter(item => {
       if (item.action === OPEN_SALESFORCE_IN_BROWSER || item.action === OPEN_SALESFORCE_IN_BROWSER_CLASSIC) return credentials.length > 0
       if (item.action === REMOVE_CREDENTIAL) return credentials.length > 1
-      if (item.action === REPLACE_CREDENTIAL || item.action === TOGGLE_DEPLOY_ON_SAVE) return credentials.length > 0
+      if (item.action === TOGGLE_DEPLOY_ON_SAVE) return credentials.length > 0 && !credentials[currentCredential]?.readOnly
+      if (item.action === REPLACE_CREDENTIAL || item.action === CHANGE_READ_ONLY_MODE) return credentials.length > 0
       return true
     })
   )
@@ -71,6 +75,20 @@ export default async function changeCredentials () {
       await configService.storeConfig(config)
     }
     return
+  } else if (credIdx === CHANGE_READ_ONLY_MODE) {
+    const credential = config.credentials[config.currentCredential]
+    const currentValue = credential.readOnly ? 'enabled' : 'disabled'
+    const newValue = await prompt(`Read-only mode is currently ${currentValue}`, undefined, [
+      { label: 'Enabled', value: true },
+      { label: 'Disabled', value: false }
+    ])()
+    if (newValue !== undefined) {
+      credential.readOnly = newValue
+      if (newValue) credential.deployOnSave = false
+      await configService.storeConfig(config)
+      StatusBar.initStatusBar()
+    }
+    return
   }
 
   if (credIdx === -1) return
@@ -80,13 +98,14 @@ export default async function changeCredentials () {
       const newCfg = { ...config, currentCredential: credIdx }
       const currentCred = newCfg.credentials[credIdx]
       await configService.storeConfig(newCfg)
+      toolingService.clearLocalState()
+      clearOrganizationKindCache()
       await connector.connect(newCfg)
       const sessionInfos = await connector.getSession()
       if (currentCred.type === 'oauth2' && currentCred.instanceUrl !== 'https://' + sessionInfos.instanceHostname) {
         currentCred.instanceUrl = 'https://' + sessionInfos.instanceHostname
         await configService.storeConfig(newCfg)
       }
-      await toolingService.resetMetadataContainer()
       vscode.commands.executeCommand('FastSfdc.refreshPackageTreeview')
       vscode.window.showInformationMessage('Credentials ok!')
       done('👍🏻')

@@ -3,6 +3,7 @@ import { CredentialProfile } from 'sfdy/credentials'
 
 export interface CredentialSettings {
   deployOnSave?: boolean;
+  readOnly?: boolean;
 }
 
 export interface StoredFastConfig {
@@ -45,8 +46,11 @@ export const fromSharedCredential = (
 export const toStoredFastConfig = (config: Config): StoredFastConfig => {
   const currentCredentialId = config.credentials[config.currentCredential]?.id
   const credentialSettings = Object.fromEntries(config.credentials
-    .filter(credential => credential.id && credential.deployOnSave !== undefined)
-    .map(credential => [credential.id!, { deployOnSave: credential.deployOnSave }]))
+    .filter(credential => credential.id && (credential.deployOnSave !== undefined || credential.readOnly !== undefined))
+    .map(credential => [credential.id!, {
+      ...(credential.deployOnSave !== undefined ? { deployOnSave: credential.deployOnSave } : {}),
+      ...(credential.readOnly !== undefined ? { readOnly: credential.readOnly } : {})
+    }]))
 
   return {
     ...(currentCredentialId ? { currentCredentialId } : {}),

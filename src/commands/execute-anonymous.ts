@@ -4,6 +4,7 @@ import sfdcConnector from '../sfdc-connector'
 import statusbar from '../statusbar'
 import utils from '../utils/utils'
 import { debugDiagnosticCollection as diagnosticCollection } from '../logger'
+import { authorizeOrgMutation } from '../services/org-protection-service'
 
 export default async function executeAnonymous () {
   const editor = vscode.window.activeTextEditor
@@ -11,6 +12,7 @@ export default async function executeAnonymous () {
   const selection = editor.selection
   const text = editor.document.getText(!selection.isEmpty ? selection : undefined)
   if (!text) return
+  if (!await authorizeOrgMutation('execute Anonymous Apex')) return
 
   diagnosticCollection.clear()
   statusbar.startLongJob(async done => {
