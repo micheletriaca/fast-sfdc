@@ -41,7 +41,7 @@ That is the whole loop: connect an org, change code, compile, retrieve metadata,
 - **Explore the org.** Package Explorer shows metadata that is not in your project yet and can switch between the complete org and the types already used by the project. Select exactly what you need and retrieve it into the correct local structure; Profiles also have a dedicated retrieval flow.
 - **Keep security changes close to the code.** Open a Profile or Permission Set and use CodeLens to edit field-level security without manually wrestling with the XML.
 - **Handle the awkward parts.** Work with zipped static resources as regular folders, create destructive changesets from the Explorer and generate ready-to-edit [sfdy](https://github.com/micheletriaca/sfdy) plugins for repeatable pre-deploy and post-retrieve transformations.
-- **Use the project format you already have.** Metadata API and Salesforce DX source formats are both supported, and `package.xml` is optional.
+- **Use the project format you already have—or change it.** Metadata API and Salesforce DX source formats are both supported, and `package.xml` is optional. The command palette offers **Convert to Salesforce DX source format** or **Convert to Metadata API format**, based on the current project.
 - **Keep every org one click away.** Add, switch, replace or remove Production, Sandbox and custom-domain credentials, and configure deploy on save independently for each org. Credentials live in an encrypted project vault; its encryption key stays in the operating-system keychain, so the project never contains readable secrets.
 
 For non-standard layouts and metadata transformations, run **Fast-Sfdc: Init metadata patching** and configure [sfdy](https://github.com/micheletriaca/sfdy).

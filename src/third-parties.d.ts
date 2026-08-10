@@ -8,6 +8,7 @@ declare module 'sfdy/deploy'
 declare module 'sfdy/retrieve'
 declare module 'sfdy/auth'
 declare module 'sfdy/constants'
+declare module 'sfdy/convert'
 declare module 'sfdy/credentials' {
   export interface CredentialProfile {
     id?: string;

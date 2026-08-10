@@ -164,6 +164,14 @@
         "title": "Fast-Sfdc: Compile current file (using tooling api)"
       },
       {
+        "command": "FastSfdc.convertToSourceFormat",
+        "title": "Fast-Sfdc: Convert to Salesforce DX source format"
+      },
+      {
+        "command": "FastSfdc.convertToMetadataFormat",
+        "title": "Fast-Sfdc: Convert to Metadata API format"
+      },
+      {
         "command": "FastSfdc.retrieveSelected",
         "title": "Fast-Sfdc: Retrieve selected files"
       },
@@ -268,6 +276,14 @@
         {
           "command": "FastSfdc.compile",
           "when": "fast-sfdc-active && fast-sfdc-configured"
+        },
+        {
+          "command": "FastSfdc.convertToSourceFormat",
+          "when": "fast-sfdc-active && fast-sfdc-configured && !fast-sfdc-source-format"
+        },
+        {
+          "command": "FastSfdc.convertToMetadataFormat",
+          "when": "fast-sfdc-active && fast-sfdc-configured && fast-sfdc-source-format"
         },
         {
           "command": "FastSfdc.retrieveSelected",
@@ -504,7 +520,7 @@
     "multimatch": "^4.0.0",
     "node-salesforce-connection": "^2.3.1",
     "open": "^8.4.0",
-    "sfdy": "^1.8.1",
+    "sfdy": "^2.0.0",
     "upath": "^1.2.0",
     "xml2js": "^0.5"
   },

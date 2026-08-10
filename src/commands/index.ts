@@ -1,6 +1,7 @@
 import manageCredentials from './manage-credentials'
 import removeCredentials from './remove-credentials'
 import compile from './compile'
+import convertSourceFormat from './convert-source-format'
 import createAuraDefinition from './create-aura-definition'
 import createMeta from './create-metadata'
 import credentials from './credentials'
@@ -33,6 +34,14 @@ export default {
   compile: (doc: TextDocument) => {
     reporter.sendEvent('compile')
     compile(doc)
+  },
+  convertToMetadataFormat: () => {
+    reporter.sendEvent('convertToMetadataFormat')
+    convertSourceFormat('metadata')
+  },
+  convertToSourceFormat: () => {
+    reporter.sendEvent('convertToSourceFormat')
+    convertSourceFormat('sfdx')
   },
   createAuraDefinition: (docUri: Uri) => {
     reporter.sendEvent('createAuraDefinition')

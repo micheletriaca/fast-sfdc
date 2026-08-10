@@ -42,8 +42,10 @@ const activateExtension = async (ctx: ExtensionContext) => {
     commands.executeCommand('setContext', 'fast-sfdc-active', true)
 
     const cfg = await configService.getConfig()
+    const sfdyConfig = configService.getSfdyConfigSync()
     statusBar.initStatusBar()
     commands.executeCommand('setContext', 'fast-sfdc-configured', cfg.stored && cfg.credentials.length > 0)
+    commands.executeCommand('setContext', 'fast-sfdc-source-format', sfdyConfig.sourceFormat?.toLowerCase() === 'sfdx')
     if (configService.consumeCredentialMigrationNotice()) {
       window.showInformationMessage('Fast-Sfdc credentials are now shared securely with the sfdy CLI.')
     }
@@ -52,6 +54,7 @@ const activateExtension = async (ctx: ExtensionContext) => {
     statusBar.hideStatusBar()
     commands.executeCommand('setContext', 'fast-sfdc-active', false)
     commands.executeCommand('setContext', 'fast-sfdc-configured', false)
+    commands.executeCommand('setContext', 'fast-sfdc-source-format', false)
   }
 }
 
@@ -69,6 +72,8 @@ export async function activate (ctx: ExtensionContext) {
     workspace.onDidChangeWorkspaceFolders(() => activateExtension(ctx)),
     workspace.onDidSaveTextDocument(textDocument => cmds.compile(textDocument)),
     commands.registerCommand('FastSfdc.compile', cmds.compile),
+    commands.registerCommand('FastSfdc.convertToMetadataFormat', cmds.convertToMetadataFormat),
+    commands.registerCommand('FastSfdc.convertToSourceFormat', cmds.convertToSourceFormat),
     commands.registerCommand('FastSfdc.statusBarClick', cmds.statusBarClick),
     commands.registerCommand('FastSfdc.enterCredentials', cmds.credentials),
     commands.registerCommand('FastSfdc.replaceCredentials', cmds.credentials),

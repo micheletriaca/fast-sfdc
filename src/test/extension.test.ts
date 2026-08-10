@@ -106,7 +106,7 @@ suite('Extension Tests', function () {
 
   test('Loads sfdy through its public entry points', function () {
     for (const entryPoint of [
-      'auth', 'constants', 'credentials', 'deploy', 'format-adapters', 'package-utils', 'path-service',
+      'auth', 'constants', 'convert', 'credentials', 'deploy', 'format-adapters', 'package-utils', 'path-service',
       'retrieve', 'sfdc-utils', 'transformer', 'xml-utils'
     ]) {
       assert.doesNotThrow(() => requireModule(`sfdy/${entryPoint}`))
