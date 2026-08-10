@@ -2,61 +2,52 @@
 
 ## 2.0.0
 
-- Added `Fast-Sfdc: Cancel active deployment`, which discovers pending and in-progress deployments in the active org and can request cancellation even when another tool started them.
+Fast-Sfdc 2.0 adds Salesforce DX source-format projects, a semantic Package
+Explorer, shared encrypted credentials with `sfdy` 2.0, production safeguards
+and project format conversion. Existing projects and `.sfdy.json`
+configurations do not require a manual migration. VS Code 1.103 or newer is
+required.
 
-Fast-Sfdc 2.0 modernizes the extension and aligns it with `sfdy` 2.0. Existing
-projects and `.sfdy.json` configurations do not require a manual migration, and
-stored credentials are migrated automatically. The only new compatibility
-requirement is VS Code 1.103 or newer, whose extension host runs on Node.js 22.
+### Added
 
-### Project formats and metadata
-
-* Added full support for both Metadata API and Salesforce DX source-format
-  projects, including projects without `package.xml`.
-* Added commands to convert an entire project to Salesforce DX source format or
-  Metadata API format. Configured renderers are reversed before conversion and
-  reapplied in the destination format.
-* Rebuilt Package Explorer around semantic metadata components. It now
-  understands decomposed object children, folder metadata and container roots,
-  retrieves folder contents recursively and loads large orgs progressively.
-* Project-only and complete-org filters now preserve partial selections and
-  correctly normalize Person Account record type aliases.
-
-### Credentials and extensibility
-
-* Fast-Sfdc and the `sfdy` CLI now share the same encrypted project credential
-  vault. Existing Fast-Sfdc credentials are migrated automatically while
-  keeping per-org settings such as deploy on save.
-* Added per-org read-only mode. Retrieve and local editing remain available,
-  while deploy, compile, destructive operations, metadata creation and
-  Anonymous Apex execution are blocked. Production orgs require an explicit
-  confirmation before these operations even when they are writable; when Apex
-  tests are required, deploy and validation commands prompt for the permitted
-  test level and any specified test classes. Production deploy commands also
-  offer a validate-only path before any changes are applied.
-* Improved environment propagation across retrieve, deploy, compile and plugin
-  workflows.
-* Added ready-to-edit `sfdy` plugin recipes for repeatable pre-deploy and
+- Full support for both Metadata API and Salesforce DX source-format projects,
+  including projects without `package.xml`.
+- Commands to convert an entire project between Salesforce DX source format and
+  Metadata API format while preserving configured renderers.
+- A shared encrypted project credential vault used by both Fast-Sfdc and the
+  `sfdy` CLI, with automatic migration of existing Fast-Sfdc credentials.
+- Per-org read-only mode and explicit production confirmations for deploy,
+  compile, destructive operations, metadata creation and Anonymous Apex.
+- Production-aware test-level selection and a validate-only deployment path.
+- `Fast-Sfdc: Cancel active deployment` for pending and in-progress Metadata API
+  deployments, including deployments started by other tools.
+- Ready-to-edit `sfdy` plugin recipes for repeatable pre-deploy and
   post-retrieve transformations.
-* Updated the metadata patching and static-resource bundle configuration flows
-  for `sfdy` 2.0.
+- Built-in syntax highlighting and editor configuration for Apex, Anonymous
+  Apex and Visualforce.
 
-### Editing and reliability
+### Changed
 
-* Added built-in syntax highlighting and editor configuration for Apex,
-  Anonymous Apex and Visualforce.
-* Improved Apex compiler diagnostics, including dependency chains and missing
-  schema or variable references.
-* Added a Metadata API fallback when Tooling API cannot save LWC metadata.
-* Improved create-field behavior, multi-file operations, metadata retrieval and
-  handling of source-format companion files.
-
-### Runtime and maintenance
-
-* Replaced Webpack with esbuild and Highland with Exstream for a smaller,
+- Package Explorer now works with semantic metadata components, decomposed
+  object children, folder metadata and container roots, and loads large orgs
+  progressively.
+- Project-only and complete-org filters preserve partial selections and
+  normalize Person Account record type aliases.
+- Environment propagation now covers retrieve, deploy, compile and plugin
+  workflows.
+- Metadata patching and static-resource bundle configuration are aligned with
+  `sfdy` 2.0.
+- Webpack and Highland were replaced with esbuild and Exstream for a smaller,
   faster extension runtime.
-* Updated telemetry, dependency handling, automated tests and release
-  packaging.
+- VS Code 1.103 or newer is now required so the extension runs on Node.js 22.
+
+### Fixed
+
+- Apex compiler diagnostics now cover dependency chains, missing schema
+  relationships and fields, invalid sObject references and missing variables.
+- Tooling API saves for LWC metadata fall back to Metadata API when necessary.
+- Improved metadata creation, multi-file operations, retrieval and handling of
+  source-format companion files.
 
 ## 1.15.2
 
