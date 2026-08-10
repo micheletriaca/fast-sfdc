@@ -52,7 +52,6 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -69,7 +68,9 @@ jobs:
           merge-multiple: true
       - name: Publish every platform package
         shell: bash
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: |
           for package in vsix/*.vsix; do
-            npx --yes @vscode/vsce@3.9.2 publish --oidc --packagePath "$package"
+            npx --yes @vscode/vsce@3.9.2 publish --packagePath "$package"
           done
