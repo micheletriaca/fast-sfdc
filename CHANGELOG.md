@@ -1,5 +1,54 @@
 # Change Log
 
+## 2.0.0
+
+Fast-Sfdc 2.0 modernizes the extension and aligns it with `sfdy` 2.0. Existing
+projects and `.sfdy.json` configurations do not require a manual migration, and
+stored credentials are migrated automatically. The only new compatibility
+requirement is VS Code 1.100 or newer.
+
+### Project formats and metadata
+
+* Added full support for both Metadata API and Salesforce DX source-format
+  projects, including projects without `package.xml`.
+* Added commands to convert an entire project to Salesforce DX source format or
+  Metadata API format. Configured renderers are reversed before conversion and
+  reapplied in the destination format.
+* Rebuilt Package Explorer around semantic metadata components. It now
+  understands decomposed object children, folder metadata and container roots,
+  retrieves folder contents recursively and loads large orgs progressively.
+* Project-only and complete-org filters now preserve partial selections and
+  correctly normalize Person Account record type aliases.
+
+### Credentials and extensibility
+
+* Fast-Sfdc and the `sfdy` CLI now share the same encrypted project credential
+  vault. Existing Fast-Sfdc credentials are migrated automatically while
+  keeping per-org settings such as deploy on save.
+* Improved environment propagation across retrieve, deploy, compile and plugin
+  workflows.
+* Added ready-to-edit `sfdy` plugin recipes for repeatable pre-deploy and
+  post-retrieve transformations.
+* Updated the metadata patching and static-resource bundle configuration flows
+  for `sfdy` 2.0.
+
+### Editing and reliability
+
+* Added built-in syntax highlighting and editor configuration for Apex,
+  Anonymous Apex and Visualforce.
+* Improved Apex compiler diagnostics, including dependency chains and missing
+  schema or variable references.
+* Added a Metadata API fallback when Tooling API cannot save LWC metadata.
+* Improved create-field behavior, multi-file operations, metadata retrieval and
+  handling of source-format companion files.
+
+### Runtime and maintenance
+
+* Replaced Webpack with esbuild and Highland with Exstream for a smaller,
+  faster extension runtime.
+* Updated telemetry, dependency handling, automated tests and release
+  packaging.
+
 ## 1.15.2
 
 * Coverage in run tests command is now sorted by class name. Thanks [marius-dyrkaj]!
