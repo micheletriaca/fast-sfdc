@@ -1,9 +1,8 @@
 name: Publish platform extensions
 
 on:
-  push:
-    tags:
-      - 'v*'
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -31,6 +30,8 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name || github.ref }}
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -48,19 +49,23 @@ jobs:
   publish:
     name: Publish to Visual Studio Marketplace
     needs: package
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: ${{ github.event_name == 'release' && !github.event.release.prerelease }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
       - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
       - run: npm ci
       - name: Verify release tag
-        run: node -e "const version = require('./package.json').version; if ('v' + version !== process.env.GITHUB_REF_NAME) throw new Error('Tag and package version do not match')"
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: node -e "const version = require('./package.json').version; if ('v' + version !== process.env.RELEASE_TAG) throw new Error('Tag and package version do not match')"
       - uses: actions/download-artifact@v7
         with:
           pattern: fast-sfdc-*
