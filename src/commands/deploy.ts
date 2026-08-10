@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import * as vscode from 'vscode'
-import * as path from 'upath'
+import * as path from 'path'
 import statusbar from '../statusbar'
 import configService from '../services/config-service'
 import logger from '../logger'

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import * as path from 'upath'
+import * as path from 'path'
 import sfdcConnector from '../sfdc-connector'
 import statusbar from '../statusbar'
 import utils from '../utils/utils'
@@ -30,7 +30,7 @@ export default async function executeAnonymous () {
       vscode.window.showErrorMessage(res.exceptionMessage || 'Anonymous Apex execution failed')
       done('👎🏻')
     } else {
-      const newFile = vscode.Uri.parse('untitled:' + path.join(utils.getWorkspaceFolder(), 'debuglog.dbg'))
+      const newFile = vscode.Uri.file(path.join(utils.getWorkspaceFolder(), 'debuglog.dbg')).with({ scheme: 'untitled' })
       const document = await vscode.workspace.openTextDocument(newFile)
       const edit = new vscode.WorkspaceEdit()
       edit.insert(newFile, new vscode.Position(0, 0), res.debugLog)

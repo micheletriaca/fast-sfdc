@@ -1,5 +1,7 @@
-import * as path from 'upath'
+import * as path from 'path'
 import { configureProject, getApiVersion, getSrcFolder } from 'sfdy/path-service'
+
+const toPortablePath = (filePath: string): string => filePath.replace(/\\/g, '/')
 
 export type SourceLayout = {
   apiVersion?: string;
@@ -12,24 +14,28 @@ export type SourceLayout = {
 
 export const resolveSourceLayout = (workspaceRoot: string, config: SfdyConfig): SourceLayout => {
   configureProject({ basePath: workspaceRoot, sourceFormat: config.sourceFormat, config })
-  const relativeRoot = path.toUnix(getSrcFolder())
+  const relativeRoot = toPortablePath(getSrcFolder())
   const root = path.resolve(workspaceRoot, relativeRoot)
-  const rootPrefix = root.endsWith('/') ? root : root + '/'
   const relativePrefix = relativeRoot.endsWith('/') ? relativeRoot : relativeRoot + '/'
 
   return {
     apiVersion: getApiVersion(),
     contains: filePath => {
-      const relative = path.relative(root, path.toUnix(filePath))
-      return relative !== '..' && !relative.startsWith('../') && !path.isAbsolute(relative)
+      const relative = path.relative(root, filePath)
+      return relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative)
     },
     isSourceFormat: config.sourceFormat?.toLowerCase() === 'sfdx',
     relativeRoot,
     root,
     toRelativePath: filePath => {
-      const normalized = path.toUnix(filePath).replace(/^\.\//, '')
-      if (normalized === root) return ''
-      if (normalized.startsWith(rootPrefix)) return normalized.substring(rootPrefix.length)
+      if (path.isAbsolute(filePath)) {
+        const relative = path.relative(root, filePath)
+        if (relative === '') return ''
+        if (relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative)) {
+          return toPortablePath(relative)
+        }
+      }
+      const normalized = toPortablePath(filePath).replace(/^\.\//, '')
       if (normalized === relativeRoot) return ''
       if (normalized.startsWith(relativePrefix)) return normalized.substring(relativePrefix.length)
       return normalized.replace(/^\/+/, '')

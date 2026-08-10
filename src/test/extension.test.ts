@@ -23,6 +23,7 @@ import { buildPluginRecipe } from '../services/plugin-recipe-service'
 import { classifyOrganization } from '../services/org-protection'
 import { metadataRequiresTests, productionTestLevels } from '../services/deploy-test-options'
 import { cancellableDeployments, deploymentTimestamp } from '../services/deployment-cancellation'
+import { preserveNativePath } from '../utils/native-path'
 
 const requireModule = createRequire(__filename)
 
@@ -37,6 +38,15 @@ suite('Extension Tests', function () {
   test('Something 1', function () {
     assert.equal(-1, [1, 2, 3].indexOf(5))
     assert.equal(-1, [1, 2, 3].indexOf(0))
+  })
+
+  test('Preserves Windows UNC workspace roots', function () {
+    const workspaceRoot = '\\\\server\\share\\project'
+    assert.equal(preserveNativePath(workspaceRoot), workspaceRoot)
+    assert.equal(
+      path.win32.resolve(preserveNativePath(workspaceRoot), 'src'),
+      '\\\\server\\share\\project\\src'
+    )
   })
 
   test('Selects only deployments that Salesforce can still cancel', function () {

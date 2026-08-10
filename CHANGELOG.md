@@ -1,5 +1,13 @@
 # Change Log
 
+## 2.0.1
+
+### Fixed
+
+- Preserve Windows UNC workspace paths so credentials and Salesforce metadata
+  are stored in the opened network share instead of a similarly named path on
+  the local drive.
+
 ## 2.0.0
 
 Fast-Sfdc 2.0 adds Salesforce DX source-format projects, a semantic Package

@@ -1,5 +1,5 @@
 import { Config, ConfigCredential } from '../fast-sfdc'
-import * as path from 'upath'
+import * as path from 'path'
 import * as fs from 'fs'
 import * as crypto from 'crypto'
 import { SecretStorage } from 'vscode'

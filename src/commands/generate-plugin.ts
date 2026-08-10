@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import * as path from 'upath'
+import * as path from 'path'
 import * as vscode from 'vscode'
 import configService from '../services/config-service'
 import utils from '../utils/utils'
