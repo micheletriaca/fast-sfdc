@@ -1,5 +1,8 @@
 # fast-sfdc ⚡
 
+[![BuyMeACoffee](https://raw.githubusercontent.com/pachadotdev/buymeacoffee-badges/main/bmc-yellow.svg)](https://buymeacoffee.com/micheletriaca)
+[![GitHub Sponsor](https://img.shields.io/github/sponsors/micheletriaca?label=Sponsor&logo=GitHub)](https://github.com/sponsors/micheletriaca)
+
 ## Connect. Code. Save. Test. Done.
 
 The fast Salesforce development loop, directly in VS Code. No Salesforce CLI, no heavyweight toolchain, no constant context switching.
