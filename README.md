@@ -34,17 +34,17 @@ That is the whole loop: connect an org, change code, compile, retrieve metadata,
 
 ## More when you need it
 
-- **A lightweight extension, not a half-finished editor.** Apex classes, triggers and Anonymous Apex scripts have native syntax highlighting, as do Visualforce pages and components. You get the language support needed for everyday work without installing a heavyweight Salesforce toolchain.
+- **Syntax highlighting.** Apex classes, triggers and Anonymous Apex scripts have native syntax highlighting, as do Visualforce pages and components. You get the language support needed for everyday work without installing a heavyweight Salesforce toolchain.
 - **Work on more than one file.** Multi-select files and folders in the VS Code Explorer, then deploy, retrieve or delete the whole selection from Salesforce. You can also deploy, retrieve and validate an entire project or folder.
 - **Execute Apex without the Developer Console.** Run an entire `.apex` script—or just the selected lines—with `⌘ I E` (`Ctrl I E` on Windows/Linux). Debug logs and compiler or runtime errors stay in VS Code.
-- **Create metadata, not boilerplate.** Create Apex classes and triggers, Visualforce pages and components, Aura bundles, LWCs and custom fields. When creating a field, set its Profile access at the same time.
+- **Create metadata.** Create Apex classes and triggers, Visualforce pages and components, Aura bundles, LWCs and custom fields. When creating a field, set its Profile access at the same time.
 - **Explore the org.** Package Explorer shows metadata that is not in your project yet and can switch between the complete org and the types already used by the project. Select exactly what you need and retrieve it into the correct local structure; Profiles also have a dedicated retrieval flow.
 - **Keep security changes close to the code.** Open a Profile or Permission Set and use CodeLens to edit field-level security without manually wrestling with the XML.
 - **Handle the awkward parts.** Work with zipped static resources as regular folders, create destructive changesets from the Explorer and generate ready-to-edit [sfdy](https://github.com/micheletriaca/sfdy) plugins for repeatable pre-deploy and post-retrieve transformations.
 - **Use the project format you already have—or change it.** Metadata API and Salesforce DX source formats are both supported, and `package.xml` is optional. The command palette offers **Convert to Salesforce DX source format** or **Convert to Metadata API format**, based on the current project.
 - **Keep every org one click away.** Add, switch, replace or remove Production, Sandbox and custom-domain credentials, and configure deploy on save independently for each org. Credentials live in an encrypted project vault; its encryption key stays in the operating-system keychain, so the project never contains readable secrets.
 
-For non-standard layouts and metadata transformations, run **Fast-Sfdc: Init metadata patching** and configure [sfdy](https://github.com/micheletriaca/sfdy).
+For metadata transformations, run **Fast-Sfdc: Init metadata patching** and configure [sfdy](https://github.com/micheletriaca/sfdy).
 
 Built from scratch for speed—and trusted in production since its first public release in 2020.
 
