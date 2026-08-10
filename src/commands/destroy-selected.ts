@@ -1,6 +1,6 @@
 import deploy from './deploy'
 import * as vscode from 'vscode'
-import * as path from 'upath'
+import * as path from 'path'
 import * as fs from 'fs'
 import utils from '../utils/utils'
 import configService from '../services/config-service'
@@ -12,13 +12,13 @@ export default async function destroySelected (uri: vscode.Uri, allUris: vscode.
   const layout = resolveSourceLayout(utils.getWorkspaceFolder(), configService.getSfdyConfigSync())
   const isFolder = (p: string) => fs.statSync(path.resolve(layout.root, p)).isDirectory()
   const filesToDelete = (allUris || [])
-    .map(x => path.toUnix(x.fsPath))
+    .map(x => x.fsPath)
     .filter(layout.contains)
     .map(layout.toRelativePath)
     .map(x => isFolder(x) ? x + '/**/*' : x)
 
   if (filesToDelete.length === 0 && vscode.window.activeTextEditor && vscode.window.activeTextEditor.document) {
-    const fileName = path.toUnix(vscode.window.activeTextEditor.document.fileName)
+    const fileName = vscode.window.activeTextEditor.document.fileName
     if (layout.contains(fileName)) {
       filesToDelete.push(layout.toRelativePath(fileName))
     }

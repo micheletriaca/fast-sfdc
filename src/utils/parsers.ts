@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 import * as path from 'upath'
+import * as nativePath from 'path'
 import { AuraDefType } from '../fast-sfdc'
 
 const parsers = {
@@ -86,8 +87,7 @@ const parsers = {
   },
 
   getLastFolder (docUri: vscode.Uri) {
-    const p = path.toUnix(docUri.fsPath)
-    return p.substring(0, p.lastIndexOf('/'))
+    return nativePath.dirname(docUri.fsPath)
   }
 }
 

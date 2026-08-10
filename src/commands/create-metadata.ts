@@ -4,7 +4,7 @@ import StatusBar from '../statusbar'
 import configService from '../services/config-service'
 import toolingService from '../services/tooling-service'
 import utils from '../utils/utils'
-import * as path from 'upath'
+import * as path from 'path'
 import sfdcConnector from '../sfdc-connector'
 import { buildXml } from 'sfdy/xml-utils'
 import createField from './create-field'
@@ -123,9 +123,9 @@ async function createRemoteMeta (docBody: string, docMeta: AnyMetadata, docName:
 async function storeOnFileSystem (docBody: string, docBodyHtml: string, docMeta: AnyMetadata, docName: string, docType: DocType) {
   const isAuraBundle = docType.toolingType === 'AuraDefinitionBundle' || docType.toolingType === 'LightningComponentBundle'
   const layout = resolveSourceLayout(utils.getWorkspaceFolder(), configService.getSfdyConfigSync())
-  let p = path.join(layout.root, docType.folder, docName + docType.extension)
+  let p = path.join(layout.root, docType.folder!, docName + docType.extension)
   if (isAuraBundle) {
-    const bundleDirPath = path.join(layout.root, docType.folder, docName)
+    const bundleDirPath = path.join(layout.root, docType.folder!, docName)
     p = path.join(bundleDirPath, docName + docType.extension)
   }
   if (docBodyHtml) {

@@ -2,13 +2,15 @@ import * as vscode from 'vscode'
 import * as fs from 'fs-extra'
 import * as xml2js from 'xml2js'
 import * as util from 'util'
-import * as path from 'upath'
 import * as transformer from 'sfdy/transformer'
 import configService from '../services/config-service'
 import logger from '../logger'
+import { preserveNativePath } from './native-path'
 import _ = require('exstream.js')
 
-const getWorkspaceFolder = () => path.toUnix((vscode.workspace.workspaceFolders as vscode.WorkspaceFolder[])[0].uri.fsPath)
+const getWorkspaceFolder = () => preserveNativePath(
+  (vscode.workspace.workspaceFolders as vscode.WorkspaceFolder[])[0].uri.fsPath
+)
 
 const untransformAndfetchFiles = async (fileGlob: string, sfdcConnector: SfdcConnector) => {
   const rootFolder = getWorkspaceFolder()

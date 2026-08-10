@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 import configService from '../services/config-service'
-import * as path from 'upath'
+import * as path from 'path'
 import { readdirSync, readFileSync } from 'fs'
 import utils from '../utils/utils'
 import retrieve from './retrieve'
