@@ -47,7 +47,7 @@ async function main () {
     plugins: watch ? [sfdyLoggingPlugin, watchPlugin] : [sfdyLoggingPlugin],
     sourcemap: 'external',
     sourcesContent: false,
-    target: 'node20'
+    target: 'node22'
   })
 
   if (watch) {

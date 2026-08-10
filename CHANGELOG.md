@@ -7,7 +7,7 @@
 Fast-Sfdc 2.0 modernizes the extension and aligns it with `sfdy` 2.0. Existing
 projects and `.sfdy.json` configurations do not require a manual migration, and
 stored credentials are migrated automatically. The only new compatibility
-requirement is VS Code 1.100 or newer.
+requirement is VS Code 1.103 or newer, whose extension host runs on Node.js 22.
 
 ### Project formats and metadata
 
