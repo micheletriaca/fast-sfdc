@@ -5,8 +5,9 @@ import StatusBar from '../statusbar'
 import { ConfigCredential } from '../fast-sfdc'
 import toolingService from '../services/tooling-service'
 import { prompt } from '../utils/field-builders'
+import utils from '../utils/utils'
 import logger from '../logger'
-import { credentialLabel } from '../services/credential-label-service'
+import { aliasIsAvailable, credentialEnvironment, credentialLabel } from '../services/credential-label-service'
 import { clearOrganizationKindCache } from '../services/org-protection-service'
 import open = require('open')
 
@@ -17,6 +18,8 @@ const TOGGLE_DEPLOY_ON_SAVE = -5
 const OPEN_SALESFORCE_IN_BROWSER = -6
 const OPEN_SALESFORCE_IN_BROWSER_CLASSIC = -7
 const CHANGE_READ_ONLY_MODE = -8
+const CHANGE_ALIAS = -9
+const CHANGE_ENVIRONMENT = -10
 
 async function showCredsMenu (credentials: ConfigCredential[], currentCredential: number): Promise<number> {
   type CredentialMenuItem = vscode.QuickPickItem & { credentialIndex?: number; action?: number }
@@ -29,13 +32,15 @@ async function showCredsMenu (credentials: ConfigCredential[], currentCredential
       .map(item => ({
         label: `$(person) ${credentialLabel(item.credential)}`,
         description: item.credential.alias && item.credential.alias !== item.credential.environment
-          ? `target: ${item.credential.alias}`
+          ? `environment: ${credentialEnvironment(item.credential)}`
           : undefined,
         credentialIndex: item.credentialIndex
       })),
     { label: '$(add) Add credential...', action: ADD_OTHER_CREDENTIAL },
     { label: '$(remove) Remove credential...', action: REMOVE_CREDENTIAL },
     { label: '$(replace) Replace current credential...', action: REPLACE_CREDENTIAL },
+    { label: '$(edit) Change alias...', action: CHANGE_ALIAS },
+    { label: '$(edit) Change environment...', action: CHANGE_ENVIRONMENT },
     { label: '$(lock) Change read-only mode...', action: CHANGE_READ_ONLY_MODE },
     { label: '$(symbol-null) Change deploy on save...', action: TOGGLE_DEPLOY_ON_SAVE }
   ]
@@ -45,7 +50,7 @@ async function showCredsMenu (credentials: ConfigCredential[], currentCredential
       if (item.action === OPEN_SALESFORCE_IN_BROWSER || item.action === OPEN_SALESFORCE_IN_BROWSER_CLASSIC) return credentials.length > 0
       if (item.action === REMOVE_CREDENTIAL) return credentials.length > 1
       if (item.action === TOGGLE_DEPLOY_ON_SAVE) return credentials.length > 0 && !credentials[currentCredential]?.readOnly
-      if (item.action === REPLACE_CREDENTIAL || item.action === CHANGE_READ_ONLY_MODE) return credentials.length > 0
+      if ([REPLACE_CREDENTIAL, CHANGE_ALIAS, CHANGE_ENVIRONMENT, CHANGE_READ_ONLY_MODE].includes(item.action!)) return credentials.length > 0
       return true
     })
   )
@@ -60,7 +65,35 @@ export default async function changeCredentials () {
   if (credIdx === ADD_OTHER_CREDENTIAL) return vscode.commands.executeCommand('FastSfdc.addCredentials')
   else if (credIdx === REMOVE_CREDENTIAL) return vscode.commands.executeCommand('FastSfdc.removeCredentials')
   else if (credIdx === REPLACE_CREDENTIAL) return vscode.commands.executeCommand('FastSfdc.replaceCredentials')
-  else if (credIdx === OPEN_SALESFORCE_IN_BROWSER || credIdx === OPEN_SALESFORCE_IN_BROWSER_CLASSIC) {
+  else if (credIdx === CHANGE_ALIAS) {
+    const credential = config.credentials[config.currentCredential]
+    const alias = await utils.inputText('Credential alias', credential.alias || credential.environment, {
+      validateInput: value => {
+        if (!value.trim()) return 'A credential alias is required'
+        if (!aliasIsAvailable(config.credentials, value, credential)) return 'Credential alias already configured'
+        return null
+      }
+    })
+    if (!alias) return
+    credential.alias = alias.trim()
+    await configService.storeConfig(config)
+    StatusBar.initStatusBar()
+    vscode.window.showInformationMessage(`Credential alias changed to ${credential.alias}`)
+    return
+  } else if (credIdx === CHANGE_ENVIRONMENT) {
+    const credential = config.credentials[config.currentCredential]
+    const environment = await utils.inputText(
+      'Environment shared by metadata plugins and patches',
+      credential.environment || credential.alias,
+      { validateInput: value => value.trim() ? null : 'An environment name is required' }
+    )
+    if (!environment) return
+    credential.environment = environment.trim()
+    await configService.storeConfig(config)
+    StatusBar.initStatusBar()
+    vscode.window.showInformationMessage(`Credential environment changed to ${credential.environment}`)
+    return
+  } else if (credIdx === OPEN_SALESFORCE_IN_BROWSER || credIdx === OPEN_SALESFORCE_IN_BROWSER_CLASSIC) {
     const session = await connector.getSession(true)
     const retUrl = credIdx === OPEN_SALESFORCE_IN_BROWSER ? encodeURIComponent('/lightning/setup/SetupOneHome/home') : encodeURIComponent('/setup/systemOverview.apexp')
     const urlToOpen = 'https://' + session.instanceHostname + '/secur/frontdoor.jsp?sid=' + encodeURIComponent(session.sessionId) + '&retURL=' + retUrl

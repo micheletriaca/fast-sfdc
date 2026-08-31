@@ -6,7 +6,7 @@ import utils from '../utils/utils'
 import { ConfigCredential } from '../fast-sfdc'
 import toolingService from '../services/tooling-service'
 import * as constants from 'sfdy/constants'
-import { environmentIsAvailable } from '../services/credential-label-service'
+import { aliasIsAvailable } from '../services/credential-label-service'
 import { clearOrganizationKindCache } from '../services/org-protection-service'
 import auth = require('sfdy/auth')
 
@@ -52,7 +52,7 @@ async function getReadOnlyMode (currentValue = false): Promise<boolean | undefin
   }
   return (await vscode.window.showQuickPick(
     currentValue ? [readOnly, writable] : [writable, readOnly],
-    { ignoreFocusOut: true, title: 'Access mode for this environment' }
+    { ignoreFocusOut: true, title: 'Access mode for this credential' }
   ))?.value
 }
 
@@ -83,16 +83,23 @@ export default async function enterCredentials (addMode = false) {
   }
 
   const currentCredential = addMode ? undefined : creds
-  creds.environment = await utils.inputText('Environment name (for example dev, uat or prod)', creds.environment || creds.alias, {
+  creds.alias = await utils.inputText('Credential alias (for example uat-admin)', creds.alias || creds.environment, {
     validateInput: value => {
-      if (!value.trim()) return 'An environment name is required'
-      if (!environmentIsAvailable(config.credentials, value, currentCredential)) return 'Environment already configured'
+      if (!value.trim()) return 'A credential alias is required'
+      if (!aliasIsAvailable(config.credentials, value, currentCredential)) return 'Credential alias already configured'
       return null
     }
   })
+  if (!creds.alias) return
+  creds.alias = creds.alias.trim()
+
+  creds.environment = await utils.inputText(
+    'Environment shared by metadata plugins and patches (for example dev, uat or prod)',
+    creds.environment || creds.alias,
+    { validateInput: value => value.trim() ? null : 'An environment name is required' }
+  )
   if (!creds.environment) return
   creds.environment = creds.environment.trim()
-  creds.alias = creds.environment
 
   const readOnly = await getReadOnlyMode(creds.readOnly)
   if (readOnly === undefined) return

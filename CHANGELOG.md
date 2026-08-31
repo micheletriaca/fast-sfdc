@@ -1,5 +1,17 @@
 # Change Log
 
+## Unreleased
+
+### Added
+
+- Manage a credential's alias and plugin environment independently from the
+  credentials menu.
+
+### Fixed
+
+- Allow multiple credentials with unique aliases to share the same plugin and
+  patch environment ([#55](https://github.com/micheletriaca/fast-sfdc/issues/55)).
+
 ## 2.0.1
 
 ### Fixed
