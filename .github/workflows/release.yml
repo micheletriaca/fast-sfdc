@@ -77,5 +77,16 @@ jobs:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: |
           for package in vsix/*.vsix; do
-            npx --yes @vscode/vsce@3.9.2 publish --packagePath "$package"
+            for attempt in 1 2 3; do
+              if npx --yes @vscode/vsce@3.9.2 publish --skip-duplicate --packagePath "$package"; then
+                break
+              fi
+
+              if [ "$attempt" -eq 3 ]; then
+                exit 1
+              fi
+
+              echo "Publish failed for $package (attempt $attempt/3); retrying in 15 seconds..."
+              sleep 15
+            done
           done
