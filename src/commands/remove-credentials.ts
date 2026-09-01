@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 import configService from '../services/config-service'
 import { ConfigCredential } from '../fast-sfdc'
-import { credentialLabel } from '../services/credential-label-service'
+import { credentialEnvironment, credentialLabel } from '../services/credential-label-service'
 
 async function showCredsMenu (credentials: ConfigCredential[], currentCredential: number): Promise<number | undefined> {
   return (await vscode.window.showQuickPick(credentials
@@ -11,7 +11,7 @@ async function showCredsMenu (credentials: ConfigCredential[], currentCredential
       credentialIndex: item.credentialIndex,
       label: `$(person) ${credentialLabel(item.credential)}`,
       description: item.credential.alias && item.credential.alias !== item.credential.environment
-        ? `target: ${item.credential.alias}`
+        ? `environment: ${credentialEnvironment(item.credential)}`
         : undefined
     }))
   , { placeHolder: 'Select credential to remove' }))?.credentialIndex

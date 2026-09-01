@@ -18,7 +18,7 @@ import * as constants from 'sfdy/constants'
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
-import { credentialLabel, environmentIsAvailable } from '../services/credential-label-service'
+import { aliasIsAvailable, credentialLabel, reserveUniqueCredentialAlias } from '../services/credential-label-service'
 import { buildPluginRecipe } from '../services/plugin-recipe-service'
 import { classifyOrganization } from '../services/org-protection'
 import { metadataRequiresTests, productionTestLevels } from '../services/deploy-test-options'
@@ -195,14 +195,28 @@ suite('Extension Tests', function () {
     })
   })
 
-  test('Labels credentials by environment and allows duplicate usernames', function () {
-    const credentials = [{ id: 'dev-id', environment: 'dev', username: 'same@example.com' }, {
-      id: 'uat-id', environment: 'uat', username: 'same@example.com'
+  test('Labels credentials by alias and allows shared environments', function () {
+    const credentials = [{ id: 'dev-admin-id', alias: 'dev-admin', environment: 'dev', username: 'same@example.com' }, {
+      id: 'dev-user-id', alias: 'dev-user', environment: 'dev', username: 'same@example.com'
     }]
-    assert.strictEqual(credentialLabel(credentials[0]), 'dev - same@example.com')
-    assert.strictEqual(environmentIsAvailable(credentials, 'prod'), true)
-    assert.strictEqual(environmentIsAvailable(credentials, 'DEV'), false)
-    assert.strictEqual(environmentIsAvailable(credentials, 'dev', credentials[0]), true)
+    assert.strictEqual(credentialLabel(credentials[0]), 'dev-admin - same@example.com')
+    assert.strictEqual(aliasIsAvailable(credentials, 'dev'), true)
+    assert.strictEqual(aliasIsAvailable(credentials, 'DEV-ADMIN'), false)
+    assert.strictEqual(aliasIsAvailable(credentials, 'dev-admin', credentials[0]), true)
+  })
+
+  test('Reserves unique aliases when migrating duplicate legacy environments', function () {
+    const usedAliases = new Set(['uat'])
+    const migrated = ['dev', 'dev', 'UAT'].map(environment => ({
+      alias: reserveUniqueCredentialAlias(environment, usedAliases),
+      environment
+    }))
+    assert.deepEqual(migrated, [
+      { alias: 'dev', environment: 'dev' },
+      { alias: 'dev-2', environment: 'dev' },
+      { alias: 'UAT-2', environment: 'UAT' }
+    ])
+    assert.strictEqual(reserveUniqueCredentialAlias(' DEV ', usedAliases), 'DEV-3')
   })
 
   test('Labels read-only credentials and classifies Salesforce organization kinds', function () {
