@@ -1,7 +1,7 @@
 # fast-sfdc ⚡
 
-[![BuyMeACoffee](https://raw.githubusercontent.com/pachadotdev/buymeacoffee-badges/main/bmc-yellow.svg)](https://buymeacoffee.com/micheletriaca)
-[![GitHub Sponsor](https://img.shields.io/github/sponsors/micheletriaca?label=Sponsor&logo=GitHub)](https://github.com/sponsors/micheletriaca)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy_Me_a_Coffee-FFDD00.png?logo=buymeacoffee&logoColor=000)](https://buymeacoffee.com/micheletriaca)
+[![GitHub Sponsor](https://img.shields.io/github/sponsors/micheletriaca.png?label=Sponsor&logo=GitHub)](https://github.com/sponsors/micheletriaca)
 
 ## Connect. Code. Save. Test. Done.
 
