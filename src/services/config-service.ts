@@ -7,6 +7,7 @@ import * as sharedCredentials from 'sfdy/credentials'
 import utils from '../utils/utils'
 import { resolveSourceLayout } from './source-layout-service'
 import { fromSharedCredential, StoredFastConfig, toSharedCredential, toStoredFastConfig } from './credential-bridge'
+import { reserveUniqueCredentialAlias } from './credential-label-service'
 
 const CONFIG_NAME = path.join('.sfdy', 'fast-sfdc.json')
 const LEGACY_CONFIG_NAME = 'fastsfdc.json'
@@ -122,6 +123,7 @@ export default {
     }
     const migratedProfiles = await credentialsVault.list()
     const globalByAlias = new Map(migratedProfiles.map(profile => [profile.alias.toLowerCase(), profile]))
+    const usedAliases = new Set(migratedProfiles.map(profile => profile.alias.trim().toLowerCase()))
     const localCredentials = (config.credentials || []).map(normalizeCredential)
     let needsMigration = config.legacy === true || Array.isArray(config.credentials) || config.currentCredential !== undefined
     let migratedLegacyCredentials = false
@@ -134,6 +136,8 @@ export default {
       if (Object.keys(secret).length === 0) continue
 
       const hydrated = { ...credential, ...secret }
+      if (hydrated.alias) hydrated.alias = hydrated.alias.trim()
+      if (hydrated.environment) hydrated.environment = hydrated.environment.trim()
       const existing = hydrated.alias ? globalByAlias.get(hydrated.alias.toLowerCase()) : undefined
       const usernameMatches = hydrated.username ? migratedProfiles.filter(profile => profile.username === hydrated.username) : []
       const existingByUsername = usernameMatches.length === 1 ? usernameMatches[0] : undefined
@@ -144,7 +148,7 @@ export default {
         hydrated.environment = hydrated.environment || matchingProfile.environment || newEnvironment(usedEnvironments)
       } else {
         if (!hydrated.environment) hydrated.environment = newEnvironment(usedEnvironments)
-        if (!hydrated.alias) hydrated.alias = hydrated.environment
+        hydrated.alias = reserveUniqueCredentialAlias(hydrated.alias || hydrated.environment, usedAliases)
       }
       const saved = await credentialsVault.save(toSharedCredential(hydrated))
       credential.id = saved.id

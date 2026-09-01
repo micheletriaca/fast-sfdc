@@ -20,3 +20,12 @@ export const aliasIsAvailable = (
     credentialAlias(credential).toLowerCase() === normalized
   )
 }
+
+export const reserveUniqueCredentialAlias = (preferredAlias: string, usedAliases: Set<string>): string => {
+  const baseAlias = preferredAlias.trim() || 'credential'
+  let alias = baseAlias
+  let suffix = 2
+  while (usedAliases.has(alias.toLowerCase())) alias = `${baseAlias}-${suffix++}`
+  usedAliases.add(alias.toLowerCase())
+  return alias
+}

@@ -11,6 +11,8 @@
 
 - Allow multiple credentials with unique aliases to share the same plugin and
   patch environment ([#55](https://github.com/micheletriaca/fast-sfdc/issues/55)).
+- Migrate legacy `fastsfdc.json` configurations with duplicate environments by
+  assigning unique suffixed aliases instead of aborting the migration.
 
 ## 2.0.1
 
