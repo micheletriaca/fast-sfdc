@@ -34,7 +34,7 @@ const chooseProductionDeployMode = async (destructive: boolean): Promise<boolean
   return selected?.checkOnly
 }
 
-export default async function deploy (checkOnly = false, destructive = false, files: string[] = []) {
+export default async function deploy (checkOnly = false, destructive = false, files: string[] = [], diffCfg?: string) {
   let operation = checkOnly
     ? 'validate metadata'
     : destructive
@@ -94,7 +94,8 @@ export default async function deploy (checkOnly = false, destructive = false, fi
         testLevel: testSelection.testLevel,
         specifiedTests: testSelection.specifiedTests,
         config: sfdyConfig,
-        files: sanitizedFiles.length > 0 ? sanitizedFiles : undefined
+        files: sanitizedFiles.length > 0 ? sanitizedFiles : undefined,
+        diffCfg
       })
       const isDeployOk = deployResult.status === 'Succeeded'
       if (isDeployOk && !checkOnly && destructive) {

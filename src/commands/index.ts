@@ -7,6 +7,7 @@ import createAuraDefinition from './create-aura-definition'
 import createMeta from './create-metadata'
 import credentials from './credentials'
 import deploy from './deploy'
+import deployDiff from './deploy-diff'
 import deploySelected from './deploy-selected'
 import destroySelected from './destroy-selected'
 import editFlsProfiles from './edit-fls-profiles'
@@ -63,6 +64,10 @@ export default {
   deploy: (checkOnly = false, destructive = false, files: string[] = []) => {
     reporter.sendEvent('deploy')
     deploy(checkOnly, destructive, files)
+  },
+  deployDiff: (checkOnly = false) => {
+    reporter.sendEvent('deployDiff')
+    deployDiff(checkOnly)
   },
   deploySelected: (uri: vscode.Uri, allUris: vscode.Uri[]) => {
     reporter.sendEvent('deploySelected')
