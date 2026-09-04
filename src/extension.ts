@@ -3,7 +3,7 @@ import { commands, workspace, languages, window, ExtensionContext } from 'vscode
 import cmds from './commands'
 import statusBar from './statusbar'
 import configService from './services/config-service'
-import { initializeLogger, reporter } from './logger'
+import logger, { initializeLogger, reporter } from './logger'
 import CodeLensRunTest from './codelens-provider/codelens-run-test'
 import CodeLensFls from './codelens-provider/codelens-fls'
 import packageTreeView from './treeviews-prodiver/package-explorer'
@@ -49,7 +49,10 @@ const activateExtension = async (ctx: ExtensionContext) => {
     if (configService.consumeCredentialMigrationNotice()) {
       window.showInformationMessage('Fast-Sfdc credentials are now shared securely with the sfdy CLI.')
     }
-    await showChangelogForNewVersion(ctx)
+    showChangelogForNewVersion(ctx).catch(error => {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.appendLine(`Unable to show the changelog notification: ${message}`)
+    })
   } else {
     statusBar.hideStatusBar()
     commands.executeCommand('setContext', 'fast-sfdc-active', false)
