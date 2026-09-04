@@ -30,11 +30,13 @@ export default class CodeLensRunTest implements vscode.CodeLensProvider {
       ))
     }
     if (!hasTestAnnotation) {
-      codeLens.push(new vscode.CodeLens(document.lineAt(0).range, {
-        command: 'FastSfdc.toggleTestCoverage',
-        title: 'Toggle test coverage',
-        arguments: [document]
-      }))
+      codeLens.push(new vscode.CodeLens(document.lineAt(0).range,
+        {
+          command: 'FastSfdc.toggleTestCoverage',
+          title: 'FastSfdc - Toggle test coverage highlighting',
+          arguments: [document]
+        }
+      ))
     }
     return codeLens
   }
