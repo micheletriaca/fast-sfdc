@@ -15,9 +15,11 @@ export default class CodeLensRunTest implements vscode.CodeLensProvider {
     const codeLens: vscode.CodeLens[] = []
     const docLine = document.lineCount
     const isTestToken = new RegExp('@isTest', 'i')
+    let hasTestAnnotation = false
     for (let i = 0; i < docLine - 1; i++) {
       const line = document.lineAt(i)
       if (!isTestToken.test(line.text)) continue
+      hasTestAnnotation = true
       const methodName = (codeLens.length > 0) ? getMethodName(document, i) : ''
       codeLens.push(new vscode.CodeLens(line.range,
         {
@@ -26,6 +28,13 @@ export default class CodeLensRunTest implements vscode.CodeLensProvider {
           arguments: [document, filename, methodName]
         }
       ))
+    }
+    if (!hasTestAnnotation) {
+      codeLens.push(new vscode.CodeLens(document.lineAt(0).range, {
+        command: 'FastSfdc.toggleTestCoverage',
+        title: 'Toggle test coverage',
+        arguments: [document]
+      }))
     }
     return codeLens
   }

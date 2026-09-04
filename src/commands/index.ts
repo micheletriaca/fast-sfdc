@@ -18,6 +18,7 @@ import retrieveSelectedMeta from './retrieve-selected-meta'
 import configureStaticResourceBundles from './static-resource-bundles'
 import runTest from './run-test'
 import generatePlugin from './generate-plugin'
+import toggleTestCoverage from './toggle-test-coverage'
 import { reporter } from '../logger'
 import { TextDocument, Uri } from 'vscode'
 import * as vscode from 'vscode'
@@ -95,6 +96,10 @@ export default {
   runTest: (document: vscode.TextDocument, className: string, methodName: string) => {
     reporter.sendEvent('runTest')
     runTest(document, className, methodName)
+  },
+  toggleTestCoverage: (document: vscode.TextDocument) => {
+    reporter.sendEvent('toggleTestCoverage')
+    toggleTestCoverage(document)
   },
   statusBarClick: () => {
     vscode.commands.executeCommand('FastSfdc.manageCredentials')

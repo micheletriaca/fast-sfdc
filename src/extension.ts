@@ -8,6 +8,7 @@ import CodeLensRunTest from './codelens-provider/codelens-run-test'
 import CodeLensFls from './codelens-provider/codelens-fls'
 import packageTreeView from './treeviews-prodiver/package-explorer'
 import * as vscode from 'vscode'
+import { disposeTestCoverage } from './commands/toggle-test-coverage'
 import open = require('open')
 
 const LAST_CHANGELOG_VERSION = 'fastSfdc.lastChangelogVersion'
@@ -96,6 +97,7 @@ export async function activate (ctx: ExtensionContext) {
     commands.registerCommand('FastSfdc.deploySelected', cmds.deploySelected),
     commands.registerCommand('FastSfdc.destroySelected', cmds.destroySelected),
     commands.registerCommand('FastSfdc.runTest', cmds.runTest),
+    commands.registerCommand('FastSfdc.toggleTestCoverage', cmds.toggleTestCoverage),
     commands.registerCommand('FastSfdc.initSfdy', cmds.initSfdy),
     commands.registerCommand('FastSfdc.editFlsProfiles', cmds.editFlsProfiles),
     commands.registerCommand('FastSfdc.generatePlugin', cmds.generatePlugin),
@@ -109,7 +111,8 @@ export async function activate (ctx: ExtensionContext) {
     commands.registerCommand('FastSfdc.refreshPackageTreeview', packageTreeView.refresh),
     commands.registerCommand('FastSfdc.filterPackageTreeview', packageTreeView.filter),
     commands.registerCommand('FastSfdc.showAllPackageTreeview', packageTreeView.filter),
-    packageExplorerView
+    packageExplorerView,
+    { dispose: disposeTestCoverage }
   ])
   await activateExtension(ctx)
 }

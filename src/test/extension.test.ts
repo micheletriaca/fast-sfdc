@@ -24,6 +24,7 @@ import { classifyOrganization } from '../services/org-protection'
 import { metadataRequiresTests, productionTestLevels } from '../services/deploy-test-options'
 import { cancellableDeployments, deploymentTimestamp } from '../services/deployment-cancellation'
 import { preserveNativePath } from '../utils/native-path'
+import { getCoverageLines } from '../utils/test-coverage'
 
 const requireModule = createRequire(__filename)
 
@@ -38,6 +39,13 @@ suite('Extension Tests', function () {
   test('Something 1', function () {
     assert.equal(-1, [1, 2, 3].indexOf(5))
     assert.equal(-1, [1, 2, 3].indexOf(0))
+  })
+
+  test('Combines covered Apex lines from coverage records', function () {
+    assert.deepEqual(getCoverageLines([
+      { Coverage: JSON.stringify({ coveredLines: [3, 1] }) },
+      { Coverage: { coveredLines: [2, 3, 0], uncoveredLines: [4, 0] } }
+    ]), { coveredLines: [1, 2, 3], uncoveredLines: [4] })
   })
 
   test('Preserves Windows UNC workspace roots', function () {
