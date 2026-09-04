@@ -144,6 +144,14 @@
         "title": "Fast-Sfdc: Deploy metadata"
       },
       {
+        "command": "FastSfdc.deployDiff",
+        "title": "Fast-Sfdc: Deploy git diff"
+      },
+      {
+        "command": "FastSfdc.validateDiff",
+        "title": "Fast-Sfdc: Validate git diff"
+      },
+      {
         "command": "FastSfdc.cancelDeploy",
         "title": "Fast-Sfdc: Cancel active deployment"
       },
@@ -259,6 +267,14 @@
         },
         {
           "command": "FastSfdc.deploy",
+          "when": "fast-sfdc-active && fast-sfdc-configured"
+        },
+        {
+          "command": "FastSfdc.deployDiff",
+          "when": "fast-sfdc-active && fast-sfdc-configured"
+        },
+        {
+          "command": "FastSfdc.validateDiff",
           "when": "fast-sfdc-active && fast-sfdc-configured"
         },
         {

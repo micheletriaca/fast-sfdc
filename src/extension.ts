@@ -91,6 +91,8 @@ export async function activate (ctx: ExtensionContext) {
     commands.registerCommand('FastSfdc.retrieveSelected', cmds.retrieveSelected),
     commands.registerCommand('FastSfdc.retrieveSelectedMeta', cmds.retrieveSelectedMeta),
     commands.registerCommand('FastSfdc.deploy', cmds.deploy),
+    commands.registerCommand('FastSfdc.deployDiff', () => cmds.deployDiff(false)),
+    commands.registerCommand('FastSfdc.validateDiff', () => cmds.deployDiff(true)),
     commands.registerCommand('FastSfdc.cancelDeploy', cmds.cancelDeploy),
     commands.registerCommand('FastSfdc.validate', () => cmds.deploy(true)),
     commands.registerCommand('FastSfdc.retrieveSingle', cmds.retrieveSelected),
