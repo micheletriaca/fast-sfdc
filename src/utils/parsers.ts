@@ -4,6 +4,16 @@ import * as nativePath from 'path'
 import { AuraDefType } from '../fast-sfdc'
 
 const parsers = {
+  isApexCoverageSupported (fullPath: string): boolean {
+    const normalizedPath = path.toUnix(fullPath)
+    const extension = normalizedPath.substring(normalizedPath.lastIndexOf('.')).toLowerCase()
+    return extension === '.cls' || extension === '.trigger'
+  },
+
+  getApexCoverageType (fullPath: string): 'ApexClass' | 'ApexTrigger' {
+    return path.toUnix(fullPath).toLowerCase().endsWith('.trigger') ? 'ApexTrigger' : 'ApexClass'
+  },
+
   getToolingType (document: vscode.TextDocument): string {
     const p = path.toUnix(document.fileName)
     const isAuraBundle = p.indexOf('/aura/') !== -1

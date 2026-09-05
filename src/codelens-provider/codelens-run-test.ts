@@ -10,20 +10,32 @@ const getMethodName = (document: vscode.TextDocument, startingLine: number, coun
 
 export default class CodeLensRunTest implements vscode.CodeLensProvider {
   async provideCodeLenses (document: vscode.TextDocument): Promise<vscode.CodeLens[]> {
+    if (!parsers.isApexCoverageSupported(document.fileName)) return []
     const filename = parsers.getFilename(document.fileName)
 
     const codeLens: vscode.CodeLens[] = []
     const docLine = document.lineCount
     const isTestToken = new RegExp('@isTest', 'i')
+    let hasTestAnnotation = false
     for (let i = 0; i < docLine - 1; i++) {
       const line = document.lineAt(i)
       if (!isTestToken.test(line.text)) continue
+      hasTestAnnotation = true
       const methodName = (codeLens.length > 0) ? getMethodName(document, i) : ''
       codeLens.push(new vscode.CodeLens(line.range,
         {
           command: 'FastSfdc.runTest',
           title: codeLens.length === 0 ? 'FastSfdc - Run all tests' : 'FastSfdc - Run test',
           arguments: [document, filename, methodName]
+        }
+      ))
+    }
+    if (!hasTestAnnotation) {
+      codeLens.push(new vscode.CodeLens(document.lineAt(0).range,
+        {
+          command: 'FastSfdc.toggleTestCoverage',
+          title: 'FastSfdc - Toggle test coverage highlighting',
+          arguments: [document]
         }
       ))
     }
