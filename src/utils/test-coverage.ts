@@ -2,6 +2,11 @@ export interface ApexCoverageRecord {
   Coverage?: string | { coveredLines?: number[]; uncoveredLines?: number[] };
 }
 
+export const normalizeSource = (source: string): string => source.replace(/\r\n?/g, '\n')
+
+export const sourcesMatch = (localSource: string, remoteSource: string): boolean =>
+  normalizeSource(localSource) === normalizeSource(remoteSource)
+
 export const getCoverageLines = (records: ApexCoverageRecord[]): { coveredLines: number[]; uncoveredLines: number[] } => {
   const coveredLines = new Set<number>()
   const uncoveredLines = new Set<number>()

@@ -10,6 +10,7 @@ const getMethodName = (document: vscode.TextDocument, startingLine: number, coun
 
 export default class CodeLensRunTest implements vscode.CodeLensProvider {
   async provideCodeLenses (document: vscode.TextDocument): Promise<vscode.CodeLens[]> {
+    if (!parsers.isApexCoverageSupported(document.fileName)) return []
     const filename = parsers.getFilename(document.fileName)
 
     const codeLens: vscode.CodeLens[] = []

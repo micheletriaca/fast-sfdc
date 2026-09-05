@@ -8,7 +8,7 @@ import CodeLensRunTest from './codelens-provider/codelens-run-test'
 import CodeLensFls from './codelens-provider/codelens-fls'
 import packageTreeView from './treeviews-prodiver/package-explorer'
 import * as vscode from 'vscode'
-import { disposeTestCoverage } from './commands/toggle-test-coverage'
+import { clearTestCoverage, disposeTestCoverage, restoreTestCoverage } from './commands/toggle-test-coverage'
 import open = require('open')
 
 const LAST_CHANGELOG_VERSION = 'fastSfdc.lastChangelogVersion'
@@ -71,6 +71,8 @@ export async function activate (ctx: ExtensionContext) {
   packageTreeView.attachTreeView(packageExplorerView)
   ctx.subscriptions.push(...[
     workspace.onDidChangeWorkspaceFolders(() => activateExtension(ctx)),
+    workspace.onDidCloseTextDocument(clearTestCoverage),
+    window.onDidChangeVisibleTextEditors(editors => editors.forEach(restoreTestCoverage)),
     workspace.onDidSaveTextDocument(textDocument => cmds.compile(textDocument)),
     commands.registerCommand('FastSfdc.compile', cmds.compile),
     commands.registerCommand('FastSfdc.convertToMetadataFormat', cmds.convertToMetadataFormat),

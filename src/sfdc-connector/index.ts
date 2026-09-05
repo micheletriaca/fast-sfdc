@@ -239,6 +239,20 @@ const connector = {
     `)).records
   },
 
+  findApexTriggersByNames: async (triggerNames: string[]): Promise<ApexClassRecord[]> => {
+    if (!triggerNames.length) return []
+    const names = triggerNames.map(name => `'${name}'`).join(',')
+    return (await query(`SELECT
+      Id,
+      Name,
+      Body,
+      IsValid,
+      NamespacePrefix
+      FROM ApexTrigger
+      WHERE Name IN (${names})
+    `)).records
+  },
+
   executeAnonymous: async (scriptData: string) => {
     const result = await metadata('executeAnonymous', {
       String: scriptData

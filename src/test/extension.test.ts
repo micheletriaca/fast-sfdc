@@ -24,7 +24,9 @@ import { classifyOrganization } from '../services/org-protection'
 import { metadataRequiresTests, productionTestLevels } from '../services/deploy-test-options'
 import { cancellableDeployments, deploymentTimestamp } from '../services/deployment-cancellation'
 import { preserveNativePath } from '../utils/native-path'
-import { getCoverageLines } from '../utils/test-coverage'
+import { getCoverageLines, normalizeSource, sourcesMatch } from '../utils/test-coverage'
+import parsers from '../utils/parsers'
+import TestCoverageState from '../utils/test-coverage-state'
 
 const requireModule = createRequire(__filename)
 
@@ -46,6 +48,28 @@ suite('Extension Tests', function () {
       { Coverage: JSON.stringify({ coveredLines: [3, 1] }) },
       { Coverage: { coveredLines: [2, 3, 0], uncoveredLines: [4, 0] } }
     ]), { coveredLines: [1, 2, 3], uncoveredLines: [4] })
+  })
+
+  test('Supports coverage only for Apex classes and triggers', function () {
+    assert.strictEqual(parsers.isApexCoverageSupported('Example.cls'), true)
+    assert.strictEqual(parsers.isApexCoverageSupported('Example.trigger'), true)
+    assert.strictEqual(parsers.isApexCoverageSupported('Example.component'), false)
+    assert.strictEqual(parsers.getApexCoverageType('Example.trigger'), 'ApexTrigger')
+  })
+
+  test('Compares local and remote Apex source after normalizing line endings', function () {
+    assert.strictEqual(normalizeSource('line 1\r\nline 2\r'), 'line 1\nline 2\n')
+    assert.strictEqual(sourcesMatch('line 1\r\nline 2', 'line 1\nline 2'), true)
+    assert.strictEqual(sourcesMatch('line 1\nchanged', 'line 1\nline 2'), false)
+  })
+
+  test('Clears coverage state when an editor is reopened', function () {
+    const state = new TestCoverageState()
+    state.enable('file:///Example.cls', { coveredLines: [1], uncoveredLines: [2] })
+    assert.strictEqual(state.has('file:///Example.cls'), true)
+    assert.deepEqual(state.get('file:///Example.cls'), { coveredLines: [1], uncoveredLines: [2] })
+    state.clear('file:///Example.cls')
+    assert.strictEqual(state.has('file:///Example.cls'), false)
   })
 
   test('Preserves Windows UNC workspace roots', function () {
