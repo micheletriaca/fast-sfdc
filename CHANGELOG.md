@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Show Apex class and trigger test coverage with source-version checks.
+
 ### Fixed
 
 - Keep extension commands available while the new-version changelog notification

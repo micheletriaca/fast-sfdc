@@ -18,6 +18,7 @@ import retrieveSelectedMeta from './retrieve-selected-meta'
 import configureStaticResourceBundles from './static-resource-bundles'
 import runTest from './run-test'
 import generatePlugin from './generate-plugin'
+import toggleTestCoverage from './toggle-test-coverage'
 import { reporter } from '../logger'
 import { TextDocument, Uri } from 'vscode'
 import * as vscode from 'vscode'
@@ -95,6 +96,15 @@ export default {
   runTest: (document: vscode.TextDocument, className: string, methodName: string) => {
     reporter.sendEvent('runTest')
     runTest(document, className, methodName)
+  },
+  toggleTestCoverage: async (document: vscode.TextDocument) => {
+    reporter.sendEvent('toggleTestCoverage')
+    try {
+      await toggleTestCoverage(document)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      await vscode.window.showErrorMessage(`Unable to show Apex test coverage: ${message}`)
+    }
   },
   statusBarClick: () => {
     vscode.commands.executeCommand('FastSfdc.manageCredentials')
