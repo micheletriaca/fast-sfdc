@@ -1,3 +1,4 @@
+import { git, getChangedSourceFiles, getGitReferences, resolveCommit, getLocallyModifiedFiles } from '../services/git-diff-service'
 //
 // Note: This example test is leveraging the Mocha test framework.
 // Please refer to their documentation on https://mochajs.org/ for help.
@@ -37,6 +38,63 @@ const requireModule = createRequire(__filename)
 
 // Defines a Mocha test suite to group tests of similar kind together
 suite('Extension Tests', function () {
+  test('Selects diff files relative to the source root in root and nested workspaces', function () {
+    for (const projectFolder of ['', 'nested/project']) {
+      const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'fast-sfdc-git-diff-'))
+      try {
+        const sourceRoot = path.join(repo, projectFolder, 'src')
+        fs.mkdirSync(sourceRoot, { recursive: true })
+        git(['init', '-q'], repo)
+        git(['config', 'user.name', 'Test'], repo)
+        git(['config', 'user.email', 'test@example.com'], repo)
+        git(['config', 'core.quotePath', 'true'], repo)
+        fs.writeFileSync(path.join(sourceRoot, 'deleted.cls'), 'old')
+        fs.writeFileSync(path.join(sourceRoot, 'changed.cls'), 'old')
+        git(['add', '.'], repo)
+        git(['-c', 'commit.gpgsign=false', 'commit', '-qm', 'initial'], repo)
+        const names = ['changed.cls', 'Città.cls', ' leading space.cls', 'line\nbreak.cls']
+        for (const name of names) fs.writeFileSync(path.join(sourceRoot, name), 'new')
+        fs.unlinkSync(path.join(sourceRoot, 'deleted.cls'))
+        fs.mkdirSync(path.join(repo, 'src-other'), { recursive: true })
+        fs.writeFileSync(path.join(repo, 'src-other', 'outside.cls'), 'outside')
+        git(['add', '.'], repo)
+        git(['-c', 'commit.gpgsign=false', 'commit', '-qm', 'changes'], repo)
+        assert.deepStrictEqual(getChangedSourceFiles(sourceRoot, 'HEAD~1..HEAD').sort(), names.sort())
+        assert.deepStrictEqual(getChangedSourceFiles(sourceRoot, 'HEAD..HEAD'), [])
+        assert.deepStrictEqual(getLocallyModifiedFiles(sourceRoot, names), [])
+        fs.writeFileSync(path.join(repo, 'src-other', 'outside.cls'), 'local outside change')
+        fs.writeFileSync(path.join(sourceRoot, 'unselected.cls'), 'unselected change')
+        assert.deepStrictEqual(getLocallyModifiedFiles(sourceRoot, names), [])
+        fs.writeFileSync(path.join(sourceRoot, 'changed.cls'), 'unstaged change')
+        fs.writeFileSync(path.join(sourceRoot, 'Città.cls'), 'staged change')
+        git(['add', '--', path.join(sourceRoot, 'Città.cls')], repo)
+        assert.deepStrictEqual(getLocallyModifiedFiles(sourceRoot, names).sort(), ['Città.cls', 'changed.cls'])
+        // An index-only change reverted on disk will not be deployed.
+        fs.writeFileSync(path.join(sourceRoot, 'Città.cls'), 'new')
+        assert.deepStrictEqual(getLocallyModifiedFiles(sourceRoot, names), ['changed.cls'])
+        fs.writeFileSync(path.join(sourceRoot, 'changed.cls'), 'new')
+        assert.deepStrictEqual(getLocallyModifiedFiles(sourceRoot, names), [])
+
+        assert.throws(() => getChangedSourceFiles(sourceRoot, 'HEAD~99..HEAD'))
+        git(['branch', 'comparison-base', 'HEAD~1'], repo)
+        git(['tag', 'comparison-base', 'HEAD'], repo)
+        git(['-c', 'tag.gpgsign=false', 'tag', '-a', 'release', '-m', 'Release', 'HEAD~1'], repo)
+        git(['update-ref', 'refs/remotes/origin/main', 'HEAD~1'], repo)
+        git(['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main'], repo)
+        const refs = getGitReferences(repo)
+        assert.ok(refs.some(ref => ref.ref === 'refs/heads/comparison-base' && ref.kind === 'Local branch'))
+        assert.ok(refs.some(ref => ref.ref === 'refs/tags/comparison-base' && ref.kind === 'Tag'))
+        assert.ok(refs.some(ref => ref.ref === 'refs/remotes/origin/main' && ref.kind === 'Remote branch'))
+        assert.ok(!refs.some(ref => ref.ref === 'refs/remotes/origin/HEAD'))
+        assert.strictEqual(resolveCommit(repo, 'refs/tags/release'), resolveCommit(repo, 'HEAD~1'))
+        assert.notStrictEqual(resolveCommit(repo, 'refs/tags/comparison-base'), resolveCommit(repo, 'refs/heads/comparison-base'))
+        assert.deepStrictEqual(getChangedSourceFiles(sourceRoot, `${resolveCommit(repo, 'refs/heads/comparison-base')}..${resolveCommit(repo, 'HEAD')}`).sort(), names.sort())
+      } finally {
+        fs.rmSync(repo, { recursive: true, force: true })
+      }
+    }
+  })
+
   // Defines a Mocha unit test
   test('Something 1', function () {
     assert.equal(-1, [1, 2, 3].indexOf(5))
