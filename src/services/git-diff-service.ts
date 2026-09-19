@@ -32,3 +32,12 @@ export const getGitReferences = (cwd: string): GitReference[] => {
 export const resolveCommit = (cwd: string, ref: string): string => {
   return git(['rev-parse', '--verify', '--end-of-options', `${ref}^{commit}`], cwd).trim()
 }
+
+export const getLocallyModifiedFiles = (sourceRoot: string, selectedFiles: string[]): string[] => {
+  // Compare disk contents with HEAD, covering staged and unstaged changes together.
+  // Disable rename detection so a selected destination is still reported as changed.
+  const modified = new Set(git(['diff', '--name-only', '-z', '--relative', '--no-renames', '--diff-filter=d', 'HEAD', '--'], sourceRoot)
+    .split('\0')
+    .filter(file => file.length > 0))
+  return selectedFiles.filter(file => modified.has(file))
+}

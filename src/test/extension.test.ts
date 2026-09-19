@@ -1,4 +1,4 @@
-import { git, getChangedSourceFiles, getGitReferences, resolveCommit } from '../services/git-diff-service'
+import { git, getChangedSourceFiles, getGitReferences, resolveCommit, getLocallyModifiedFiles } from '../services/git-diff-service'
 //
 // Note: This example test is leveraging the Mocha test framework.
 // Please refer to their documentation on https://mochajs.org/ for help.
@@ -61,6 +61,20 @@ suite('Extension Tests', function () {
         git(['-c', 'commit.gpgsign=false', 'commit', '-qm', 'changes'], repo)
         assert.deepStrictEqual(getChangedSourceFiles(sourceRoot, 'HEAD~1..HEAD').sort(), names.sort())
         assert.deepStrictEqual(getChangedSourceFiles(sourceRoot, 'HEAD..HEAD'), [])
+        assert.deepStrictEqual(getLocallyModifiedFiles(sourceRoot, names), [])
+        fs.writeFileSync(path.join(repo, 'src-other', 'outside.cls'), 'local outside change')
+        fs.writeFileSync(path.join(sourceRoot, 'unselected.cls'), 'unselected change')
+        assert.deepStrictEqual(getLocallyModifiedFiles(sourceRoot, names), [])
+        fs.writeFileSync(path.join(sourceRoot, 'changed.cls'), 'unstaged change')
+        fs.writeFileSync(path.join(sourceRoot, 'Città.cls'), 'staged change')
+        git(['add', '--', path.join(sourceRoot, 'Città.cls')], repo)
+        assert.deepStrictEqual(getLocallyModifiedFiles(sourceRoot, names).sort(), ['Città.cls', 'changed.cls'])
+        // An index-only change reverted on disk will not be deployed.
+        fs.writeFileSync(path.join(sourceRoot, 'Città.cls'), 'new')
+        assert.deepStrictEqual(getLocallyModifiedFiles(sourceRoot, names), ['changed.cls'])
+        fs.writeFileSync(path.join(sourceRoot, 'changed.cls'), 'new')
+        assert.deepStrictEqual(getLocallyModifiedFiles(sourceRoot, names), [])
+
         assert.throws(() => getChangedSourceFiles(sourceRoot, 'HEAD~99..HEAD'))
         git(['branch', 'comparison-base', 'HEAD~1'], repo)
         git(['tag', 'comparison-base', 'HEAD'], repo)

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 import * as path from 'path'
-import { git, getChangedSourceFiles, getGitReferences, resolveCommit } from '../services/git-diff-service'
+import { git, getChangedSourceFiles, getGitReferences, resolveCommit, getLocallyModifiedFiles } from '../services/git-diff-service'
 import deploy from './deploy'
 import configService from '../services/config-service'
 import { resolveSourceLayout } from '../services/source-layout-service'
@@ -77,9 +77,11 @@ export default async function deployDiff (checkOnly = false) {
   const layout = resolveSourceLayout(rootFolder, configService.getSfdyConfigSync())
 
   let changedFiles: string[]
+  let locallyModifiedFiles: string[]
   try {
     const diffCfg = `${resolveCommit(rootFolder, baseRef)}..${resolveCommit(rootFolder, 'HEAD')}`
     changedFiles = getChangedSourceFiles(layout.root, diffCfg)
+    locallyModifiedFiles = getLocallyModifiedFiles(layout.root, changedFiles)
   } catch (e) {
     vscode.window.showErrorMessage(`Unable to compute the git diff: ${e.message}`)
     return
@@ -90,11 +92,15 @@ export default async function deployDiff (checkOnly = false) {
     return
   }
 
-  const contentNotice = `Files are selected using the Git diff. Their current local contents will be ${checkOnly ? 'validated' : 'deployed'}, including uncommitted changes.`
+  const contentNotice = locallyModifiedFiles.length
+    ? `Warning: ${locallyModifiedFiles.length} selected file(s) have local changes. Their current local contents will be ${checkOnly ? 'validated' : 'deployed'}. Make sure this is intentional.`
+    : undefined
+  const locallyModified = new Set(locallyModifiedFiles)
+  const previewFiles = changedFiles.map(file => locallyModified.has(file) ? `${file} [locally modified]` : file)
   const message = `${action} ${changedFiles.length} changed file(s) from ${diffLabel}?`
   let confirmed: string | undefined = await vscode.window.showWarningMessage(
     message,
-    { modal: true, detail: `${contentNotice}\n\n${filePreview(changedFiles)}` },
+    { modal: true, detail: [contentNotice, filePreview(previewFiles)].filter(Boolean).join('\n\n') },
     action,
     'Show full preview'
   )
@@ -105,9 +111,9 @@ export default async function deployDiff (checkOnly = false) {
         `${action} git diff: ${diffLabel}`,
         `Source folder: ${layout.root}`,
         `${changedFiles.length} changed file(s). Deleted files are excluded.`,
-        contentNotice,
+        ...(contentNotice ? [contentNotice] : []),
         '',
-        ...changedFiles
+        ...previewFiles
       ].join('\n')
     })
     await vscode.window.showTextDocument(document, { preview: false })
