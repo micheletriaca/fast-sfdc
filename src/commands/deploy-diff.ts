@@ -90,10 +90,11 @@ export default async function deployDiff (checkOnly = false) {
     return
   }
 
+  const contentNotice = `Files are selected using the Git diff. Their current local contents will be ${checkOnly ? 'validated' : 'deployed'}, including uncommitted changes.`
   const message = `${action} ${changedFiles.length} changed file(s) from ${diffLabel}?`
   let confirmed: string | undefined = await vscode.window.showWarningMessage(
     message,
-    { modal: true, detail: filePreview(changedFiles) },
+    { modal: true, detail: `${contentNotice}\n\n${filePreview(changedFiles)}` },
     action,
     'Show full preview'
   )
@@ -104,6 +105,7 @@ export default async function deployDiff (checkOnly = false) {
         `${action} git diff: ${diffLabel}`,
         `Source folder: ${layout.root}`,
         `${changedFiles.length} changed file(s). Deleted files are excluded.`,
+        contentNotice,
         '',
         ...changedFiles
       ].join('\n')
