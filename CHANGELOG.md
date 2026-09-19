@@ -1,15 +1,24 @@
 # Change Log
 
-## Unreleased
+## 2.1.0
 
 ### Added
 
+- Deploy or validate metadata selected by a Git diff, comparing HEAD with a
+  number of earlier commits or a branch/tag selected from a searchable list.
+- Open the complete deployment file preview in an editor before confirming.
+- Warn when selected files have local changes and mark them in the preview;
+  deployments and validations use the current local file contents.
 - Show Apex class and trigger test coverage with source-version checks.
 
 ### Fixed
 
 - Keep extension commands available while the new-version changelog notification
   is awaiting user interaction ([#60](https://github.com/micheletriaca/fast-sfdc/issues/60)).
+
+### Changed
+
+- Update `sfdy` to 2.0.1 and refresh transitive dependencies.
 
 ## 2.0.2
 
