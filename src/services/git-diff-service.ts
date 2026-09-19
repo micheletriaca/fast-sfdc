@@ -14,3 +14,21 @@ export const getChangedSourceFiles = (sourceRoot: string, range: string): string
     .split('\0')
     .filter(file => file.length > 0)
 }
+
+export type GitReference = { name: string; ref: string; kind: string }
+
+export const getGitReferences = (cwd: string): GitReference[] => {
+  return git(['for-each-ref', '--sort=refname', '--format=%(refname)%00%(symref)', 'refs/heads', 'refs/remotes', 'refs/tags'], cwd)
+    .split('\n')
+    .filter(line => line.length > 0)
+    .flatMap(line => {
+      const [ref, symbolicTarget] = line.split('\0')
+      if (symbolicTarget) return []
+      const prefix = ref.startsWith('refs/heads/') ? 'refs/heads/' : ref.startsWith('refs/remotes/') ? 'refs/remotes/' : 'refs/tags/'
+      return [{ name: ref.substring(prefix.length), ref, kind: prefix === 'refs/heads/' ? 'Local branch' : prefix === 'refs/remotes/' ? 'Remote branch' : 'Tag' }]
+    })
+}
+
+export const resolveCommit = (cwd: string, ref: string): string => {
+  return git(['rev-parse', '--verify', '--end-of-options', `${ref}^{commit}`], cwd).trim()
+}

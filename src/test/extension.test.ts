@@ -1,4 +1,4 @@
-import { git, getChangedSourceFiles } from '../services/git-diff-service'
+import { git, getChangedSourceFiles, getGitReferences, resolveCommit } from '../services/git-diff-service'
 //
 // Note: This example test is leveraging the Mocha test framework.
 // Please refer to their documentation on https://mochajs.org/ for help.
@@ -62,6 +62,19 @@ suite('Extension Tests', function () {
         assert.deepStrictEqual(getChangedSourceFiles(sourceRoot, 'HEAD~1..HEAD').sort(), names.sort())
         assert.deepStrictEqual(getChangedSourceFiles(sourceRoot, 'HEAD..HEAD'), [])
         assert.throws(() => getChangedSourceFiles(sourceRoot, 'HEAD~99..HEAD'))
+        git(['branch', 'comparison-base', 'HEAD~1'], repo)
+        git(['tag', 'comparison-base', 'HEAD'], repo)
+        git(['-c', 'tag.gpgsign=false', 'tag', '-a', 'release', '-m', 'Release', 'HEAD~1'], repo)
+        git(['update-ref', 'refs/remotes/origin/main', 'HEAD~1'], repo)
+        git(['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main'], repo)
+        const refs = getGitReferences(repo)
+        assert.ok(refs.some(ref => ref.ref === 'refs/heads/comparison-base' && ref.kind === 'Local branch'))
+        assert.ok(refs.some(ref => ref.ref === 'refs/tags/comparison-base' && ref.kind === 'Tag'))
+        assert.ok(refs.some(ref => ref.ref === 'refs/remotes/origin/main' && ref.kind === 'Remote branch'))
+        assert.ok(!refs.some(ref => ref.ref === 'refs/remotes/origin/HEAD'))
+        assert.strictEqual(resolveCommit(repo, 'refs/tags/release'), resolveCommit(repo, 'HEAD~1'))
+        assert.notStrictEqual(resolveCommit(repo, 'refs/tags/comparison-base'), resolveCommit(repo, 'refs/heads/comparison-base'))
+        assert.deepStrictEqual(getChangedSourceFiles(sourceRoot, `${resolveCommit(repo, 'refs/heads/comparison-base')}..${resolveCommit(repo, 'HEAD')}`).sort(), names.sort())
       } finally {
         fs.rmSync(repo, { recursive: true, force: true })
       }
