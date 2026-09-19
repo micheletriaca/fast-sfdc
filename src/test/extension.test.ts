@@ -1,3 +1,4 @@
+import { git, getChangedSourceFiles } from '../services/git-diff-service'
 //
 // Note: This example test is leveraging the Mocha test framework.
 // Please refer to their documentation on https://mochajs.org/ for help.
@@ -37,6 +38,36 @@ const requireModule = createRequire(__filename)
 
 // Defines a Mocha test suite to group tests of similar kind together
 suite('Extension Tests', function () {
+  test('Selects diff files relative to the source root in root and nested workspaces', function () {
+    for (const projectFolder of ['', 'nested/project']) {
+      const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'fast-sfdc-git-diff-'))
+      try {
+        const sourceRoot = path.join(repo, projectFolder, 'src')
+        fs.mkdirSync(sourceRoot, { recursive: true })
+        git(['init', '-q'], repo)
+        git(['config', 'user.name', 'Test'], repo)
+        git(['config', 'user.email', 'test@example.com'], repo)
+        git(['config', 'core.quotePath', 'true'], repo)
+        fs.writeFileSync(path.join(sourceRoot, 'deleted.cls'), 'old')
+        fs.writeFileSync(path.join(sourceRoot, 'changed.cls'), 'old')
+        git(['add', '.'], repo)
+        git(['-c', 'commit.gpgsign=false', 'commit', '-qm', 'initial'], repo)
+        const names = ['changed.cls', 'Città.cls', ' leading space.cls', 'line\nbreak.cls']
+        for (const name of names) fs.writeFileSync(path.join(sourceRoot, name), 'new')
+        fs.unlinkSync(path.join(sourceRoot, 'deleted.cls'))
+        fs.mkdirSync(path.join(repo, 'src-other'), { recursive: true })
+        fs.writeFileSync(path.join(repo, 'src-other', 'outside.cls'), 'outside')
+        git(['add', '.'], repo)
+        git(['-c', 'commit.gpgsign=false', 'commit', '-qm', 'changes'], repo)
+        assert.deepStrictEqual(getChangedSourceFiles(sourceRoot, 'HEAD~1..HEAD').sort(), names.sort())
+        assert.deepStrictEqual(getChangedSourceFiles(sourceRoot, 'HEAD..HEAD'), [])
+        assert.throws(() => getChangedSourceFiles(sourceRoot, 'HEAD~99..HEAD'))
+      } finally {
+        fs.rmSync(repo, { recursive: true, force: true })
+      }
+    }
+  })
+
   // Defines a Mocha unit test
   test('Something 1', function () {
     assert.equal(-1, [1, 2, 3].indexOf(5))

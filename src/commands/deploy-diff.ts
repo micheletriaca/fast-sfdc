@@ -1,18 +1,12 @@
 import * as vscode from 'vscode'
-import { spawnSync } from 'child_process'
+import * as path from 'path'
+import { git, getChangedSourceFiles } from '../services/git-diff-service'
 import deploy from './deploy'
 import configService from '../services/config-service'
 import { resolveSourceLayout } from '../services/source-layout-service'
 import utils from '../utils/utils'
 
 const MAX_PREVIEWED_FILES = 20
-
-const git = (args: string[], cwd: string) => {
-  const res = spawnSync('git', args, { cwd })
-  if (res.error) throw Error(res.error.message)
-  if (res.status !== 0) throw Error(res.stderr.toString('utf8').trim() || `git ${args[0]} failed`)
-  return res.stdout.toString('utf8').trim()
-}
 
 const filePreview = (files: string[]) => {
   const preview = files.slice(0, MAX_PREVIEWED_FILES).join('\n')
@@ -25,7 +19,7 @@ export default async function deployDiff (checkOnly = false) {
 
   let branchName: string
   try {
-    branchName = git(['branch', '--show-current'], rootFolder)
+    branchName = git(['branch', '--show-current'], rootFolder).trim()
   } catch (e) {
     vscode.window.showErrorMessage(`Unable to read the current git branch: ${e.message}`)
     return
@@ -43,15 +37,10 @@ export default async function deployDiff (checkOnly = false) {
 
   const diffCfg = `HEAD~${parseInt(answer.trim(), 10)}..HEAD`
   const layout = resolveSourceLayout(rootFolder, configService.getSfdyConfigSync())
-  const srcPrefix = layout.relativeRoot.endsWith('/') ? layout.relativeRoot : layout.relativeRoot + '/'
 
   let changedFiles: string[]
   try {
-    changedFiles = git(['diff', '--name-only', '--diff-filter=d', diffCfg], rootFolder)
-      .split('\n')
-      .map(x => x.trim())
-      .filter(x => x.startsWith(srcPrefix))
-      .map(x => x.substring(srcPrefix.length))
+    changedFiles = getChangedSourceFiles(layout.root, diffCfg)
   } catch (e) {
     vscode.window.showErrorMessage(`Unable to compute the git diff: ${e.message}`)
     return
@@ -72,5 +61,5 @@ export default async function deployDiff (checkOnly = false) {
   )
   if (!confirmed) return
 
-  await deploy(checkOnly, false, [], diffCfg)
+  await deploy(checkOnly, false, changedFiles.map(file => path.resolve(layout.root, file)))
 }
