@@ -52,7 +52,9 @@ suite('Extension Tests', function () {
         fs.writeFileSync(path.join(sourceRoot, 'changed.cls'), 'old')
         git(['add', '.'], repo)
         git(['-c', 'commit.gpgsign=false', 'commit', '-qm', 'initial'], repo)
-        const names = ['changed.cls', 'Città.cls', ' leading space.cls', 'line\nbreak.cls']
+        const names = ['changed.cls', 'Città.cls', ' leading space.cls']
+        // Windows forbids control characters in filenames.
+        if (process.platform !== 'win32') names.push('line\nbreak.cls')
         for (const name of names) fs.writeFileSync(path.join(sourceRoot, name), 'new')
         fs.unlinkSync(path.join(sourceRoot, 'deleted.cls'))
         fs.mkdirSync(path.join(repo, 'src-other'), { recursive: true })
