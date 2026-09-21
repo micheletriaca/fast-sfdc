@@ -136,6 +136,10 @@
         "title": "Fast-Sfdc: Retrieve metadata"
       },
       {
+        "command": "FastSfdc.toggleRetrieveSound",
+        "title": "Fast-Sfdc: Toggle retrieve completion sound"
+      },
+      {
         "command": "FastSfdc.retrieveProfiles",
         "title": "Fast-Sfdc: Retrieve profiles"
       },
@@ -500,7 +504,17 @@
           "source.js": "javascript"
         }
       }
-    ]
+    ],
+    "configuration": {
+      "title": "fast-sfdc",
+      "properties": {
+        "fast-sfdc.retrieveSound": {
+          "type": "boolean",
+          "default": true,
+          "description": "Play a sound when a retrieve operation completes."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
@@ -545,6 +559,7 @@
     "node-salesforce-connection": "^2.3.1",
     "open": "^8.4.0",
     "sfdy": "^2.0.1",
+    "speaker": "^0.5.5",
     "upath": "^1.2.0",
     "xml2js": "^0.5"
   },

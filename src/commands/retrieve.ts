@@ -4,6 +4,7 @@ import logger from '../logger'
 import utils from '../utils/utils'
 import { resolveSourceLayout } from '../services/source-layout-service'
 import { MetadataComponent } from '../services/metadata-tree-service'
+import { playCompletionSound } from '../utils/sound'
 import sfdyRetrieve = require('sfdy/retrieve')
 
 export default async function retrieve (
@@ -40,12 +41,14 @@ export default async function retrieve (
           components,
           config: sfdyConfig
         })
+        playCompletionSound()
         done('👍🏻')
         resolve()
       } catch (e) {
         logger.appendLine('Something went wrong')
         logger.appendLine(e.message)
         logger.show()
+        playCompletionSound()
         done('👎🏻')
         reject(e)
       }
