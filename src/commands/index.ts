@@ -20,6 +20,7 @@ import configureStaticResourceBundles from './static-resource-bundles'
 import runTest from './run-test'
 import generatePlugin from './generate-plugin'
 import toggleTestCoverage from './toggle-test-coverage'
+import toggleRetrieveSound from './toggle-retrieve-sound'
 import { reporter } from '../logger'
 import { TextDocument, Uri } from 'vscode'
 import * as vscode from 'vscode'
@@ -125,5 +126,9 @@ export default {
   generatePlugin: () => {
     reporter.sendEvent('generatePlugin')
     generatePlugin()
+  },
+  toggleRetrieveSound: () => {
+    reporter.sendEvent('toggleRetrieveSound')
+    toggleRetrieveSound()
   }
 }

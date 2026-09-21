@@ -108,6 +108,7 @@ export async function activate (ctx: ExtensionContext) {
     commands.registerCommand('FastSfdc.initSfdy', cmds.initSfdy),
     commands.registerCommand('FastSfdc.editFlsProfiles', cmds.editFlsProfiles),
     commands.registerCommand('FastSfdc.generatePlugin', cmds.generatePlugin),
+    commands.registerCommand('FastSfdc.toggleRetrieveSound', cmds.toggleRetrieveSound),
     languages.registerCodeLensProvider({ language: 'apex', scheme: 'file' }, new CodeLensRunTest()),
     languages.registerCodeLensProvider([
       { pattern: '**/profiles/*.profile' },

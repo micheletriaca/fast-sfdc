@@ -38,7 +38,7 @@ async function main () {
     absWorkingDir: __dirname,
     entryPoints: ['src/extension.ts'],
     bundle: true,
-    external: ['vscode'],
+    external: ['vscode', 'speaker'],
     format: 'cjs',
     loader: { '.node': 'copy' },
     minify: production,
