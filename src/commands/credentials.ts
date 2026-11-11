@@ -8,7 +8,7 @@ import toolingService from '../services/tooling-service'
 import * as constants from 'sfdy/constants'
 import { aliasIsAvailable } from '../services/credential-label-service'
 import { clearOrganizationKindCache } from '../services/org-protection-service'
-import auth = require('sfdy/auth')
+import { authenticateOAuth } from '../services/oauth-reconnect-service'
 
 async function getUrl (): Promise<string> {
   const res = await vscode.window.showQuickPick([
@@ -107,15 +107,25 @@ export default async function enterCredentials (addMode = false) {
   if (readOnly) creds.deployOnSave = false
 
   if (creds.type === 'oauth2') {
-    const infos = await auth(creds.url, constants.DEFAULT_CLIENT_ID, undefined, 3000)
-    creds.username = infos.userInfo.username
-    creds.password = infos.oauth2.refresh_token
-    creds.instanceUrl = infos.oauth2.instance_url
+    try {
+      const { oauth2, userInfo, refreshToken } = await authenticateOAuth(creds.url)
+      creds.username = userInfo.username
+      creds.password = refreshToken
+      creds.instanceUrl = oauth2.instance_url
+      creds.clientId = constants.DEFAULT_CLIENT_ID
+      creds.clientSecret = undefined
+    } catch (error) {
+      vscode.window.showErrorMessage(error instanceof Error ? error.message : String(error))
+      return
+    }
   }
 
+  const saved = await configService.saveCredential(creds)
   if (addMode) {
-    config.credentials.push(creds)
+    config.credentials.push(saved)
     config.currentCredential = config.credentials.length - 1
+  } else {
+    config.credentials[config.currentCredential] = saved
   }
 
   await configService.storeConfig(config)

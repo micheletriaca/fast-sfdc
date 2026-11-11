@@ -76,6 +76,7 @@ export default async function changeCredentials () {
     })
     if (!alias) return
     credential.alias = alias.trim()
+    await configService.updateCredential(credential.id!, { alias: credential.alias })
     await configService.storeConfig(config)
     StatusBar.initStatusBar()
     vscode.window.showInformationMessage(`Credential alias changed to ${credential.alias}`)
@@ -89,6 +90,7 @@ export default async function changeCredentials () {
     )
     if (!environment) return
     credential.environment = environment.trim()
+    await configService.updateCredential(credential.id!, { environment: credential.environment })
     await configService.storeConfig(config)
     StatusBar.initStatusBar()
     vscode.window.showInformationMessage(`Credential environment changed to ${credential.environment}`)
@@ -129,16 +131,10 @@ export default async function changeCredentials () {
   StatusBar.startLongJob(async done => {
     try {
       const newCfg = { ...config, currentCredential: credIdx }
-      const currentCred = newCfg.credentials[credIdx]
       await configService.storeConfig(newCfg)
       toolingService.clearLocalState()
       clearOrganizationKindCache()
       await connector.connect(newCfg)
-      const sessionInfos = await connector.getSession()
-      if (currentCred.type === 'oauth2' && currentCred.instanceUrl !== 'https://' + sessionInfos.instanceHostname) {
-        currentCred.instanceUrl = 'https://' + sessionInfos.instanceHostname
-        await configService.storeConfig(newCfg)
-      }
       vscode.commands.executeCommand('FastSfdc.refreshPackageTreeview')
       vscode.window.showInformationMessage('Credentials ok!')
       done('👍🏻')
