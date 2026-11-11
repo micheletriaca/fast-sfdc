@@ -1,5 +1,27 @@
 # Change Log
 
+## 2.1.1
+
+### Fixed
+
+- Preserve rotated Salesforce OAuth refresh tokens in the shared credential
+  vault and coordinate concurrent renewals with the `sfdy` CLI.
+- Offer **Reconnect** when Salesforce rejects an expired refresh token. The
+  action opens the browser sign-in for the affected credential and saves the
+  new token after a successful sign-in.
+- Give SFDC Explorer an extension-specific view container ID.
+
+### Changed
+
+- Update `sfdy` to 2.0.2.
+- Document how to deploy or validate files selected by Git diff.
+
+### Security
+
+- Update `brace-expansion` to 1.1.21
+  ([#68](https://github.com/micheletriaca/fast-sfdc/pull/68)) and `fast-uri` to
+  3.1.9 ([#70](https://github.com/micheletriaca/fast-sfdc/pull/70)).
+
 ## 2.1.0
 
 ### Added
