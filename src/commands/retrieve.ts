@@ -27,15 +27,7 @@ export default async function retrieve (
         await sfdyRetrieve({
           logger: (msg: string) => logger.appendLine(msg),
           basePath: rootFolder,
-          loginOpts: {
-            serverUrl: creds.url,
-            username: creds.username,
-            password: creds.password,
-            instanceUrl: creds.type === 'oauth2' ? creds.instanceUrl : undefined,
-            refreshToken: creds.type === 'oauth2' ? creds.password : undefined,
-            clientId: creds.clientId,
-            clientSecret: creds.clientSecret
-          },
+          loginOpts: configService.getLoginOptions(creds),
           [filesAreMeta ? 'meta' : 'files']: sanitizedFiles,
           components,
           config: sfdyConfig

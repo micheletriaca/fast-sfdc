@@ -24,6 +24,7 @@ export default async function removeCredentials () {
 
   const currentIdx = config.currentCredential
 
+  await configService.removeCredential(config.credentials[credentialIndex].id!)
   await configService.storeConfig({
     ...config,
     credentials: config.credentials.filter((_, index) => index !== credentialIndex),

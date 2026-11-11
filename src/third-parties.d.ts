@@ -6,7 +6,13 @@ declare module 'node:test' {
 }
 declare module 'sfdy/deploy'
 declare module 'sfdy/retrieve'
-declare module 'sfdy/auth'
+declare module 'sfdy/auth' {
+  function auth(host: string, clientId: string, clientSecret: string | undefined, callbackPort: number): Promise<{
+    oauth2: import('sfdy/credentials').OAuthTokenResponse;
+    userInfo: { username: string };
+  }>
+  export = auth
+}
 declare module 'sfdy/constants'
 declare module 'sfdy/convert'
 declare module 'sfdy/credentials' {
@@ -27,10 +33,18 @@ declare module 'sfdy/credentials' {
     id: string;
     alias: string;
   }
+  export interface OAuthTokenResponse {
+    'access_token': string;
+    'instance_url': string;
+    'refresh_token'?: string;
+  }
   export interface CredentialManager {
+    readonly vaultPath: string
     list(): Promise<CredentialMetadata[]>
     get(selector: string): Promise<CredentialProfile & {id: string; alias: string}>
     save(profile: CredentialProfile): Promise<CredentialProfile & {id: string; alias: string}>
+    update(selector: string, changes: Pick<CredentialProfile, 'alias' | 'environment'>): Promise<CredentialProfile & {id: string; alias: string}>
+    refreshOAuthToken(selector: string, exchange: (profile: CredentialProfile) => Promise<OAuthTokenResponse>): Promise<OAuthTokenResponse>
     remove(selector: string): Promise<boolean>
   }
   export function createCredentialManager(options?: {basePath?: string}): CredentialManager
@@ -45,19 +59,23 @@ type GenericObject = { [key: string]: any };
 type SfdcConnector = GenericObject
 
 declare module 'sfdy/sfdc-utils' {
+  import { CredentialManager, OAuthTokenResponse } from 'sfdy/credentials'
+  export interface OAuthRefreshOptions {
+    credential?: { manager: CredentialManager; id: string };
+    instanceUrl?: string;
+    refreshToken?: string;
+    clientId?: string;
+    clientSecret?: string;
+  }
+  export function refreshOAuthToken(options: OAuthRefreshOptions): Promise<OAuthTokenResponse>
   export function newInstance(opts: {
     username: string;
     password: string;
     serverUrl?: string;
     isSandbox?: boolean;
     apiVersion: string;
-    oauth2?: {
-      instanceUrl?: string;
-      refreshToken?: string;
-      clientId?: string;
-      clientSecret?: string;
-    };
-  }): SfdcConnector
+    oauth2?: OAuthRefreshOptions;
+  }): Promise<SfdcConnector>
 }
 
 declare module 'sfdy/transformer'

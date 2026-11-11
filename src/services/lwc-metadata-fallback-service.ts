@@ -62,15 +62,7 @@ const deployResource = async (bundleName: string, filePath: string, source: stri
       logger: (message: string) => logger.appendLine(message),
       basePath: tempRoot,
       srcFolder: 'src',
-      loginOpts: {
-        serverUrl: creds.url,
-        username: creds.username,
-        password: creds.password,
-        instanceUrl: creds.type === 'oauth2' ? creds.instanceUrl : undefined,
-        refreshToken: creds.type === 'oauth2' ? creds.password : undefined,
-        clientId: creds.clientId,
-        clientSecret: creds.clientSecret
-      },
+      loginOpts: configService.getLoginOptions(creds),
       checkOnly: false,
       files: `lwc/${bundleName}/**/*`,
       preDeployPlugins: [],

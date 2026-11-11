@@ -14,8 +14,6 @@ import { buildMetadataTree, getSelectionState } from '../services/metadata-tree-
 import { getMetadataComponentAliases } from '../services/metadata-component-aliases'
 import { getComponentModel } from 'sfdy/format-adapters'
 import { fromSharedCredential, toSharedCredential, toStoredFastConfig } from '../services/credential-bridge'
-import { buildRefreshTokenRequest } from '../services/oauth-utils'
-import * as constants from 'sfdy/constants'
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
@@ -385,21 +383,8 @@ suite('Extension Tests', function () {
     )
   })
 
-  test('Omits an unavailable client secret from refresh-token requests', function () {
-    assert.deepEqual(buildRefreshTokenRequest({
-      type: 'oauth2',
-      password: 'refresh-token'
-    }), {
-      grant_type: 'refresh_token',
-      client_id: constants.DEFAULT_CLIENT_ID,
-      refresh_token: 'refresh-token'
-    })
-
-    assert.strictEqual(buildRefreshTokenRequest({
-      type: 'oauth2',
-      password: 'refresh-token',
-      clientSecret: 'connected-app-secret'
-    }).client_secret, 'connected-app-secret')
+  test('Loads the shared OAuth refresh implementation from the bundled sfdy dependency', function () {
+    assert.strictEqual(typeof requireModule('sfdy/sfdc-utils').refreshOAuthToken, 'function')
   })
 
   test('Resolves a standard source-format project without package.xml', function () {

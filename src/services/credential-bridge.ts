@@ -39,8 +39,8 @@ export const fromSharedCredential = (
   environment: local.environment || profile.environment,
   instanceUrl: profile.instanceUrl,
   password: profile.refreshToken || profile.password,
-  type: local.type || profile.authType || (profile.refreshToken ? 'oauth2' : 'userpwd'),
-  url: local.url || profile.serverUrl
+  type: profile.authType || (profile.refreshToken ? 'oauth2' : local.type || 'userpwd'),
+  url: profile.serverUrl || local.url
 })
 
 export const toStoredFastConfig = (config: Config): StoredFastConfig => {

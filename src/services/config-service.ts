@@ -4,10 +4,12 @@ import * as fs from 'fs'
 import * as crypto from 'crypto'
 import { SecretStorage } from 'vscode'
 import * as sharedCredentials from 'sfdy/credentials'
+import type { OAuthRefreshOptions } from 'sfdy/sfdc-utils'
 import utils from '../utils/utils'
 import { resolveSourceLayout } from './source-layout-service'
 import { fromSharedCredential, StoredFastConfig, toSharedCredential, toStoredFastConfig } from './credential-bridge'
 import { reserveUniqueCredentialAlias } from './credential-label-service'
+import { withOAuthReconnect } from './oauth-reconnect-service'
 
 const CONFIG_NAME = path.join('.sfdy', 'fast-sfdc.json')
 const LEGACY_CONFIG_NAME = 'fastsfdc.json'
@@ -116,8 +118,7 @@ export default {
       .filter((environment): environment is string => !!environment)
       .map(environment => environment.toLowerCase()))
     for (const profile of globalProfiles.filter(profile => !profile.environment)) {
-      await credentialsVault.save({
-        ...await credentialsVault.get(profile.id),
+      await credentialsVault.update(profile.id, {
         environment: newEnvironment(usedEnvironments)
       })
     }
@@ -150,7 +151,9 @@ export default {
         if (!hydrated.environment) hydrated.environment = newEnvironment(usedEnvironments)
         hydrated.alias = reserveUniqueCredentialAlias(hydrated.alias || hydrated.environment, usedAliases)
       }
-      const saved = await credentialsVault.save(toSharedCredential(hydrated))
+      const saved = matchingProfile
+        ? await credentialsVault.update(matchingProfile.id, { environment: hydrated.environment })
+        : await credentialsVault.save(toSharedCredential(hydrated))
       credential.id = saved.id
       credential.alias = saved.alias
       await getSecrets().delete(secretKey(legacyCredentialId))
@@ -194,26 +197,32 @@ export default {
   },
 
   async storeConfig (cfg: Config): Promise<void> {
-    const credentialsVault = getCredentialManager()
-    const previousCredentials = configCache && configCachePath === getCfgPath() ? configCache.credentials : []
-    const storedCredentials: ConfigCredential[] = []
-    for (const credential of cfg.credentials) {
-      const saved = await credentialsVault.save(toSharedCredential(credential))
-      credential.id = saved.id
-      credential.alias = saved.alias
-      storedCredentials.push(credential)
-      await getSecrets().delete(secretKey(saved.id))
-    }
-
-    const credentialIds = new Set(storedCredentials.map(credential => credential.id))
-    await Promise.all(previousCredentials
-      .filter(credential => credential.id && !credentialIds.has(credential.id))
-      .map(credential => credentialsVault.remove(credential.id!)))
-
-    const storedConfig = { ...cfg, credentials: storedCredentials }
-    await storeLocalConfig(storedConfig)
-    configCache = { ...storedConfig, stored: true }
+    await storeLocalConfig(cfg)
+    configCache = cloneConfig({ ...cfg, stored: cfg.credentials.length > 0 })
     configCachePath = getCfgPath()
+  },
+
+  async saveCredential (credential: ConfigCredential): Promise<ConfigCredential> {
+    const saved = await getCredentialManager().save(toSharedCredential(credential))
+    await getSecrets().delete(secretKey(saved.id))
+    return fromSharedCredential(saved, credential)
+  },
+
+  async updateCredential (id: string, changes: Pick<ConfigCredential, 'alias' | 'environment'>): Promise<void> {
+    await getCredentialManager().update(id, changes)
+  },
+
+  async removeCredential (id: string): Promise<void> {
+    await getCredentialManager().remove(id)
+  },
+
+  getLoginOptions (credential: ConfigCredential): OAuthRefreshOptions & {username?: string; serverUrl?: string; password?: string} {
+    const { id, username, url: serverUrl, password, instanceUrl, clientId, clientSecret } = credential
+    if (credential.type !== 'oauth2') return { username, serverUrl, password }
+    const oauth = id
+      ? { credential: { manager: withOAuthReconnect(getCredentialManager()), id } }
+      : { instanceUrl, refreshToken: password, clientId, clientSecret }
+    return { username, serverUrl, ...oauth }
   },
 
   async storeSfdyConfig (cfg: SfdyConfig): Promise<void> {

@@ -3,19 +3,22 @@ import configService from '../services/config-service'
 import utils from '../utils/utils'
 import soapWithDebug from './soap-with-debug'
 import logger from '../logger'
-import { buildRefreshTokenRequest } from '../services/oauth-utils'
+import { refreshOAuthToken } from 'sfdy/sfdc-utils'
 import SfdcConn = require('node-salesforce-connection')
 
-let config: Config | undefined
 let apiVersion: string
 const conn = new SfdcConn()
+let pendingConnection: Promise<void> | undefined
 
-const connect = async function (cfg?: Config) {
-  config = cfg || await configService.getConfig()
+const openConnection = async (cfg?: Config): Promise<void> => {
+  conn.sessionId = undefined
+  const config = cfg || await configService.getConfig()
   const creds = config.credentials[config.currentCredential]
   apiVersion = await configService.getPackageXmlVersion()
   if (creds.type === 'oauth2') {
-    await conn.oauthToken(creds.instanceUrl?.replace('https://', ''), buildRefreshTokenRequest(creds))
+    const token = await refreshOAuthToken(configService.getLoginOptions(creds))
+    conn.instanceHostname = new URL(token.instance_url).host
+    conn.sessionId = token.access_token
   } else {
     await conn.soapLogin({
       hostname: creds.url,
@@ -26,15 +29,31 @@ const connect = async function (cfg?: Config) {
   }
 }
 
+const connect = async (cfg?: Config): Promise<void> => {
+  if (pendingConnection) {
+    if (!cfg) return pendingConnection
+    await pendingConnection.catch(() => undefined)
+    return connect(cfg)
+  }
+  pendingConnection = openConnection(cfg)
+  try {
+    await pendingConnection
+  } finally {
+    pendingConnection = undefined
+  }
+}
+
 const getBasePath = (useRest: boolean) => `/services/data/v${apiVersion}${useRest ? '' : '/tooling'}`
 const rest = async function (endpoint: string, useRest: boolean, ...args: any[]) {
+  let sessionId: string | undefined
   try {
     if (!conn.sessionId) await connect()
+    sessionId = conn.sessionId
     return await conn.rest(getBasePath(useRest) + endpoint, ...args)
   } catch (e) {
     if (e.code === 'ENOTFOUND') throw Error('Unreachable host. Check connection')
-    else if (e.response && (e.response.statusCode === 401 || e.response.statusCode === 403)) {
-      await connect()
+    else if (e.response?.statusCode === 401) {
+      if (!conn.sessionId || conn.sessionId === sessionId) await connect()
       return conn.rest(getBasePath(useRest) + endpoint, ...args)
     } else {
       throw e
@@ -43,15 +62,17 @@ const rest = async function (endpoint: string, useRest: boolean, ...args: any[])
 }
 
 const metadata = async function (method: string, args: any, wsdl = 'Metadata', headers: any = {}, retry = true): Promise<any> {
+  let sessionId: string | undefined
   try {
     if (!conn.sessionId) await connect()
+    sessionId = conn.sessionId
     const metadataWsdl = conn.wsdl(apiVersion, wsdl)
     return await soapWithDebug(conn, metadataWsdl, method, args, headers)
   } catch (e) {
     const invalidSessionId = e.detail && e.detail.faultcode && e.detail.faultcode === 'sf:INVALID_SESSION_ID'
     if (e.code === 'ENOTFOUND') throw Error('Unreachable host. Check connection')
-    else if (((e.response && (e.response.statusCode === 401 || e.response.statusCode === 403)) || invalidSessionId) && retry) {
-      conn.sessionId = undefined
+    else if ((e.response?.statusCode === 401 || invalidSessionId) && retry) {
+      if (conn.sessionId === sessionId) conn.sessionId = undefined
       return metadata(method, args, wsdl, headers, false)
     } else {
       throw e

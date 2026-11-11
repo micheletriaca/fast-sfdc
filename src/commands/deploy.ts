@@ -81,15 +81,7 @@ export default async function deploy (checkOnly = false, destructive = false, fi
         renderers: sfdyConfig.renderers,
         basePath: rootFolder,
         destructive,
-        loginOpts: {
-          serverUrl: creds.url,
-          username: creds.username,
-          password: creds.password,
-          instanceUrl: creds.type === 'oauth2' ? creds.instanceUrl : undefined,
-          refreshToken: creds.type === 'oauth2' ? creds.password : undefined,
-          clientId: creds.clientId,
-          clientSecret: creds.clientSecret
-        },
+        loginOpts: configService.getLoginOptions(creds),
         checkOnly,
         testLevel: testSelection.testLevel,
         specifiedTests: testSelection.specifiedTests,
