@@ -25,6 +25,16 @@ The fast Salesforce development loop, directly in VS Code. No Salesforce CLI, no
 
 That is the whole loop: connect an org, change code, compile, retrieve metadata, run tests and jump into Setup without leaving your editor.
 
+## Deploy the changes selected by Git
+
+Ready to move your work to another org? Use Git to select the metadata to deploy or validate, directly from VS Code.
+
+1. Run **Fast-Sfdc: Deploy git diff** or **Fast-Sfdc: Validate git diff** from the Command Palette.
+2. Compare `HEAD` with **a number of commits back**, or choose **a branch or tag** from a searchable list of local branches, remote branches and tags.
+3. Review the selected files. **Show full preview** opens the complete list in an editor so you can inspect it before confirming.
+
+Git selects the files; their **current local contents** are deployed or validated. If selected files have uncommitted changes, the preview warns you and marks them so you can check that this is intentional. Deleted files are excluded.
+
 ## The shortcuts worth remembering
 
 | Action | macOS | Windows/Linux |

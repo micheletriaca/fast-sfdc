@@ -47,7 +47,7 @@
   "main": "./dist/extension",
   "contributes": {
     "views": {
-      "package-explorer": [
+      "fast-sfdc-package-explorer": [
         {
           "id": "packageEditor",
           "icon": "$(cloud-download)",
@@ -216,7 +216,7 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "package-explorer",
+          "id": "fast-sfdc-package-explorer",
           "title": "SFDC Explorer",
           "icon": "$(cloud-download)",
           "when": "fast-sfdc-active && fast-sfdc-configured"
